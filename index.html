@@ -638,6 +638,49 @@ body.com-foco .tabbar{display:none}
 
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (forced-colors:active){.tn.hl{forced-color-adjust:none;background:Mark;color:MarkText}}
+
+/* ---------- EDITAIS e DISCIPLINAS (listas e cadastros) ---------- */
+.voltar{margin:-4px 0 -8px}
+.voltar .btn{padding-left:0}
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-h{font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}
+.ed-card{width:100%;text-align:left;border:0;background:var(--sheet);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:5px;height:100%}
+@media (hover:hover){.ed-card:hover{box-shadow:var(--shadow),inset 0 0 0 1.5px var(--rule-2)}}
+.ed-c-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ed-c-h b{font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1.25;overflow-wrap:anywhere}
+.ed-c-s{font-weight:700;font-size:15.5px;display:flex;flex-direction:column}
+.ed-c-s small{font-weight:400;color:var(--muted);font-size:14px}
+.ed-c-i{font-size:14.5px;color:var(--muted)}
+.ed-c-t{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.ed-card .mat-bar{margin-top:6px}
+.tag.mute{background:transparent;box-shadow:inset 0 0 0 1.5px var(--rule);color:var(--faint)}
+.top-r .tag{font-size:12px;padding:2px 7px}
+.st-seg{margin-top:6px}
+.st-seg>button{min-height:38px;padding:7px 12px;font-size:14px}
+.opcoes{display:flex;flex-direction:column;gap:10px}
+.opcao{display:flex;flex-direction:column;gap:3px;text-align:left;border:0;background:var(--sheet);border-radius:16px;padding:15px 16px;box-shadow:inset 0 0 0 1.5px var(--rule);cursor:pointer;width:100%}
+@media (hover:hover){.opcao:hover{box-shadow:inset 0 0 0 2px var(--pen);background:var(--pen-soft)}}
+.op-k{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--pen)}
+.op-k svg{width:17px;height:17px}
+.op-n{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.op-d{font-size:14.5px;color:var(--muted)}
+.chk-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:min(46vh,420px);overflow:auto;background:var(--sheet-2);border-radius:12px;padding:6px 10px}
+.chk-lista li{padding:7px 0;border-bottom:1px solid var(--rule)}
+.chk-lista li:last-child{border-bottom:0}
+.chk-lista small{color:var(--muted);font-size:13px;margin-left:4px}
+.check small{color:var(--muted);font-size:13.5px}
+.ar-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.ar-row{display:flex;gap:6px;align-items:center}
+.ar-row input{flex:1;min-width:0}
+.mais-campos{border-radius:14px;box-shadow:inset 0 0 0 1.5px var(--rule);padding:4px 14px}
+.mais-campos[open]{padding-bottom:14px}
+.mais-campos>summary{cursor:pointer;font-weight:700;padding:10px 0;color:var(--pen)}
+.mais-campos>.field,.mais-campos>.grid2{margin-top:10px}
+.tb.cp tr.mute td{color:var(--faint)}
+.pz-t small,.dia-l small{color:var(--muted);font-weight:400}
+.agora.boas .ag-k svg{color:var(--hl)}
+.lead .btn.link,.cont-p .btn.link,.hint .btn.link{display:inline;padding:0;min-height:0;font-size:inherit;vertical-align:baseline}
 </style>
 </head>
 <body>
@@ -648,8 +691,9 @@ body.com-foco .tabbar{display:none}
 <div class="foco" id="foco" hidden></div>
 <div id="sheet-root"></div>
 <noscript><p style="padding:24px">O Estudo Fácil precisa de JavaScript ligado para funcionar.</p></noscript>
-<script src="editais.js?v=1.0.0"></script>
-<script src="app.js?v=1.0.0"></script>
-<script src="telas.js?v=1.0.0"></script>
+<script src="editais.js?v=2.0.0"></script>
+<script src="app.js?v=2.0.0"></script>
+<script src="telas.js?v=2.0.0"></script>
+<script src="cadastros.js?v=2.0.0"></script>
 </body>
 </html>

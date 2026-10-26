@@ -1,7 +1,7 @@
 // Deixa o app abrir sem internet. Arquivos do app: busca a versão nova primeiro e usa a guardada se estiver offline.
 // Bibliotecas (fontes e leitor de PDF) têm versão fixa: usa a guardada.
-const CACHE = 'estudo-facil-v1';
-const APP = ['./', './index.html', './editais.js', './app.js', './telas.js', './leitor-pdf.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/favicon-32.png'];
+const CACHE = 'estudo-facil-v2';
+const APP = ['./', './index.html', './editais.js', './app.js', './telas.js', './cadastros.js', './leitor-pdf.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/favicon-32.png'];
 const LIBS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', e => {

@@ -2,7 +2,7 @@
    Dados guardados neste aparelho (localStorage) e, se ligada, sincronização criptografada por um gist secreto
    na conta GitHub do usuário. Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "1.0.0";
+const VERSAO = "2.0.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -82,9 +82,11 @@ const I = {
   busca: svg('<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>'),
   alerta: svg('<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.1"/>'),
   menos: svg('<path d="M6 12h12"/>'),
+  livro: svg('<path d="M12 6.5C10 5 7.5 4.5 4 4.7v13.6c3.5-.2 6 .3 8 1.8 2-1.5 4.5-2 8-1.8V4.7c-3.5-.2-6 .3-8 1.8z"/><path d="M12 6.5v13.6"/>'),
+  filtro: svg('<path d="M4 6h16M7 12h10M10 18h4"/>'),
   mais3: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.7" fill="currentColor" stroke="none"/></svg>'
 };
-const MARCA = `<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="var(--mark-bg)"/><path d="M9 29.5 39 22.5v9.5L9 38.5z" fill="var(--hl)"/><path d="M13 13.5h22M13 20h15" stroke="var(--mark-line)" stroke-width="3.2" stroke-linecap="round"/><path d="m15.5 30 4.6 4.6 10.4-10.4" fill="none" stroke="var(--mark-ink)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const MARCA = `<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="11" fill="#2742D3"/><rect x="11" y="11.5" width="26" height="4.4" rx="2.2" fill="#fff" fill-opacity=".62"/><path d="M8 21.8 40 19.6 40.6 30.2 8.6 32.2z" fill="#DFF65C"/><rect x="12" y="23.6" width="24" height="4.6" rx="2.3" fill="#131A3A"/><rect x="11" y="34.5" width="17" height="4.4" rx="2.2" fill="#fff" fill-opacity=".62"/></svg>`;
 
 /* ================= dados ================= */
 const KEY = "estudofacil.";
@@ -93,57 +95,138 @@ const LS = {
   set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); return true; } catch { return false; } }
 };
 const COLLS = ["concursos", "materias", "topicos", "sessoes", "eventos", "simulados"];
-const CFG_PADRAO = { hDia: 3, qDia: 20, dias: [1, 2, 3, 4, 5, 6], ciclo: [1, 7, 30], moverFolga: true, concurso: EDITAL_ABDI.id, teoriaAte: "", novosDia: 0, metaMin: 50, pronto: false };
-const GRUPOS = { gerais: "Conhecimentos gerais", inst: "Conhecimentos institucionais", esp: "Conhecimentos específicos", geral: "Conteúdo" };
-const ORD_GRUPO = { gerais: 0, inst: 1, esp: 2, geral: 3 };
-
+const CFG_PADRAO = { hDia: 3, qDia: 20, dias: [1, 2, 3, 4, 5, 6], ciclo: [1, 7, 30], moverFolga: true, teoriaAte: "", novosDia: 0, metaMin: 50, pronto: false };
+const STATUS = [["estudando", "Estudando"], ["espera", "Em espera"], ["encerrado", "Encerrado"]];
+const statusTxt = s => (STATUS.find(x => x[0] === s) || STATUS[0])[1];
+/* Modelo:
+   materias = disciplinas, valem para todos os editais { id, nome }
+   topicos = assuntos de cada disciplina { id, m, nome, ord, teoria, tc, ult, rev, ur, prox, nota }; o estudo de um assunto vale em todos os editais que o cobram
+   concursos = editais { id, orgao, cargo, sigla, banca, ..., status, datas[], prova { minPct, naoZerar, grupos[{ id, nome }] },
+     disc: [{ m, g (área da prova), q (questões), valor (pontos por questão), t: [assuntos cobrados] }] } */
 function novoTopico(id, m, nome, ord) { return { id, m, nome, ord, teoria: false, tc: "", ult: "", rev: 0, ur: "", prox: "", nota: "" }; }
-function concursoAbdi() {
-  const E = EDITAL_ABDI;
-  return { id: E.id, sigla: E.sigla, orgao: E.orgao, cargo: E.cargo, banca: E.banca, numero: E.numero, site: E.site, email: E.email,
-    remuneracao: E.remuneracao, taxa: E.taxa, lotacao: E.lotacao, regime: E.regime, validade: E.validade, dataProva: E.dataProva,
-    horaProva: E.horaProva, local: E.local, provaNotas: clone(E.provaNotas), prova: clone(E.prova), etapas: clone(E.etapas),
-    desempate: E.desempate, perfis: clone(E.perfis), perfil: "", datas: clone(E.datas), ativo: true, criado: "2026-10-20" };
-}
-function materiasComuns() {
-  const m = [], t = [];
-  EDITAL_ABDI.materias.forEach((x, i) => {
-    m.push({ id: x.id, c: EDITAL_ABDI.id, grupo: x.grupo, nome: x.nome, q: x.q, valor: 0.3, ord: i });
-    x.topicos.forEach((n, j) => t.push(novoTopico(`${x.id}-${j + 1}`, x.id, n, j)));
-  });
-  return { m, t };
-}
-function materiasPerfil(pid) {
-  const lista = EDITAL_ABDI.especificos[pid] || [], tot = sum(lista.map(x => x.topicos.length)) || 1, m = [], t = [];
-  lista.forEach((x, i) => {
-    const id = `abdi-${pid}-${i + 1}`;
-    m.push({ id, c: EDITAL_ABDI.id, grupo: "esp", nome: x.nome, q: 20 * x.topicos.length / tot, valor: 0.65, ord: 100 + i, perfil: pid });
-    x.topicos.forEach((n, j) => t.push(novoTopico(`${id}-${j + 1}`, id, n, j)));
-  });
-  return { m, t };
-}
+const provaVazia = () => ({ minPct: 0, naoZerar: false, grupos: [] });
 function bancoNovo() {
-  const { m, t } = materiasComuns();
-  return { v: 1, cfg: { ...CFG_PADRAO }, concursos: [concursoAbdi()], materias: m, topicos: t, sessoes: [], eventos: [], simulados: [], ativa: null };
+  return { v: 2, cfg: { ...CFG_PADRAO }, concursos: [], materias: [], topicos: [], sessoes: [], eventos: [], simulados: [], ativa: null };
+}
+/* dados da versão 1.0 (um concurso por vez, matérias presas ao concurso) para o modelo geral */
+function migrarV1(d) {
+  const ORD = { gerais: 0, inst: 1, esp: 2, geral: 3 };
+  const tops = Array.isArray(d.topicos) ? d.topicos : [], mats = Array.isArray(d.materias) ? d.materias : [];
+  const foco = d.cfg && d.cfg.concurso;
+  const out = { v: 2, cfg: { ...(d.cfg || {}) }, concursos: [], materias: [], topicos: tops, sessoes: d.sessoes || [], eventos: d.eventos || [], simulados: d.simulados || [], ativa: d.ativa || null };
+  delete out.cfg.concurso;
+  for (const c0 of Array.isArray(d.concursos) ? d.concursos : []) {
+    const ms = mats.filter(m => m.c === c0.id && !m.arq).sort((a, b) => (ORD[a.grupo] ?? 9) - (ORD[b.grupo] ?? 9) || (a.ord || 0) - (b.ord || 0));
+    const disc = ms.map(m => ({ m: m.id, g: m.grupo && m.grupo !== "geral" ? m.grupo : "", q: m.q || 0, valor: m.valor ?? 1,
+      t: tops.filter(t => t.m === m.id).sort((a, b) => a.ord - b.ord).map(t => t.id), ...(m.perfil ? { perfil: m.perfil } : {}) }));
+    const c = { ...c0, disc, status: !foco || c0.id === foco ? "estudando" : "espera" };
+    delete c.ativo;
+    c.prova = c0.prova && c0.prova.grupos ? { minPct: c0.prova.minPct || 0, naoZerar: !!c0.prova.naoZerar, grupos: c0.prova.grupos.map(g => ({ id: g.id, nome: g.nome })) } : provaVazia();
+    if (c0.id === EDITAL_ABDI.id) c.modelo = EDITAL_ABDI.id;
+    out.concursos.push(c);
+  }
+  for (const m of mats) out.materias.push({ id: m.id, nome: m.nome });
+  return out;
 }
 function arrumarBanco(d) {
-  if (!d || typeof d !== "object" || d.v !== 1) d = bancoNovo();
+  if (d && typeof d === "object" && d.v === 1) d = migrarV1(d);
+  if (!d || typeof d !== "object" || d.v !== 2) d = bancoNovo();
   for (const c of COLLS) if (!Array.isArray(d[c])) d[c] = [];
   d.cfg = { ...CFG_PADRAO, ...(d.cfg || {}) };
+  delete d.cfg.concurso;
   if (!Array.isArray(d.cfg.dias) || !d.cfg.dias.length) d.cfg.dias = CFG_PADRAO.dias.slice();
   if (!Array.isArray(d.cfg.ciclo) || !d.cfg.ciclo.length) d.cfg.ciclo = CFG_PADRAO.ciclo.slice();
-  if (!d.concursos.length) { d.concursos.push(concursoAbdi()); const { m, t } = materiasComuns(); d.materias.push(...m); d.topicos.push(...t); }
-  if (!d.concursos.some(c => c.id === d.cfg.concurso)) d.cfg.concurso = d.concursos[0].id;
-  if (d.ativa && (!d.ativa.itens || !d.ativa.itens.length)) d.ativa = null;
-  // edital ABDI: só os específicos do perfil escolhido ficam ativos (vale também depois de juntar dois aparelhos)
-  const abdi = d.concursos.find(c => c.id === EDITAL_ABDI.id);
-  if (abdi) {
-    for (const m of d.materias) if (m.c === abdi.id && m.perfil) { if (m.perfil === abdi.perfil) delete m.arq; else m.arq = true; }
-    if (abdi.perfil && !d.materias.some(m => m.c === abdi.id && m.perfil === abdi.perfil)) { const { m, t } = materiasPerfil(abdi.perfil); d.materias.push(...m); d.topicos.push(...t); }
+  for (const c of d.concursos) {
+    if (!Array.isArray(c.disc)) c.disc = [];
+    if (!Array.isArray(c.datas)) c.datas = [];
+    if (!STATUS.some(s => s[0] === c.status)) c.status = "estudando";
+    if (!c.prova || typeof c.prova !== "object") c.prova = provaVazia();
+    if (!Array.isArray(c.prova.grupos)) c.prova.grupos = [];
+    for (const l of c.disc) if (!Array.isArray(l.t)) l.t = [];
   }
+  if (d.ativa && (!d.ativa.itens || !d.ativa.itens.length)) d.ativa = null;
   return d;
 }
-let DB = arrumarBanco(LS.get("db", null));
+
+/* nome de assunto sem a numeração do edital ("2.1 Crase." vira "Crase") e chave para reconhecer o mesmo assunto em editais diferentes */
+const limparAssunto = s => String(s || "").replace(/\s+/g, " ").trim().replace(/^(?:\d{1,2}(?:\.\d{1,2})*\s*[.)\-–:]?|[a-z][.)\-–])\s+(?=\S)/i, "").replace(/[\s.;,]+$/, "").trim();
+const chave = s => fold(limparAssunto(s)).replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+/* junta disciplinas e assuntos às que já existem (mesmo id ou mesmo nome) e devolve os vínculos com um edital */
+function incorporar(lista) {
+  const links = [];
+  for (const x of lista) {
+    const nome = String(x.nome || "").replace(/\s+/g, " ").trim(); if (!nome) continue;
+    let m = (x.id && DB.materias.find(y => y.id === x.id)) || DB.materias.find(y => chave(y.nome) === chave(nome));
+    if (!m) { m = { id: x.id || uid(), nome }; DB.materias.push(m); }
+    const doM = DB.topicos.filter(t => t.m === m.id);
+    let ord = Math.max(-1, ...doM.map(t => t.ord)) + 1;
+    const t = [];
+    for (const tp of x.tops || []) {
+      const tn = limparAssunto(tp.nome); if (!tn) continue;
+      let top = (tp.id && doM.find(y => y.id === tp.id)) || doM.find(y => chave(y.nome) === chave(tn));
+      if (!top) { top = novoTopico(tp.id && !DB.topicos.some(y => y.id === tp.id) ? tp.id : uid(), m.id, tn, ord++); DB.topicos.push(top); doM.push(top); }
+      if (!t.includes(top.id)) t.push(top.id);
+    }
+    const prev = links.find(l => l.m === m.id);
+    if (prev) { for (const id of t) if (!prev.t.includes(id)) prev.t.push(id); }
+    else links.push({ m: m.id, g: x.g || "", q: x.q || 0, valor: x.valor ?? 1, t, ...(x.perfil ? { perfil: x.perfil } : {}) });
+  }
+  return links;
+}
+/* acrescenta vínculos a um edital (a mesma disciplina não se repete) */
+function vincular(c, links) {
+  for (const l of links) {
+    const ex = c.disc.find(y => y.m === l.m);
+    if (ex) { for (const id of l.t) if (!ex.t.includes(id)) ex.t.push(id); }
+    else c.disc.push(l);
+  }
+}
+/* tira do app as disciplinas que não estão em nenhum edital e nunca foram estudadas */
+function limparOrfas(ids) {
+  const comEstudo = new Set(DB.sessoes.flatMap(s => (s.itens || []).map(i => i.m)));
+  if (DB.ativa) for (const i of DB.ativa.itens) comEstudo.add(i.m);
+  for (const id of ids) {
+    if (DB.concursos.some(c => c.disc.some(l => l.m === id))) continue;
+    if (comEstudo.has(id) || DB.topicos.some(t => t.m === id && (t.teoria || t.ult || t.nota))) continue;
+    DB.materias = DB.materias.filter(m => m.id !== id); DB.topicos = DB.topicos.filter(t => t.m !== id);
+  }
+}
+
+/* edital pronto da biblioteca: ABDI 2026, com os específicos do perfil escolhido */
+function listaAbdi(pid, soPerfil) {
+  const E = EDITAL_ABDI, out = [];
+  if (!soPerfil) E.materias.forEach(x => out.push({ id: x.id, nome: x.nome, g: x.grupo, q: x.q, valor: 0.3, tops: x.topicos.map((n, j) => ({ id: `${x.id}-${j + 1}`, nome: n })) }));
+  const esp = E.especificos[pid] || [], tot = sum(esp.map(x => x.topicos.length)) || 1;
+  esp.forEach((x, i) => {
+    const id = `abdi-${pid}-${i + 1}`;
+    out.push({ id, nome: x.nome, g: "esp", q: 20 * x.topicos.length / tot, valor: 0.65, perfil: pid, tops: x.topicos.map((n, j) => ({ id: `${id}-${j + 1}`, nome: n })) });
+  });
+  return out;
+}
+function adicionarAbdi(pid) {
+  const E = EDITAL_ABDI, ja = DB.concursos.find(c => c.id === E.id);
+  if (ja) return ja;
+  const c = { id: E.id, modelo: E.id, sigla: E.sigla, orgao: E.orgao, cargo: E.cargo, banca: E.banca, numero: E.numero, site: E.site, email: E.email,
+    remuneracao: E.remuneracao, taxa: E.taxa, lotacao: E.lotacao, regime: E.regime, validade: E.validade, dataProva: E.dataProva,
+    horaProva: E.horaProva, local: E.local, provaNotas: clone(E.provaNotas), etapas: clone(E.etapas), desempate: E.desempate,
+    prova: { minPct: E.prova.minPct, naoZerar: E.prova.naoZerar, grupos: E.prova.grupos.map(g => ({ id: g.id, nome: g.nome })) },
+    perfis: clone(E.perfis), perfil: pid, datas: clone(E.datas), status: "estudando", disc: [], criado: today() };
+  c.disc = incorporar(listaAbdi(pid));
+  DB.concursos.push(c);
+  return c;
+}
+/* troca o perfil do edital ABDI: os específicos antigos saem do edital; os que já têm estudo continuam em Disciplinas */
+function trocarPerfil(c, pid) {
+  const velhos = c.disc.filter(l => l.perfil && l.perfil !== pid).map(l => l.m);
+  c.disc = c.disc.filter(l => !l.perfil || l.perfil === pid);
+  vincular(c, incorporar(listaAbdi(pid, true)));
+  c.perfil = pid;
+  limparOrfas(velhos);
+  commit();
+  toast(`Perfil alterado para ${((c.perfis || []).find(p => p.id === pid) || {}).nome}.`);
+}
+const BIBLIOTECA = [{ id: EDITAL_ABDI.id, sigla: EDITAL_ABDI.sigla, orgao: EDITAL_ABDI.orgao, cargo: EDITAL_ABDI.cargo, banca: EDITAL_ABDI.banca, dataProva: EDITAL_ABDI.dataProva, perfis: EDITAL_ABDI.perfis }];
+let DB = (() => { const bruto = LS.get("db", null), d = arrumarBanco(bruto); if (bruto && bruto.v === 1) LS.set("db", d); return d; })();
 let VER = 1;
 let sync = { token: "", gistId: "", login: "", lastSync: 0, err: "", st: {}, del: {}, tipOff: false, ...LS.get("sync", {}) };
 const saveSync = () => LS.set("sync", sync);
@@ -218,6 +301,8 @@ function mergeList(L, R, lt, rt, del, onRemote) {
   return out;
 }
 function applyRemote(R) {
+  // nuvem gravada pela versão 1.0: converte para o modelo geral antes de juntar
+  if (R && R.v === 1) R = { ...migrarV1(R), st: R.st || {}, del: R.del || {} };
   const first = !sync.lastSync, rs = R.st || {}, st = { ...sync.st }, del = { ...sync.del };
   for (const k in (R.del || {})) del[k] = Math.max(del[k] || 0, R.del[k]);
   const corte = Date.now() - 400 * DAY;
@@ -229,7 +314,7 @@ function applyRemote(R) {
     const rt = rs["cfg:" + k] || 0, lt = st["cfg:" + k] || 0;
     if ((first && (rt || !lt)) || rt > lt) { C[k] = RC[k]; if (rt) st["cfg:" + k] = rt; }
   }
-  const novo = { v: 1, cfg: C, ativa: DB.ativa };
+  const novo = { v: 2, cfg: C, ativa: DB.ativa };
   for (const c of COLLS) {
     // na primeira conexão, os dados do concurso (perfil, datas) que já estão na nuvem prevalecem, como os ajustes
     const lt = first && c === "concursos" ? () => 0 : id => st[c + ":" + id] || 0;
@@ -239,12 +324,20 @@ function applyRemote(R) {
   const rta = rs.ativa || 0, lta = st.ativa || 0;
   if (rta > lta) { novo.ativa = R.ativa || null; st.ativa = rta; }
   DB = arrumarBanco(novo);
+  // primeira conexão: os específicos de outro perfil da ABDI escolhido neste aparelho, sem estudo, saem junto com o perfil antigo
+  if (first) {
+    const antes = new Set(DB.materias.map(m => m.id)), topsAntes = new Set(DB.topicos.map(t => t.id));
+    limparOrfas(DB.materias.filter(m => /^abdi-[a-z]+-\d+$/.test(m.id)).map(m => m.id));
+    const agora = Date.now();
+    for (const id of antes) if (!DB.materias.some(m => m.id === id)) { del["materias:" + id] = agora; delete st["materias:" + id]; }
+    for (const id of topsAntes) if (!DB.topicos.some(t => t.id === id)) { del["topicos:" + id] = agora; delete st["topicos:" + id]; }
+  }
   sync.st = st; sync.del = del;
   persist(); snapAll(); saveSync(); VER++;
   return antes !== canon(dadosSync());
 }
 const dadosSync = () => { const o = { cfg: DB.cfg, ativa: DB.ativa }; for (const c of COLLS) o[c] = DB[c]; return o; };
-const syncPayload = () => ({ v: 1, ...dadosSync(), st: sync.st, del: sync.del });
+const syncPayload = () => ({ v: 2, ...dadosSync(), st: sync.st, del: sync.del });
 
 // criptografia: a chave sai do código de acesso do GitHub, que só os aparelhos do usuário conhecem
 const b64 = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
@@ -328,7 +421,7 @@ function syncNow(opts = {}) {
       }
       if (remote) changed = applyRemote(remote);
       const out = syncPayload();
-      if (!remote || canon(out) !== canon({ v: 1, cfg: remote.cfg, ativa: remote.ativa ?? null, ...Object.fromEntries(COLLS.map(c => [c, remote[c]])), st: remote.st, del: remote.del })) await writeRemote(out);
+      if (!remote || canon(out) !== canon({ v: remote.v, cfg: remote.cfg, ativa: remote.ativa ?? null, ...Object.fromEntries(COLLS.map(c => [c, remote[c]])), st: remote.st, del: remote.del })) await writeRemote(out);
       sync.lastSync = Date.now(); sync.err = ""; ok = true;
       setSyncState("ok");
     } catch (e) {
@@ -410,16 +503,35 @@ snapAll();
 
 /* ================= índices derivados ================= */
 let IX = { v: -1 };
-function concurso() { return DB.concursos.find(c => c.id === DB.cfg.concurso) || DB.concursos[0]; }
+const ptsLink = l => (l.q || 0) * (l.valor ?? 1);
+/* O plano junta os assuntos cobrados pelos editais marcados como Estudando.
+   Sem edital em estudo, vale tudo o que está cadastrado em Disciplinas. */
 function ix() {
   if (IX.v === VER) return IX;
-  const c = concurso();
   const matById = new Map(DB.materias.map(m => [m.id, m])), topById = new Map(DB.topicos.map(t => [t.id, t]));
-  const mats = DB.materias.filter(m => m.c === c.id && !m.arq).sort((a, b) => (ORD_GRUPO[a.grupo] ?? 9) - (ORD_GRUPO[b.grupo] ?? 9) || a.ord - b.ord);
-  const doConc = new Set(mats.map(m => m.id));
-  const topsByMat = new Map(mats.map(m => [m.id, []]));
-  for (const t of DB.topicos) if (doConc.has(t.m)) topsByMat.get(t.m).push(t);
-  for (const l of topsByMat.values()) l.sort((a, b) => a.ord - b.ord);
+  const topsAll = new Map(DB.materias.map(m => [m.id, []]));
+  for (const t of DB.topicos) { const l = topsAll.get(t.m); if (l) l.push(t); }
+  for (const l of topsAll.values()) l.sort((a, b) => a.ord - b.ord);
+  const ativos = DB.concursos.filter(c => c.status === "estudando").sort((a, b) => (a.dataProva || "9999").localeCompare(b.dataProva || "9999"));
+  const ordem = new Set(), share = new Map();
+  let escopo = null;
+  if (ativos.length) {
+    escopo = new Set();
+    const comPts = ativos.filter(c => sum(c.disc.map(ptsLink)) > 0).length;
+    for (const c of ativos) {
+      const tot = sum(c.disc.map(ptsLink));
+      for (const l of c.disc) {
+        if (!matById.has(l.m)) continue;
+        ordem.add(l.m);
+        for (const id of l.t) { const t = topById.get(id); if (t && t.m === l.m) escopo.add(id); }
+        // peso da disciplina: média da parte da nota que ela vale em cada edital em estudo
+        if (tot) share.set(l.m, (share.get(l.m) || 0) + ptsLink(l) / tot / comPts);
+      }
+    }
+  } else DB.materias.slice().sort((a, b) => fold(a.nome).localeCompare(fold(b.nome))).forEach(m => ordem.add(m.id));
+  const topsByMat = new Map();
+  for (const id of ordem) { const l = topsAll.get(id).filter(t => !escopo || escopo.has(t.id)); if (l.length) topsByMat.set(id, l); }
+  const mats = [...topsByMat.keys()].map(id => matById.get(id));
   const tops = mats.flatMap(m => topsByMat.get(m.id));
   const stT = new Map(), stM = new Map(), days = new Map();
   const sess = DB.sessoes.slice().sort((a, b) => b.ini - a.ini);
@@ -433,18 +545,39 @@ function ix() {
       mm.s += it.s || 0; mm.a += it.a || 0; mm.e += it.e || 0; stM.set(it.m, mm);
     }
   }
-  const pts = new Map(mats.map(m => [m.id, (m.q || 0) * (m.valor || 1)]));
-  const ptsTot = sum([...pts.values()]);
   const first = sess.length ? sess[sess.length - 1].d : "";
-  IX = { v: VER, c, mats, matById, topById, topsByMat, tops, stT, stM, days, sess, pts, ptsTot, first };
+  IX = { v: VER, ativos, mats, matById, topById, topsAll, topsByMat, tops, stT, stM, days, sess, share, shareTot: sum([...share.values()]), first, est: new Map() };
   return IX;
 }
-const matNome = id => (ix().matById.get(id) || {}).nome || "Matéria removida";
-const topNome = id => (ix().topById.get(id) || {}).nome || "Tópico removido";
+const matNome = id => (ix().matById.get(id) || {}).nome || "Disciplina removida";
+const topNome = id => (ix().topById.get(id) || {}).nome || "Assunto removido";
 const statT = id => ix().stT.get(id) || { s: 0, a: 0, e: 0, n: 0, last: "" };
-function resumoEdital() {
-  const X = ix(), n = X.tops.length, teo = X.tops.filter(t => t.teoria).length, est = X.tops.filter(t => t.teoria || t.ult).length;
+const nomeEdital = c => c ? c.sigla || c.orgao || c.cargo || "Edital" : "";
+const editalPorId = id => DB.concursos.find(c => c.id === id);
+const editaisVivos = () => DB.concursos.filter(c => c.status !== "encerrado");
+function resumoEdital(tops = ix().tops) {
+  const n = tops.length, teo = tops.filter(t => t.teoria).length, est = tops.filter(t => t.teoria || t.ult).length;
   return { n, teo, est, pc: pct(teo, n) };
+}
+/* estrutura de um edital: disciplinas, assuntos cobrados, áreas da prova, questões e pontos */
+function estrutura(c) {
+  const X = ix(); if (X.est.has(c.id)) return X.est.get(c.id);
+  const links = c.disc.filter(l => X.matById.has(l.m)).map(l => ({ ...l, mat: X.matById.get(l.m), pts: ptsLink(l),
+    tops: l.t.map(id => X.topById.get(id)).filter(t => t && t.m === l.m).sort((a, b) => a.ord - b.ord) }));
+  const def = (c.prova && c.prova.grupos) || [];
+  const grupos = def.map(g => ({ id: g.id, nome: g.nome, links: links.filter(l => l.g === g.id) })).filter(g => g.links.length);
+  const sem = links.filter(l => !def.some(g => g.id === l.g));
+  if (sem.length) grupos.push({ id: "", nome: def.length ? "Sem área definida" : "", links: sem });
+  for (const g of grupos) { g.q = sum(g.links.map(l => l.q || 0)); g.pts = sum(g.links.map(l => l.pts)); }
+  const tops = links.flatMap(l => l.tops);
+  const E = { links, grupos, q: sum(links.map(l => l.q || 0)), pts: sum(links.map(l => l.pts)), tops, ...resumoEdital(tops) };
+  X.est.set(c.id, E);
+  return E;
+}
+/* edital em estudo com a prova mais próxima */
+function provaProx() {
+  const t = today();
+  return ix().ativos.find(c => c.dataProva && c.dataProva >= t) || null;
 }
 
 /* ================= rotina, metas e revisões ================= */
@@ -456,9 +589,9 @@ function proxRevisao(d, n) {
 }
 function diasEstudoEntre(a, b) { let n = 0; for (let d = a; d <= b; d = addD(d, 1)) if (ehDiaEstudo(d)) n++; return n; }
 function teoriaAte() {
-  const c = concurso(), t = today();
+  const c = provaProx(), t = today();
   if (cfg().teoriaAte) return cfg().teoriaAte;
-  if (c.dataProva) { const f = addD(c.dataProva, -14); return f > t ? f : addD(c.dataProva, -1); }
+  if (c) { const f = addD(c.dataProva, -14); return f > t ? f : addD(c.dataProva, -1); }
   return addD(t, 60);
 }
 function metaDia(d) {
@@ -491,7 +624,7 @@ function planoHoje() {
   const X = ix(), t = today();
   const hojeTeoria = new Set(), hojeRev = new Set();
   for (const s of X.sess) { if (s.d !== t) continue; for (const it of s.itens || []) (it.tipo === "revisao" ? hojeRev : hojeTeoria).add(it.t); }
-  const peso = m => (X.pts.get(m) || 0) / Math.max(1, (X.topsByMat.get(m) || []).length);
+  const peso = m => (X.share.get(m) || 0) / Math.max(1, (X.topsByMat.get(m) || []).length);
   const rev = X.tops.filter(x => (x.prox && x.prox <= t) || x.ur === t)
     .map(x => ({ tipo: "revisao", top: x, feito: x.ur === t || hojeRev.has(x.id), atraso: x.prox && x.prox < t ? diffD(x.prox, t) : 0 }))
     .sort((a, b) => (a.feito - b.feito) || ((a.top.prox || t).localeCompare(b.top.prox || t)) || (peso(b.top.m) - peso(a.top.m)));
@@ -528,7 +661,7 @@ function planoHoje() {
 /* sugestão quando o plano de hoje acabou: o próximo tópico novo pela mesma regra */
 function proximoTopico(excluir = new Set()) {
   const X = ix(), t = today();
-  const peso = m => (X.pts.get(m) || 0) / Math.max(1, (X.topsByMat.get(m) || []).length);
+  const peso = m => (X.share.get(m) || 0) / Math.max(1, (X.topsByMat.get(m) || []).length);
   const maxPeso = Math.max(0.0001, ...X.mats.map(m => peso(m.id)));
   let best = null, bestSc = Infinity;
   for (const m of X.mats) {
@@ -725,11 +858,13 @@ document.addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" &&
 /* ================= navegação e desenho das telas ================= */
 const UI = { pendingRender: false, alarme: 0, focoAberto: false, edTab: "conteudo", edAberta: new Set(), dsPer: "semana", dsNav: today(), cal: { mes: today().slice(0, 8) + "01", sel: today() }, busca: "", hLim: 30 };
 const VIEWS = {};
-const NAV = [["hoje", "Hoje", "hoje"], ["edital", "Edital", "edital"], ["estudar", "Estudar", "timer"], ["agenda", "Agenda", "agenda"], ["desempenho", "Desempenho", "stats"]];
+const NAV = [["hoje", "Hoje", "hoje"], ["editais", "Editais", "edital"], ["estudar", "Estudar", "timer"], ["disciplinas", "Disciplinas", "livro"], ["agenda", "Agenda", "agenda"]];
+const RAIL_MAIS = [["desempenho", "Desempenho", "stats"], ["ajustes", "Ajustes", "ajustes"]];
+const ABA = { edital: "editais" };
 function route() {
   const h = decodeURIComponent(location.hash.replace(/^#\/?/, "")).split("/");
   const v = VIEWS[h[0]] ? h[0] : "hoje";
-  return { v, sub: h[1] || "" };
+  return { v, sub: h[1] || "", sub2: h[2] || "" };
 }
 function go(path, replace) {
   const d = (history.state && history.state.d) || 0;
@@ -758,18 +893,18 @@ function render(opts = {}) {
 document.addEventListener("focusout", () => setTimeout(() => { if (UI.pendingRender && !busyTyping()) render(); }, 40));
 
 function renderShell(r) {
-  const a = DB.ativa;
+  const a = DB.ativa, aba = ABA[r.v] || r.v;
+  const cur = v => aba === v ? 'aria-current="page"' : "";
   const navBtn = ([v, l, ic]) => {
-    if (v === "estudar") return `<button class="nav-it nav-go${a ? " ativo" : ""}" data-act="nav-estudar" ${r.v === v ? 'aria-current="page"' : ""}><span class="nav-fab">${a ? I.timer : I.play}</span><span class="nav-l" ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : l}</span></button>`;
-    return `<button class="nav-it" data-go="${v}" ${r.v === v ? 'aria-current="page"' : ""}>${I[ic]}<span class="nav-l">${l}</span></button>`;
+    if (v === "estudar") return `<button class="nav-it nav-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}><span class="nav-fab">${a ? I.timer : I.play}</span><span class="nav-l" ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : l}</span></button>`;
+    return `<button class="nav-it" data-go="${v}" ${cur(v)}>${I[ic]}<span class="nav-l">${l}</span></button>`;
   };
   $("#nav").innerHTML = NAV.map(navBtn).join("");
-  $("#rail-nav").innerHTML = NAV.map(([v, l, ic]) => v === "estudar"
-    ? `<button class="rail-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${r.v === v ? 'aria-current="page"' : ""}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
-    : `<button class="rail-it" data-go="${v}" ${r.v === v ? 'aria-current="page"' : ""}>${I[ic]}<span>${l}</span></button>`).join("")
-    + `<button class="rail-it" data-go="ajustes" ${r.v === "ajustes" ? 'aria-current="page"' : ""}>${I.ajustes}<span>Ajustes</span></button>`;
+  $("#rail-nav").innerHTML = [...NAV, ...RAIL_MAIS].map(([v, l, ic]) => v === "estudar"
+    ? `<button class="rail-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
+    : `<button class="rail-it" data-go="${v}" ${cur(v)}>${I[ic]}<span>${l}</span></button>`).join("");
   const syncBtn = syncOn() ? `<button class="icon-btn sync-ic s-${syncState}" data-go="ajustes" aria-label="${esc("Sincronização: " + syncStatusText())}" title="${esc(syncStatusText())}">${I.cloud}</button>` : "";
-  $("#bar-acts").innerHTML = syncBtn + `<button class="icon-btn" data-go="ajustes" aria-label="Ajustes" ${r.v === "ajustes" ? 'aria-current="page"' : ""}>${I.ajustes}</button>`;
+  $("#bar-acts").innerHTML = syncBtn + `<button class="icon-btn" data-go="desempenho" aria-label="Desempenho" title="Desempenho" ${cur("desempenho")}>${I.stats}</button><button class="icon-btn" data-go="ajustes" aria-label="Ajustes" title="Ajustes" ${cur("ajustes")}>${I.ajustes}</button>`;
   $("#rail-sync").innerHTML = syncOn() ? `<button class="rail-sync sync-ic s-${syncState}" data-go="ajustes" title="${esc(syncStatusText())}">${I.cloud}<span>${syncState === "ok" ? "Sincronizado" : syncState === "busy" ? "Sincronizando" : syncState === "offline" ? "Sem internet" : "Sincronização parada"}</span></button>` : "";
 }
 
@@ -811,94 +946,79 @@ document.addEventListener("change", ev => {
 });
 
 /* ================= tela inicial (primeiro uso) ================= */
-const ONB = { passo: 0, perfil: "", dias: null, h: null };
+const ONB = { passo: 0, dias: null, h: null, semEdital: false };
 function renderOnboarding() {
   document.body.classList.add("onb");
-  const c = concurso(), t = today(), n = c.dataProva ? diffD(t, c.dataProva) : null;
+  const t = today();
   $("#nav").innerHTML = ""; $("#rail-nav").innerHTML = ""; $("#bar-acts").innerHTML = ""; $("#rail-sync").innerHTML = "";
   const main = $("#main");
   if (ONB.passo === 0) {
+    const bib = BIBLIOTECA.filter(b => !DB.concursos.some(c => c.id === b.id));
+    const ja = DB.concursos;
     main.innerHTML = `<section class="onb-wrap">
       <div class="onb-mark">${MARCA}</div>
-      <h1 class="onb-h">Seu edital já está aqui.</h1>
-      <p class="lead">O Estudo Fácil divide o edital em tópicos, diz o que estudar a cada dia, cronometra o estudo e agenda as revisões.</p>
-      <div class="onb-ed">
-        <p class="onb-ed-a">${esc(c.orgao)} (${esc(c.sigla)})</p>
-        <p class="onb-ed-b">${esc(c.cargo)}</p>
-        <p class="onb-ed-c">Banca ${esc(c.banca)}. Prova em ${dLonga(c.dataProva)}${n !== null && n >= 0 ? `, daqui a ${plural(n, "dia", "dias")}` : ""}.</p>
+      <h1 class="onb-h">Seu estudo para concursos, organizado.</h1>
+      <p class="lead">Você cadastra o edital e as disciplinas. O Estudo Fácil diz o que estudar a cada dia, cronometra o estudo e agenda as revisões.</p>
+      ${ja.length ? `<div class="aviso ok"><p><b>Já adicionado:</b> ${esc(ja.map(nomeEdital).join(", "))}.</p><button class="btn pri sm" data-act="onb-rotina">Continuar</button></div>` : ""}
+      <h2 class="onb-q">Como quer começar?</h2>
+      <div class="opcoes">
+        ${bib.map(b => `<button class="opcao" data-act="bib-abdi"><span class="op-k">Edital pronto</span><span class="op-n">${esc(b.orgao)} (${esc(b.sigla)})</span><span class="op-d">${esc(b.cargo)}. Banca ${esc(b.banca)}, prova em ${dLonga(b.dataProva)}${b.dataProva >= t ? `, daqui a ${plural(diffD(t, b.dataProva), "dia", "dias")}` : ""}. Já vem com disciplinas, assuntos, pesos e datas.</span></button>`).join("")}
+        <label class="opcao" for="onb-pdf"><span class="op-k">${I.arquivo}PDF do edital</span><span class="op-n">Tenho o edital em PDF</span><span class="op-d">O app lê o arquivo aqui no aparelho e separa disciplinas, assuntos e datas. Você confere antes de salvar.</span></label>
+        <input type="file" id="onb-pdf" accept="application/pdf,.pdf" data-on="pdf" hidden>
+        <button class="opcao" data-act="ed-novo-mao"><span class="op-k">${I.lapis}À mão</span><span class="op-n">Cadastrar o edital</span><span class="op-d">Digite órgão, cargo e data da prova. Depois cole o conteúdo programático ou escolha as disciplinas.</span></button>
+        <button class="opcao" data-act="onb-sem-edital"><span class="op-k">${I.livro}Sem edital</span><span class="op-n">Só minhas disciplinas</span><span class="op-d">Cadastre as disciplinas e os assuntos que vai estudar. O plano do dia usa todos eles. Dá para adicionar um edital depois.</span></button>
       </div>
-      <h2 class="onb-q">Para qual perfil você vai concorrer?</h2>
-      <p class="hint">Os conhecimentos gerais e institucionais são iguais para todos. O perfil define os 20 conhecimentos específicos. Dá para trocar depois.</p>
-      <div class="perfis" role="radiogroup" aria-label="Perfil">
-        ${c.perfis.map(p => `<label class="perfil${ONB.perfil === p.id ? " on" : ""}"><input type="radio" name="onb-perfil" value="${p.id}" ${ONB.perfil === p.id ? "checked" : ""} data-on="onb-perfil">
-          <span class="perfil-n">${esc(p.nome)}</span><span class="perfil-v">${plural(p.vagas, "vaga", "vagas")} e ${p.cr} no cadastro reserva</span></label>`).join("")}
-      </div>
-      <div class="onb-foot">
-        <button class="btn pri lg" data-act="onb-seguir" ${ONB.perfil ? "" : "disabled"}>Continuar</button>
-        <button class="btn link" data-act="onb-conectar">Já uso o Estudo Fácil em outro aparelho</button>
-      </div>
+      <div class="onb-foot"><button class="btn link" data-act="onb-conectar">Já uso o Estudo Fácil em outro aparelho</button></div>
     </section>`;
   } else {
     const dias = ONB.dias || cfg().dias, h = ONB.h ?? cfg().hDia;
-    const p = c.perfis.find(x => x.id === ONB.perfil);
-    const totT = DB.topicos.filter(x => ix().topsByMat.has(x.m)).length + (EDITAL_ABDI.especificos[ONB.perfil] || []).reduce((a, m) => a + m.topicos.length, 0);
-    const fim = c.dataProva ? addD(c.dataProva, -14) : addD(t, 60);
+    const X = ix(), totT = X.tops.length, c = provaProx();
+    const fim = c ? addD(c.dataProva, -14) : addD(t, 60);
     let nd = 0; for (let d = t; d <= fim; d = addD(d, 1)) if (dias.includes(toD(d).getDay())) nd++;
     const porDia = nd ? Math.ceil(totT / nd) : totT;
     main.innerHTML = `<section class="onb-wrap">
-      <button class="btn link back" data-act="onb-voltar">${I.chevL}Perfil</button>
+      <button class="btn link back" data-act="onb-voltar">${I.chevL}Voltar</button>
       <h1 class="onb-h">Sua rotina de estudo</h1>
-      <p class="lead">Com isso o app monta o plano de cada dia até a prova. Você ajusta quando quiser.</p>
+      <p class="lead">Com isso o app monta o plano de cada dia. Você ajusta quando quiser.</p>
       <div class="field"><span class="lbl">Dias em que você estuda</span>
         <div class="dias">${[1, 2, 3, 4, 5, 6, 0].map(d => `<label class="dia"><input type="checkbox" value="${d}" ${dias.includes(d) ? "checked" : ""} data-on="onb-dia"><span>${WD[d]}</span></label>`).join("")}</div></div>
       <div class="field"><span class="lbl">Horas por dia de estudo</span>
         <div class="stepper"><button class="icon-btn boxed" data-act="onb-h" data-d="-0.5" aria-label="Menos meia hora">${I.minus}</button><output id="onb-h">${dec(h)} h</output><button class="icon-btn boxed" data-act="onb-h" data-d="0.5" aria-label="Mais meia hora">${I.plus}</button></div></div>
-      <div class="onb-calc">
-        <p><b>${totT} tópicos</b> no edital do perfil ${esc(p ? p.nome : "")}.</p>
-        <p>Para terminar a teoria até ${dLonga(fim)}, duas semanas antes da prova, o plano sugere <b>${plural(porDia, "tópico novo", "tópicos novos")} por dia</b>, mais as revisões.</p>
-      </div>
-      <div class="onb-foot"><button class="btn pri lg" data-act="onb-fim">Começar a estudar</button></div>
+      <div class="onb-calc">${totT ? `<p><b>${plural(totT, "assunto", "assuntos")}</b> ${X.ativos.length ? `no edital ${esc(X.ativos.map(nomeEdital).join(" e "))}` : "nas suas disciplinas"}.</p>
+        <p>Para terminar a teoria até ${dLonga(fim)}${c ? ", duas semanas antes da prova" : ""}, o plano sugere <b>${plural(porDia, "assunto novo", "assuntos novos")} por dia</b>, mais as revisões.</p>`
+        : `<p>Depois desta etapa, cadastre suas disciplinas e os assuntos de cada uma. O plano do dia começa a partir delas.</p>`}</div>
+      <div class="onb-foot"><button class="btn pri lg" data-act="onb-fim">${totT ? "Começar a estudar" : "Cadastrar disciplinas"}</button></div>
     </section>`;
   }
 }
+/* depois de criar um edital: no primeiro uso segue para a rotina; depois, abre o edital */
+function editalCriado(c, msg) {
+  closeSheet(true);
+  if (!DB.cfg.pronto) { ONB.passo = 1; commit({ quiet: true }); renderOnboarding(); window.scrollTo(0, 0); if (msg) toast(msg); return; }
+  commit({ quiet: true });
+  go("edital/" + c.id);
+  if (msg) toast(msg);
+}
 Object.assign(ON, {
-  "onb-perfil": el => { ONB.perfil = el.value; renderOnboarding(); },
   "onb-dia": () => { ONB.dias = $$('[data-on="onb-dia"]').filter(x => x.checked).map(x => +x.value); if (!ONB.dias.length) ONB.dias = null; renderOnboarding(); }
 });
 Object.assign(ACT, {
-  "onb-seguir": () => { if (!ONB.perfil) return; ONB.passo = 1; renderOnboarding(); window.scrollTo(0, 0); },
+  "onb-rotina": () => { ONB.passo = 1; renderOnboarding(); window.scrollTo(0, 0); },
+  "onb-sem-edital": () => { ONB.semEdital = true; ONB.passo = 1; renderOnboarding(); window.scrollTo(0, 0); },
   "onb-voltar": () => { ONB.passo = 0; renderOnboarding(); },
   "onb-h": el => { ONB.h = clamp((ONB.h ?? cfg().hDia) + +el.dataset.d, 0.5, 14); renderOnboarding(); },
   "onb-conectar": () => connectSheet(),
   "onb-fim": () => {
     const dias = ONB.dias || cfg().dias;
     if (!dias.length) return toast("Escolha pelo menos um dia de estudo.");
-    trocarPerfil(ONB.perfil, true);
     Object.assign(DB.cfg, { dias: dias.slice().sort(), hDia: ONB.h ?? cfg().hDia, pronto: true });
     commit({ quiet: true });
-    history.replaceState({ d: 0 }, "", "#/hoje");
+    const vazio = !ix().tops.length;
+    history.replaceState({ d: 0 }, "", vazio ? "#/disciplinas" : "#/hoje");
     render({ top: true });
-    toast("Pronto. Este é o seu plano de hoje.");
+    if (vazio) materiaSheet(null); else toast("Pronto. Este é o seu plano de hoje.");
   }
 });
-/* troca o perfil do edital ABDI: os específicos do perfil anterior ficam guardados se já tiverem estudo */
-function trocarPerfil(pid, silencioso) {
-  const c = DB.concursos.find(x => x.id === EDITAL_ABDI.id); if (!c) return;
-  const antigos = DB.materias.filter(m => m.c === c.id && m.grupo === "esp");
-  const comEstudo = new Set(DB.sessoes.flatMap(s => s.itens.map(i => i.m)));
-  for (const m of antigos) {
-    if (m.perfil === pid) { delete m.arq; continue; }
-    const usada = comEstudo.has(m.id) || DB.topicos.some(t => t.m === m.id && (t.teoria || t.ult));
-    if (usada) m.arq = true;
-    else { DB.materias = DB.materias.filter(x => x !== m); DB.topicos = DB.topicos.filter(t => t.m !== m.id); }
-  }
-  // completa as matérias do perfil que faltarem (as que já existem mantêm o estudo)
-  const { m: ms, t: ts } = materiasPerfil(pid), tem = new Set(DB.materias.map(x => x.id));
-  for (const m of ms) if (!tem.has(m.id)) { DB.materias.push(m); DB.topicos.push(...ts.filter(t => t.m === m.id)); }
-  c.perfil = pid;
-  if (!silencioso) { commit(); toast(`Perfil alterado para ${(c.perfis.find(p => p.id === pid) || {}).nome}.`); }
-  else VER++;
-}
 
 /* ================= sincronização: janelas ================= */
 function connectSheet() {
@@ -912,7 +1032,7 @@ function connectSheet() {
           <input id="sy-token" type="text" placeholder="ghp_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Chave do GitHub"></li>
         <li><b>Nos outros aparelhos</b><span>Depois de conectar, toque em <b>Outro aparelho</b> para mandar um link para você mesmo, ou cole a mesma chave.</span></li>
       </ol>
-      <p class="hint">Seus tópicos, sessões, revisões e ajustes ficam num gist secreto da sua conta, criptografados com a sua chave. O gist não aparece no seu perfil e só os seus aparelhos conseguem ler.</p>`,
+      <p class="hint">Seus editais, disciplinas, sessões, revisões e ajustes ficam num gist secreto da sua conta, criptografados com a sua chave. O gist não aparece no seu perfil e só os seus aparelhos conseguem ler.</p>`,
     foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn pri" data-ok>Conectar</button>`,
     onMount: s => {
       $("[data-no]", s).onclick = () => closeSheet();
@@ -942,7 +1062,7 @@ function linkSheet() {
 function syncCardHTML() {
   if (!syncOn()) return `<section class="bloco">
     <h2 class="b-h">Usar em vários aparelhos</h2>
-    <p class="hint">Conecte sua conta GitHub e tenha os mesmos tópicos, sessões e revisões no celular, no tablet e no computador. O que você muda num aparelho aparece nos outros, até o cronômetro em andamento.</p>
+    <p class="hint">Conecte sua conta GitHub e tenha os mesmos editais, disciplinas, sessões e revisões no celular, no tablet e no computador. O que você muda num aparelho aparece nos outros, até o cronômetro em andamento.</p>
     <p class="hint">Sem a sincronização, os dados ficam só neste aparelho.</p>
     <div><button class="btn pri" data-act="sync-start">${I.cloud}Ativar sincronização</button></div>
   </section>`;

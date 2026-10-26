@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Estudo Fácil",
   "short_name": "Estudo Fácil",
-  "description": "Controle de estudos para concursos: plano do dia, cronômetro, revisões e edital",
+  "description": "Controle de estudos para concursos: editais, disciplinas, plano do dia, cronômetro e revisões",
   "lang": "pt-BR",
   "start_url": "./#/hoje",
   "scope": "./",
@@ -17,6 +17,6 @@
   ],
   "shortcuts": [
     { "name": "Estudar agora", "url": "./#/estudar", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Edital", "url": "./#/edital", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Editais", "url": "./#/editais", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
