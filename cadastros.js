@@ -636,18 +636,15 @@ Object.assign(ACT, {
 (function boot() {
   aplicarTema();
   try { history.scrollRestoration = "manual"; } catch {}
-  let linkToken = "";
-  const lm = location.hash.match(/^#\/conectar\/(.+)$/);
-  if (lm) { try { linkToken = decodeURIComponent(lm[1]); } catch {} history.replaceState({ d: 0 }, "", "#/ajustes"); }
+  const linkToken = SY.tokenDoLink();
+  if (linkToken) history.replaceState({ d: 0 }, "", "#/ajustes");
   if (!location.hash) history.replaceState({ d: 0 }, "", "#/hoje");
   else if (!history.state) history.replaceState({ d: 0 }, "", location.hash);
   document.getElementById("marca").innerHTML = MARCA;
   document.getElementById("rail-marca").innerHTML = MARCA;
   if (DB.ativa) UI.focoAberto = true;
   render({ top: true });
-  if (linkToken && linkToken !== sync.token) confirmSheet("Conectar este aparelho?", "Os dados deste aparelho se juntam aos da nuvem. Os ajustes passam a ser os da nuvem.", "Conectar", () => connectSync(linkToken), false);
-  else if (linkToken) toast("Este aparelho já está conectado.");
-  else if (syncOn()) syncNow({ quiet: true });
+  SY.iniciar({ token: linkToken, silencioso: true, textoConfirmar: "Os dados deste aparelho se juntam aos da nuvem. Os ajustes passam a ser os da nuvem." });
   let ultimoDia = today();
   setInterval(() => { if (today() !== ultimoDia) { ultimoDia = today(); VER++; agendarRender(); } }, 60000);
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});

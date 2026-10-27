@@ -2,6 +2,13 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
+**Fase de testes** · versão 2.1.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+
+Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
+[`comum/PADRAO.md`](comum/PADRAO.md).
+
+## O que o app faz
+
 - Cadastre editais de três jeitos: prontos da biblioteca (hoje, o Processo Seletivo ABDI 2026), lidos do PDF ou digitados com o conteúdo programático colado
 - Mantenha suas disciplinas e assuntos num só lugar. Eles valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram
 - Informe, em cada edital, as questões e o valor de cada disciplina, as áreas da prova e a nota mínima
@@ -12,14 +19,75 @@ Controle de estudos para concursos, direto no celular e no computador. Você cad
 - Confira o cronograma de cada concurso, com as datas que dependem de você, e leve as datas para a agenda do celular
 - Registre simulados e veja a nota calculada pela regra da prova
 - Compare dois editais e veja quantos assuntos eles têm em comum
-- Use no celular, no tablet e no computador com os mesmos dados: a sincronização guarda tudo criptografado num gist secreto da sua conta GitHub
+- **Use em vários aparelhos (opcional):** os mesmos dados no celular, no tablet e no computador, criptografados num gist secreto da sua conta GitHub
+- **Avalie o app e relate problemas** em Ajustes → Ajude a melhorar
+- Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
 
-App web instalável: no iPhone, abra o endereço no Safari e toque em **Compartilhar → Adicionar à Tela de Início**. No Android, use **Instalar app** no menu do Chrome. Sem a sincronização, os dados ficam só no aparelho; ative em **Ajustes → Usar em vários aparelhos**.
+## Como usar
 
-- `index.html`: estrutura e visual do app
-- `app.js`: dados, sincronização, plano do dia e cronômetro
-- `telas.js`: Hoje, Estudar, Agenda, Desempenho e Ajustes
-- `cadastros.js`: Editais, Disciplinas, biblioteca e leitura de editais
-- `editais.js`: o edital da ABDI na biblioteca (disciplinas, assuntos, cronograma e prova)
-- `leitor-pdf.js`: leitura de editais em PDF, carregada só quando você usa
-- `sw.js` / `manifest.webmanifest` / `icons/`: instalação e uso offline
+Abra o endereço em qualquer navegador, no celular, no tablet ou no computador. Para instalar:
+
+- **iPhone:** no Safari, toque em **Compartilhar → Adicionar à Tela de Início**
+- **Android:** no Chrome, menu **⋮ → Instalar app**
+- **Computador:** ícone de instalar na barra de endereço do Chrome ou do Edge
+
+Sem a sincronização, os dados ficam só no aparelho; ative em **Ajustes → Usar em vários aparelhos**.
+
+## Onde ficam os dados
+
+| Dado | Onde fica |
+|---|---|
+| Editais, disciplinas, sessões, revisões, simulados e ajustes | neste aparelho (armazenamento do navegador, chaves `estudofacil.*`) |
+| Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
+| Editais em PDF | lidos no próprio aparelho; o arquivo não é enviado |
+| Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback` |
+
+A janela **Ajustes → Sobre e privacidade** explica isso para quem usa o app.
+
+## Para desenvolver
+
+O app não tem etapa de build nem dependências: o que está no repositório é o que vai para o ar.
+O Node (22 ou mais novo) só é usado para o servidor local, os testes e a verificação do padrão.
+
+```bash
+npm start                         # abre em http://localhost:8080/estudo-facil/
+npm install                       # primeira vez: instala o Playwright, usado nos testes
+npx playwright install chromium   # primeira vez: baixa o navegador dos testes
+npm test                          # testes do Kit Fácil e do app, sem internet
+npm run verificar                 # padrão do Projeto Integrador, segredos e versão
+```
+
+Os testes simulam o GitHub (sincronização) e o Firebase (avaliações); nada toca nos dados reais.
+O modo sem internet (service worker) só funciona em `https`, ou seja, no endereço publicado.
+Ao mudar a versão, atualize também o `?v=` dos scripts no `index.html`.
+
+## Estrutura
+
+| Arquivo | Conteúdo |
+|---|---|
+| `index.html` | estrutura e visual do app |
+| `app.js` | dados, sincronização, plano do dia e cronômetro |
+| `telas.js` | Hoje, Estudar, Agenda, Desempenho e Ajustes |
+| `cadastros.js` | Editais, Disciplinas, biblioteca e leitura de editais |
+| `editais.js` | o edital da ABDI na biblioteca (disciplinas, assuntos, cronograma e prova) |
+| `leitor-pdf.js` | leitura de editais em PDF, carregada só quando você usa |
+| `comum/` | **Kit Fácil**: avaliação, Sobre e privacidade, tema, motor de sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
+| `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
+| `tests/` | testes do app |
+
+## Serviços externos e configuração
+
+| Serviço | Para quê | Custo | O que configurar |
+|---|---|---|---|
+| GitHub (gist) | sincronização entre aparelhos | gratuito | nada no projeto; cada pessoa usa a própria conta |
+| Firebase (projeto `conta-facil-2c1f9`, compartilhado pelo projeto) | receber as avaliações | plano gratuito | publicar a regra de [`comum/regras-firestore-feedback.txt`](comum/regras-firestore-feedback.txt) |
+| Google Fonts, cdnjs | fontes e leitor de PDF (pdf.js) | gratuito | nada |
+
+## Publicação
+
+GitHub Pages a partir da branch `main`, pasta raiz. Antes de publicar: `npm run verificar` e `npm test`, e confira o app
+no celular e no computador. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
+
+## Uso do código
+
+O código está público durante a fase de testes, sem licença de uso definida: todos os direitos reservados.

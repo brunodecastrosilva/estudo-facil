@@ -17,6 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@500;700&family=Atkinson+Hyperlegible+Next:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="comum/kit-facil.css?v=2.1.0">
 <style>
 /* Papel de caderno, tinta de caneta azul e marca-texto.
    O marca-texto é o único elemento chamativo: marca o que já foi estudado no edital e o botão de estudar. */
@@ -681,6 +682,16 @@ body.com-foco .tabbar{display:none}
 .pz-t small,.dia-l small{color:var(--muted);font-weight:400}
 .agora.boas .ag-k svg{color:var(--hl)}
 .lead .btn.link,.cont-p .btn.link,.hint .btn.link{display:inline;padding:0;min-height:0;font-size:inherit;vertical-align:baseline}
+
+/* ---------- Kit Fácil: componentes comuns do Projeto Integrador, com as cores do Estudo Fácil ---------- */
+:root{
+  --kf-bg:var(--paper); --kf-surface:var(--sheet); --kf-surface-2:var(--sheet-2); --kf-line:var(--rule); --kf-line-2:var(--rule-2);
+  --kf-ink:var(--ink); --kf-muted:var(--muted); --kf-accent:var(--pen); --kf-accent-ink:var(--pen-ink); --kf-accent-soft:var(--pen-soft);
+  --kf-focus:var(--pen); --kf-ok:var(--ok); --kf-ok-soft:var(--ok-soft); --kf-warn:var(--warn); --kf-warn-soft:var(--warn-soft);
+  --kf-bad:var(--bad); --kf-bad-soft:var(--bad-soft); --kf-star:var(--warn-mk); --kf-scrim:var(--scrim); --kf-shadow:var(--shadow-lg);
+  --kf-font:var(--f); --kf-font-display:var(--f); --kf-r-lg:22px; --kf-r-btn:14px; --kf-r-campo:12px;
+}
+.aj .bloco .kf-seg{max-width:420px}
 </style>
 </head>
 <body>
@@ -691,9 +702,10 @@ body.com-foco .tabbar{display:none}
 <div class="foco" id="foco" hidden></div>
 <div id="sheet-root"></div>
 <noscript><p style="padding:24px">O Estudo Fácil precisa de JavaScript ligado para funcionar.</p></noscript>
-<script src="editais.js?v=2.0.0"></script>
-<script src="app.js?v=2.0.0"></script>
-<script src="telas.js?v=2.0.0"></script>
-<script src="cadastros.js?v=2.0.0"></script>
+<script src="comum/kit-facil.js?v=2.1.0"></script>
+<script src="editais.js?v=2.1.0"></script>
+<script src="app.js?v=2.1.0"></script>
+<script src="telas.js?v=2.1.0"></script>
+<script src="cadastros.js?v=2.1.0"></script>
 </body>
 </html>

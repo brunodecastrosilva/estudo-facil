@@ -1,7 +1,9 @@
-// Deixa o app abrir sem internet. Arquivos do app: busca a versão nova primeiro e usa a guardada se estiver offline.
+// Estudo Fácil · uso sem internet (modelo do Projeto Integrador).
+// Arquivos do app: busca a versão nova primeiro e usa a guardada se estiver sem internet.
 // Bibliotecas (fontes e leitor de PDF) têm versão fixa: usa a guardada.
-const CACHE = 'estudo-facil-v2';
-const APP = ['./', './index.html', './editais.js', './app.js', './telas.js', './cadastros.js', './leitor-pdf.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/favicon-32.png'];
+// O cache leva a versão do app (package.json); cada app só apaga as próprias cópias antigas.
+const CACHE = 'estudo-facil-2.1.0';
+const APP = ['./', './index.html', './comum/kit-facil.js', './comum/kit-facil.css', './editais.js', './app.js', './telas.js', './cadastros.js', './leitor-pdf.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/favicon-32.png'];
 const LIBS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', e => {
@@ -20,11 +22,11 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(req).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;
-    }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('./index.html'))));
+    }).catch(() => caches.match(req, { ignoreSearch: true, cacheName: CACHE }).then(r => r || caches.match('./index.html', { cacheName: CACHE }))));
   } else if (LIBS.includes(url.hostname)) {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
       const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return res;
     })));
   }
-  // o resto (API do GitHub da sincronização) passa direto pela rede
+  // o resto (API do GitHub da sincronização, envio de avaliações) passa direto pela rede
 });

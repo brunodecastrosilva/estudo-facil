@@ -611,8 +611,7 @@ VIEWS.ajustes = () => {
     ${syncCardHTML()}
     <section class="bloco">
       <h2 class="b-h">Aparência</h2>
-      <div class="seg" role="group" aria-label="Tema">${[["auto", "Automático"], ["claro", "Claro"], ["escuro", "Escuro"]].map(([k, l]) => `<button data-act="tema" data-t="${k}" aria-pressed="${PREF.tema === k}">${l}</button>`).join("")}</div>
-      <p class="hint">No automático, o app segue o tema do aparelho. Vale só para este aparelho.</p>
+      ${KitFacil.tema.seletorHTML()}
     </section>
     ${instalarHTML()}
     <section class="bloco">
@@ -620,6 +619,10 @@ VIEWS.ajustes = () => {
       <p class="hint">${syncOn() ? "Com a sincronização ligada, seus dados já ficam guardados na nuvem. A cópia é um arquivo extra." : "Seus dados ficam só neste aparelho. Guarde uma cópia de vez em quando, ou ative a sincronização."}</p>
       <div class="btns"><button class="btn ghost sm" data-act="bk-baixar">${I.baixar}Baixar cópia</button><label class="btn ghost sm" for="bk-file">${I.subir}Restaurar cópia</label><input type="file" id="bk-file" accept=".json,application/json" data-on="bk-file" hidden></div>
       <div><button class="btn link sm danger" data-act="apagar-tudo">Apagar todos os dados</button></div>
+    </section>
+    <section class="bloco">
+      <h2 class="b-h">Ajude a melhorar</h2>
+      ${KitFacil.ajudaHTML()}
     </section>
     <p class="versao">Estudo Fácil ${VERSAO}</p>
   </div>`;
@@ -663,7 +666,6 @@ Object.assign(ACT, {
     commit();
   },
   "aj-teoria-auto": () => { cfg().teoriaAte = ""; commit(); },
-  "tema": el => { PREF.tema = el.dataset.t; savePref(); aplicarTema(); render(); },
   "instalar": async () => { const e = INSTALL_EVT; if (!e) return; INSTALL_EVT = null; e.prompt(); try { await e.userChoice; } catch {} render(); },
   "bk-baixar": () => { if (baixar(`estudo-facil-copia-${today()}.json`, new Blob([backupJson()], { type: "application/json" }))) toast("Cópia baixada."); },
   "apagar-tudo": () => confirmSheet("Apagar todos os dados?", `Sessões, revisões, anotações e ajustes deste aparelho${syncOn() ? " e da nuvem" : ""} serão apagados, com editais e disciplinas, e o app volta à tela inicial, como na primeira vez.`, "Apagar tudo", () => {
@@ -674,12 +676,6 @@ Object.assign(ACT, {
 });
 
 /* ================= tema ================= */
-function aplicarTema() {
-  const root = document.documentElement, t = PREF.tema;
-  if (t === "claro") root.setAttribute("data-theme", "light"); else if (t === "escuro") root.setAttribute("data-theme", "dark"); else root.removeAttribute("data-theme");
-  const escuro = t === "escuro" || (t === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
-  $$('meta[name="theme-color"]').forEach(m => m.remove());
-  const m = document.createElement("meta"); m.name = "theme-color"; m.content = escuro ? "#10142A" : "#EDEFF5"; document.head.appendChild(m);
-}
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (PREF.tema === "auto") aplicarTema(); });
+// Kit Fácil: automático, claro ou escuro, guardado em estudofacil.pref (a mesma chave de antes)
+function aplicarTema() { KitFacil.tema.iniciar({ chave: KEY + "pref", cores: { claro: "#EDEFF5", escuro: "#10142A" } }); }
 

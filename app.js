@@ -1,8 +1,9 @@
 /* Estudo Fácil: núcleo do app.
    Dados guardados neste aparelho (localStorage) e, se ligada, sincronização criptografada por um gist secreto
-   na conta GitHub do usuário. Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
+   na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
+   Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.0.0";
+const VERSAO = "2.1.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -228,10 +229,29 @@ function trocarPerfil(c, pid) {
 const BIBLIOTECA = [{ id: EDITAL_ABDI.id, sigla: EDITAL_ABDI.sigla, orgao: EDITAL_ABDI.orgao, cargo: EDITAL_ABDI.cargo, banca: EDITAL_ABDI.banca, dataProva: EDITAL_ABDI.dataProva, perfis: EDITAL_ABDI.perfis }];
 let DB = (() => { const bruto = LS.get("db", null), d = arrumarBanco(bruto); if (bruto && bruto.v === 1) LS.set("db", d); return d; })();
 let VER = 1;
-let sync = { token: "", gistId: "", login: "", lastSync: 0, err: "", st: {}, del: {}, tipOff: false, ...LS.get("sync", {}) };
-const saveSync = () => LS.set("sync", sync);
+/* padrão do Projeto Integrador: avaliação, sobre e privacidade, tema e sincronização vêm do Kit Fácil */
+KitFacil.iniciar({
+  app: "estudo-facil", nome: "Estudo Fácil", versao: VERSAO, icone: "icons/icon-192.png",
+  resumo: "Controle de estudos para concursos: editais, disciplinas, plano do dia, cronômetro, revisões e simulados.",
+  tela: () => route().v, toast: m => toast(m), exemploDados: "os editais, as sessões de estudo e as anotações",
+  privacidade: [
+    "Os editais, as disciplinas, as sessões de estudo, as revisões, os simulados e os ajustes ficam guardados neste aparelho.",
+    "Os editais em PDF são lidos aqui no aparelho: o arquivo não é enviado para lugar nenhum.",
+  ],
+});
+const SY = KitFacil.sync.criar({
+  app: "estudo-facil", nome: "Estudo Fácil", chave: KEY + "sync", dados: "os mesmos editais, disciplinas, sessões e revisões",
+  carimbar: () => stampAll(), aplicar: R => applyRemote(R), pacote: () => syncPayload(),
+  mesmo: (out, remote) => canon(out) === canon({ v: remote.v, cfg: remote.cfg, ativa: remote.ativa ?? null, ...Object.fromEntries(COLLS.map(c => [c, remote[c]])), st: remote.st, del: remote.del }),
+  redesenhar: () => render(),
+  aoEstado: s => pintarSync(s),
+  ocupado: () => busyTyping(),
+});
+const sync = SY.estado;
+const saveSync = () => SY.salvar();
 let PREF = { tema: "auto", ...LS.get("pref", {}) };
-const savePref = () => LS.set("pref", PREF);
+// o tema é escolhido pelo Kit Fácil (mesma chave); aqui ficam as outras preferências do aparelho
+const savePref = () => { PREF.tema = KitFacil.tema.valor; LS.set("pref", PREF); };
 const cfg = () => DB.cfg;
 
 /* Cada alteração ganha a hora em que aconteceu, por registro (e por campo, nos ajustes).
@@ -274,18 +294,22 @@ function agendarRender() { if (renderQ) return; renderQ = true; requestAnimation
 /* outra aba (ou o app instalado aberto junto com o navegador) mudou os dados */
 window.addEventListener("storage", e => {
   if (e.key === KEY + "db") { DB = arrumarBanco(LS.get("db", null)); snapAll(); VER++; agendarRender(); }
-  if (e.key === KEY + "sync") { sync = { ...sync, ...LS.get("sync", {}) }; }
 });
 
 /* ================= sincronização entre aparelhos ================= */
-const SYNC_FILE = "estudo-facil.json";
-const TOKEN_URL = "https://github.com/settings/tokens/new?scopes=gist&description=Estudo%20F%C3%A1cil";
-let syncTimer = null, syncBusy = null, syncAgain = false, syncKey = null, pendingRR = false;
-let syncState = sync.err ? (sync.err === "offline" ? "offline" : "error") : "ok";
-const syncOn = () => !!sync.token;
-const canon = v => JSON.stringify(v, (k, x) => x && typeof x === "object" && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, key) => (o[key] = x[key], o), {}) : x);
-function scheduleSync(ms = 2500) { if (!syncOn()) return; clearTimeout(syncTimer); syncTimer = setTimeout(() => syncNow(), ms); }
-
+// O motor (conexão, criptografia, gist, avisos e telas) é o do Kit Fácil, comum aos apps do projeto. O arquivo no gist
+// continua o mesmo (estudo-facil.json, mesmo formato), então aparelhos com a versão anterior seguem sincronizando.
+// Aqui fica só a regra do Estudo Fácil para juntar os dados.
+const syncOn = () => SY.ligada();
+const scheduleSync = ms => SY.agendar(ms);
+const syncNow = opts => SY.agora(opts);
+const syncStatusText = () => SY.texto();
+const canon = KitFacil.canon;
+const busyTyping = () => !!$("#sheet-root").innerHTML || (document.activeElement && document.activeElement.matches("input,textarea,select"));
+function pintarSync(s) {
+  $$(".sync-ic").forEach(b => { b.classList.remove("s-ok", "s-busy", "s-offline", "s-error"); b.classList.add("s-" + s); b.setAttribute("aria-label", "Sincronização: " + SY.texto()); b.title = SY.texto(); });
+  const r = $(".rail-sync span"); if (r) r.textContent = SY.rotuloCurto();
+}
 // junta duas listas por id; a versão mais recente de cada registro vence
 function mergeList(L, R, lt, rt, del, onRemote) {
   const rm = new Map(R.map(x => [x.id, x])), used = new Set(), out = [];
@@ -332,6 +356,10 @@ function applyRemote(R) {
     for (const id of antes) if (!DB.materias.some(m => m.id === id)) { del["materias:" + id] = agora; delete st["materias:" + id]; }
     for (const id of topsAntes) if (!DB.topicos.some(t => t.id === id)) { del["topicos:" + id] = agora; delete st["topicos:" + id]; }
   }
+  for (const c of COLLS) {
+    const vivos = new Set(DB[c].map(r => r.id));
+    for (const k of Object.keys(st)) if (k.startsWith(c + ":") && !vivos.has(k.slice(c.length + 1))) delete st[k];
+  }
   sync.st = st; sync.del = del;
   persist(); snapAll(); saveSync(); VER++;
   return antes !== canon(dadosSync());
@@ -339,166 +367,7 @@ function applyRemote(R) {
 const dadosSync = () => { const o = { cfg: DB.cfg, ativa: DB.ativa }; for (const c of COLLS) o[c] = DB[c]; return o; };
 const syncPayload = () => ({ v: 2, ...dadosSync(), st: sync.st, del: sync.del });
 
-// criptografia: a chave sai do código de acesso do GitHub, que só os aparelhos do usuário conhecem
-const b64 = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
-const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-async function cryptoKey() {
-  if (syncKey && syncKey.t === sync.token) return syncKey.k;
-  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(sync.token), "PBKDF2", false, ["deriveKey"]);
-  const k = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: new TextEncoder().encode("estudo-facil:" + (sync.login || "").toLowerCase()), iterations: 150000, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-  syncKey = { t: sync.token, k };
-  return k;
-}
-async function seal(obj) {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const data = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await cryptoKey(), new TextEncoder().encode(JSON.stringify(obj)));
-  return JSON.stringify({ app: "estudo-facil", v: 1, enc: "AES-GCM", iv: b64(iv), data: b64(new Uint8Array(data)) });
-}
-async function unseal(text) {
-  const j = JSON.parse(text);
-  if (j.app !== "estudo-facil" || !j.data) throw Object.assign(new Error("formato"), { code: "format" });
-  try {
-    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(j.iv) }, await cryptoKey(), unb64(j.data));
-    return JSON.parse(new TextDecoder().decode(plain));
-  } catch { throw Object.assign(new Error("chave"), { code: "key" }); }
-}
-async function gh(path, opt = {}, token = sync.token) {
-  let r;
-  try {
-    r = await fetch("https://api.github.com" + path, { cache: "no-store", ...opt,
-      headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, ...(opt.body ? { "Content-Type": "application/json" } : {}) } });
-  } catch { throw Object.assign(new Error("offline"), { code: "offline" }); }
-  if (r.status === 401) throw Object.assign(new Error("auth"), { code: "auth" });
-  if (r.status === 404) throw Object.assign(new Error("404"), { code: "404" });
-  if (!r.ok) throw Object.assign(new Error("http " + r.status), { code: r.status === 403 ? "scope" : "http" });
-  return { json: await r.json(), headers: r.headers };
-}
-async function findGist() {
-  for (let page = 1; page <= 10; page++) {
-    const { json } = await gh(`/gists?per_page=100&page=${page}`);
-    const g = json.find(x => x.files && x.files[SYNC_FILE]);
-    if (g) return g.id;
-    if (json.length < 100) return "";
-  }
-  return "";
-}
-async function readRemote() {
-  const { json } = await gh("/gists/" + sync.gistId);
-  const f = json.files && json.files[SYNC_FILE];
-  if (!f) throw Object.assign(new Error("404"), { code: "404" });
-  let text = f.content;
-  if (f.truncated) { try { text = await (await fetch(f.raw_url, { cache: "no-store" })).text(); } catch { throw Object.assign(new Error("offline"), { code: "offline" }); } }
-  return unseal(text);
-}
-async function writeRemote(obj) {
-  const files = { [SYNC_FILE]: { content: await seal(obj) } };
-  if (sync.gistId) {
-    try { await gh("/gists/" + sync.gistId, { method: "PATCH", body: JSON.stringify({ files }) }); return; }
-    catch (e) { if (e.code !== "404") throw e; }
-  }
-  const { json } = await gh("/gists", { method: "POST", body: JSON.stringify({ description: "Estudo Fácil · dados do app, criptografados (não apague)", public: false, files }) });
-  sync.gistId = json.id;
-}
-function syncNow(opts = {}) {
-  if (!syncOn()) return Promise.resolve(false);
-  if (syncBusy) { syncAgain = true; return syncBusy; }
-  clearTimeout(syncTimer);
-  stampAll();
-  syncBusy = (async () => {
-    setSyncState("busy");
-    let changed = false, ok = false;
-    try {
-      if (!sync.gistId) sync.gistId = await findGist();
-      let remote = null;
-      if (sync.gistId) {
-        try { remote = await readRemote(); }
-        catch (e) {
-          if (e.code === "404") sync.gistId = "";
-          // chave nova (a antiga venceu): a nuvem é regravada com os dados deste aparelho
-          else if (e.code === "key" || e.code === "format") remote = null;
-          else throw e;
-        }
-      }
-      if (remote) changed = applyRemote(remote);
-      const out = syncPayload();
-      if (!remote || canon(out) !== canon({ v: remote.v, cfg: remote.cfg, ativa: remote.ativa ?? null, ...Object.fromEntries(COLLS.map(c => [c, remote[c]])), st: remote.st, del: remote.del })) await writeRemote(out);
-      sync.lastSync = Date.now(); sync.err = ""; ok = true;
-      setSyncState("ok");
-    } catch (e) {
-      sync.err = e.code || "http";
-      setSyncState(sync.err === "offline" ? "offline" : "error");
-      if (opts.manual) toast(syncErrText());
-    }
-    saveSync();
-    if (changed) afterRemoteChange(opts.quiet);
-    return ok;
-  })();
-  return syncBusy.finally(() => { syncBusy = null; if (syncAgain) { syncAgain = false; scheduleSync(400); } });
-}
-const busyTyping = () => !!$("#sheet-root").innerHTML || (document.activeElement && document.activeElement.matches("input,textarea,select"));
-function afterRemoteChange(quiet) {
-  if (busyTyping()) { pendingRR = true; return; }
-  pendingRR = false; render();
-  if (!quiet) toast("Atualizado com seus outros aparelhos.");
-}
-setInterval(() => { if (pendingRR && !busyTyping()) afterRemoteChange(true); }, 1500);
-function syncErrText() {
-  return { offline: "Sem internet agora. Sincroniza quando a conexão voltar.", auth: "A chave do GitHub não vale mais. Crie uma nova e cole em Ajustes, Sincronização.",
-    scope: "A chave do GitHub não tem a permissão gist. Crie outra marcando gist." }[sync.err] || "Não foi possível sincronizar agora. Tente de novo em instantes.";
-}
-function agoTxt(ts) {
-  const m = Math.round((Date.now() - ts) / 6e4);
-  if (m < 1) return "agora mesmo";
-  if (m < 60) return `há ${m} min`;
-  const d = new Date(ts), hm = `${pad(d.getHours())}h${pad(d.getMinutes())}`;
-  return ymd(d) === today() ? `hoje às ${hm}` : `em ${brs(ymd(d))} às ${hm}`;
-}
-function syncStatusText() {
-  if (syncState === "busy") return "Sincronizando…";
-  if (syncState !== "ok") return syncErrText();
-  return sync.lastSync ? `Tudo sincronizado, ${agoTxt(sync.lastSync)}.` : "Conectado.";
-}
-function setSyncState(s) {
-  syncState = s;
-  $$(".sync-ic").forEach(b => { b.className = "icon-btn sync-ic s-" + s; b.setAttribute("aria-label", "Sincronização: " + syncStatusText()); b.title = syncStatusText(); });
-  const t = $("#sync-status"); if (t) { t.textContent = syncStatusText(); t.classList.toggle("bad", s === "error"); }
-}
-/* chave já usada pelo Elétrica Fácil neste aparelho (os apps dividem o mesmo endereço) */
-function chaveIrma() {
-  try { const s = JSON.parse(localStorage.getItem("eletricafacil.sync") || "null"); if (s && s.token && s.login) return { token: s.token, login: s.login, app: "Elétrica Fácil" }; } catch {}
-  return null;
-}
-async function connectSync(token) {
-  token = String(token || "").trim().replace(/\s/g, "");
-  if (!/^(ghp_|github_pat_|gho_)\w{20,}$/.test(token)) { toast("Essa não parece uma chave do GitHub. Ela começa com ghp_."); return false; }
-  let login = "";
-  try {
-    const { json, headers } = await gh("/user", {}, token);
-    const scopes = headers.get("x-oauth-scopes");
-    if (scopes !== null && !/\bgist\b/.test(scopes)) { toast("Essa chave não tem a permissão gist. Crie outra marcando gist."); return false; }
-    login = json.login || "";
-  } catch (e) {
-    toast(e.code === "offline" ? "Sem internet. Conecte quando estiver on-line." : "O GitHub não aceitou essa chave. Confira se copiou inteira.");
-    return false;
-  }
-  const same = sync.login && sync.login.toLowerCase() === login.toLowerCase();
-  // trocar a chave na mesma conta mantém o histórico; outra conta começa do zero
-  sync = { ...sync, token, login, err: "", ...(same ? {} : { gistId: "", lastSync: 0 }) };
-  syncKey = null; saveSync();
-  const had = sync.lastSync;
-  const ok = await syncNow({ quiet: true });
-  if (ok) toast(had ? "Chave atualizada." : "Sincronização ligada. Seus aparelhos agora têm os mesmos dados.");
-  else toast(syncErrText());
-  render();
-  return true;
-}
-document.addEventListener("visibilitychange", () => {
-  if (!syncOn()) return;
-  if (document.visibilityState === "visible") { if (Date.now() - (sync.lastSync || 0) > 10000) syncNow({ quiet: false }); }
-  else if (syncTimer) syncNow();
-});
-window.addEventListener("online", () => { if (syncOn()) syncNow(); });
-setInterval(() => { if (syncOn() && document.visibilityState === "visible" && !syncBusy) syncNow(); }, 60000);
+
 snapAll();
 
 /* ================= índices derivados ================= */
@@ -903,9 +772,9 @@ function renderShell(r) {
   $("#rail-nav").innerHTML = [...NAV, ...RAIL_MAIS].map(([v, l, ic]) => v === "estudar"
     ? `<button class="rail-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
     : `<button class="rail-it" data-go="${v}" ${cur(v)}>${I[ic]}<span>${l}</span></button>`).join("");
-  const syncBtn = syncOn() ? `<button class="icon-btn sync-ic s-${syncState}" data-go="ajustes" aria-label="${esc("Sincronização: " + syncStatusText())}" title="${esc(syncStatusText())}">${I.cloud}</button>` : "";
+  const syncBtn = syncOn() ? `<button class="icon-btn sync-ic s-${SY.situacao()}" data-go="ajustes" aria-label="${esc("Sincronização: " + syncStatusText())}" title="${esc(syncStatusText())}">${I.cloud}</button>` : "";
   $("#bar-acts").innerHTML = syncBtn + `<button class="icon-btn" data-go="desempenho" aria-label="Desempenho" title="Desempenho" ${cur("desempenho")}>${I.stats}</button><button class="icon-btn" data-go="ajustes" aria-label="Ajustes" title="Ajustes" ${cur("ajustes")}>${I.ajustes}</button>`;
-  $("#rail-sync").innerHTML = syncOn() ? `<button class="rail-sync sync-ic s-${syncState}" data-go="ajustes" title="${esc(syncStatusText())}">${I.cloud}<span>${syncState === "ok" ? "Sincronizado" : syncState === "busy" ? "Sincronizando" : syncState === "offline" ? "Sem internet" : "Sincronização parada"}</span></button>` : "";
+  $("#rail-sync").innerHTML = syncOn() ? `<button class="rail-sync sync-ic s-${SY.situacao()}" data-go="ajustes" title="${esc(syncStatusText())}">${I.cloud}<span>${SY.rotuloCurto()}</span></button>` : "";
 }
 
 /* o relógio da sessão atualiza só os números, sem redesenhar a tela */
@@ -1007,7 +876,7 @@ Object.assign(ACT, {
   "onb-sem-edital": () => { ONB.semEdital = true; ONB.passo = 1; renderOnboarding(); window.scrollTo(0, 0); },
   "onb-voltar": () => { ONB.passo = 0; renderOnboarding(); },
   "onb-h": el => { ONB.h = clamp((ONB.h ?? cfg().hDia) + +el.dataset.d, 0.5, 14); renderOnboarding(); },
-  "onb-conectar": () => connectSheet(),
+  "onb-conectar": () => SY.dialogoConectar(),
   "onb-fim": () => {
     const dias = ONB.dias || cfg().dias;
     if (!dias.length) return toast("Escolha pelo menos um dia de estudo.");
@@ -1020,67 +889,15 @@ Object.assign(ACT, {
   }
 });
 
-/* ================= sincronização: janelas ================= */
-function connectSheet() {
-  const irma = chaveIrma();
-  openSheet({ title: "Usar em vários aparelhos", tall: true,
-    body: `${irma && !syncOn() ? `<div class="aviso ok"><p><b>Você já sincroniza o ${esc(irma.app)} neste aparelho.</b> Dá para usar a mesma chave, da conta @${esc(irma.login)}. Os dados do Estudo Fácil ficam num arquivo separado.</p><button class="btn pri sm" data-act="sync-irma">Usar a mesma chave</button></div>` : ""}
-      <ol class="passos">
-        <li><b>Crie uma chave de acesso no GitHub</b><span>Na página que vai abrir, em <b>Expiration</b> escolha <b>No expiration</b>. Deixe marcada só a opção <b>gist</b> e toque em <b>Generate token</b>, no fim da página.</span>
-          <a class="btn ghost sm" href="${TOKEN_URL}" target="_blank" rel="noopener">${I.externo}Abrir o GitHub</a></li>
-        <li><b>Copie a chave e cole aqui</b><span>Ela começa com <b>ghp_</b>.</span>
-          <input id="sy-token" type="text" placeholder="ghp_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Chave do GitHub"></li>
-        <li><b>Nos outros aparelhos</b><span>Depois de conectar, toque em <b>Outro aparelho</b> para mandar um link para você mesmo, ou cole a mesma chave.</span></li>
-      </ol>
-      <p class="hint">Seus editais, disciplinas, sessões, revisões e ajustes ficam num gist secreto da sua conta, criptografados com a sua chave. O gist não aparece no seu perfil e só os seus aparelhos conseguem ler.</p>`,
-    foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn pri" data-ok>Conectar</button>`,
-    onMount: s => {
-      $("[data-no]", s).onclick = () => closeSheet();
-      const ok = $("[data-ok]", s), inp = $("#sy-token", s);
-      const goC = async v => { ok.disabled = true; ok.textContent = "Conectando…"; if (await connectSync(v ?? inp.value)) { closeSheet(true); if (!DB.cfg.pronto) render(); } else { ok.disabled = false; ok.textContent = "Conectar"; } };
-      ok.onclick = () => goC();
-      inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); goC(); } });
-      const ib = $('[data-act="sync-irma"]', s); if (ib) ib.onclick = e => { e.stopPropagation(); goC(irma.token); };
-    } });
-}
-function linkSheet() {
-  const link = `${location.origin}${location.pathname}#/conectar/${encodeURIComponent(sync.token)}`;
-  openSheet({ title: "Conectar outro aparelho",
-    body: `<p class="lead">Mande este link para você mesmo e abra no outro aparelho. Ele entra com os mesmos dados.</p>
-      <div class="aviso bad"><p><b>O link dá acesso aos seus dados de estudo.</b> Não envie para outras pessoas.</p></div>
-      <p class="hint">Se no outro aparelho o app estiver instalado na tela de início, abra o app, vá em Ajustes, Sincronização, e cole a chave.</p>`,
-    foot: `<button class="btn ghost" data-k>${I.copiar}Copiar chave</button><button class="btn pri" data-l>${I.link}Enviar link</button>`,
-    onMount: s => {
-      $("[data-k]", s).onclick = () => copyText(sync.token, "Chave copiada.");
-      $("[data-l]", s).onclick = async () => {
-        const text = "Link para conectar o Estudo Fácil neste aparelho: " + link;
-        if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
-        copyText(link, "Link copiado. Cole numa conversa com você mesmo.");
-      };
-    } });
-}
+/* ================= sincronização: cartão dos Ajustes (janelas e textos do Kit Fácil) ================= */
 function syncCardHTML() {
-  if (!syncOn()) return `<section class="bloco">
-    <h2 class="b-h">Usar em vários aparelhos</h2>
-    <p class="hint">Conecte sua conta GitHub e tenha os mesmos editais, disciplinas, sessões e revisões no celular, no tablet e no computador. O que você muda num aparelho aparece nos outros, até o cronômetro em andamento.</p>
-    <p class="hint">Sem a sincronização, os dados ficam só neste aparelho.</p>
-    <div><button class="btn pri" data-act="sync-start">${I.cloud}Ativar sincronização</button></div>
-  </section>`;
+  if (!syncOn()) return `<section class="bloco"><h2 class="b-h">Usar em vários aparelhos</h2>${SY.cartaoHTML()}</section>`;
   return `<section class="bloco">
     <div class="b-hr"><h2 class="b-h">Sincronização</h2>${sync.err === "auth" ? '<span class="tag bad">Parada</span>' : `<span class="tag ok">${I.check}Ligada</span>`}</div>
-    <p class="hint">Conta GitHub <b>@${esc(sync.login)}</b>.</p>
-    <p class="hint${syncState === "error" ? " bad" : ""}" id="sync-status">${esc(syncStatusText())}</p>
-    ${sync.err === "auth" ? `<div><button class="btn pri" data-act="sync-start">Colar chave nova</button></div>` : ""}
-    <div class="btns"><button class="btn ghost" data-act="sync-agora">Sincronizar agora</button><button class="btn ghost" data-act="sync-link">${I.celular}Outro aparelho</button></div>
-    <div><button class="btn link muted" data-act="sync-off">Desconectar este aparelho</button></div>
+    ${SY.cartaoHTML()}
   </section>`;
 }
 Object.assign(ACT, {
-  "sync-start": () => connectSheet(),
-  "sync-agora": async () => { if (await syncNow({ manual: true, quiet: true })) toast("Tudo sincronizado."); },
-  "sync-link": () => linkSheet(),
-  "sync-off": () => confirmSheet("Desconectar este aparelho?", "Os dados continuam neste aparelho e na nuvem, mas as mudanças deixam de passar de um para o outro.", "Desconectar", () => {
-    sync = { ...sync, token: "", gistId: "", lastSync: 0, err: "" }; syncKey = null; saveSync(); render(); toast("Aparelho desconectado.");
-  }),
+  "sync-start": () => SY.dialogoConectar(),
   "sync-dica-off": () => { sync.tipOff = true; saveSync(); render(); }
 });
