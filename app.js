@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.1.0";
+const VERSAO = "2.2.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -234,6 +234,16 @@ KitFacil.iniciar({
   app: "estudo-facil", nome: "Estudo Fácil", versao: VERSAO, icone: "icons/icon-192.png",
   resumo: "Controle de estudos para concursos: editais, disciplinas, plano do dia, cronômetro, revisões e simulados.",
   tela: () => route().v, toast: m => toast(m), exemploDados: "os editais, as sessões de estudo e as anotações",
+  abrirAjustes: secao => {
+    if (route().v !== "ajustes") return go("ajustes");
+    if (secao) return;
+    // a engrenagem de novo fecha os Ajustes (tirando também a guia aberta, no celular)
+    const st = history.state || {};
+    if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
+  },
+  emAjustes: () => route().v === "ajustes",
+  copia: { descricao: "Baixe um arquivo com os editais, as disciplinas, as sessões, as revisões e os ajustes.", baixar: () => KitFacil.copia.baixar({ v: 2, ...dadosSync() }, 2), restaurar: f => restaurarCopiaEstudo(f) },
+  textos: { notificacoes: "O Estudo Fácil não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto; no fim do tempo de estudo, o app toca um som e vibra (se você deixar ligado abaixo)." },
   privacidade: [
     "Os editais, as disciplinas, as sessões de estudo, as revisões, os simulados e os ajustes ficam guardados neste aparelho.",
     "Os editais em PDF são lidos aqui no aparelho: o arquivo não é enviado para lugar nenhum.",
@@ -244,7 +254,6 @@ const SY = KitFacil.sync.criar({
   carimbar: () => stampAll(), aplicar: R => applyRemote(R), pacote: () => syncPayload(),
   mesmo: (out, remote) => canon(out) === canon({ v: remote.v, cfg: remote.cfg, ativa: remote.ativa ?? null, ...Object.fromEntries(COLLS.map(c => [c, remote[c]])), st: remote.st, del: remote.del }),
   redesenhar: () => render(),
-  aoEstado: s => pintarSync(s),
   ocupado: () => busyTyping(),
 });
 const sync = SY.estado;
@@ -306,10 +315,6 @@ const syncNow = opts => SY.agora(opts);
 const syncStatusText = () => SY.texto();
 const canon = KitFacil.canon;
 const busyTyping = () => !!$("#sheet-root").innerHTML || (document.activeElement && document.activeElement.matches("input,textarea,select"));
-function pintarSync(s) {
-  $$(".sync-ic").forEach(b => { b.classList.remove("s-ok", "s-busy", "s-offline", "s-error"); b.classList.add("s-" + s); b.setAttribute("aria-label", "Sincronização: " + SY.texto()); b.title = SY.texto(); });
-  const r = $(".rail-sync span"); if (r) r.textContent = SY.rotuloCurto();
-}
 // junta duas listas por id; a versão mais recente de cada registro vence
 function mergeList(L, R, lt, rt, del, onRemote) {
   const rm = new Map(R.map(x => [x.id, x])), used = new Set(), out = [];
@@ -654,6 +659,7 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 let audioCtx = null;
 function unlockAudio() { try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch {} }
 function beep() {
+  if (PREF.alarme === false) return; // Ajustes → Notificações: som e vibração no fim do tempo
   try {
     unlockAudio(); const t0 = audioCtx.currentTime;
     for (let i = 0; i < 3; i++) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination); g.gain.setValueAtTime(.0001, t0 + i * .45); g.gain.exponentialRampToValueAtTime(.3, t0 + i * .45 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + i * .45 + .35); o.start(t0 + i * .45); o.stop(t0 + i * .45 + .4); }
@@ -728,7 +734,7 @@ document.addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" &&
 const UI = { pendingRender: false, alarme: 0, focoAberto: false, edTab: "conteudo", edAberta: new Set(), dsPer: "semana", dsNav: today(), cal: { mes: today().slice(0, 8) + "01", sel: today() }, busca: "", hLim: 30 };
 const VIEWS = {};
 const NAV = [["hoje", "Hoje", "hoje"], ["editais", "Editais", "edital"], ["estudar", "Estudar", "timer"], ["disciplinas", "Disciplinas", "livro"], ["agenda", "Agenda", "agenda"]];
-const RAIL_MAIS = [["desempenho", "Desempenho", "stats"], ["ajustes", "Ajustes", "ajustes"]];
+const RAIL_MAIS = [["desempenho", "Desempenho", "stats"]]; // Ajustes abre pela engrenagem do topo, igual nos três apps
 const ABA = { edital: "editais" };
 function route() {
   const h = decodeURIComponent(location.hash.replace(/^#\/?/, "")).split("/");
@@ -765,16 +771,18 @@ function renderShell(r) {
   const a = DB.ativa, aba = ABA[r.v] || r.v;
   const cur = v => aba === v ? 'aria-current="page"' : "";
   const navBtn = ([v, l, ic]) => {
-    if (v === "estudar") return `<button class="nav-it nav-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}><span class="nav-fab">${a ? I.timer : I.play}</span><span class="nav-l" ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : l}</span></button>`;
-    return `<button class="nav-it" data-go="${v}" ${cur(v)}>${I[ic]}<span class="nav-l">${l}</span></button>`;
+    if (v === "estudar") return `<button class="kf-nav-it nav-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}><span class="nav-fab">${a ? I.timer : I.play}</span><span class="kf-nav-l" ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : l}</span></button>`;
+    return `<button class="kf-nav-it" data-go="${v}" ${cur(v)}><span class="kf-nav-ic">${I[ic]}</span><span class="kf-nav-l">${l}</span></button>`;
   };
   $("#nav").innerHTML = NAV.map(navBtn).join("");
   $("#rail-nav").innerHTML = [...NAV, ...RAIL_MAIS].map(([v, l, ic]) => v === "estudar"
-    ? `<button class="rail-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
-    : `<button class="rail-it" data-go="${v}" ${cur(v)}>${I[ic]}<span>${l}</span></button>`).join("");
-  const syncBtn = syncOn() ? `<button class="icon-btn sync-ic s-${SY.situacao()}" data-go="ajustes" aria-label="${esc("Sincronização: " + syncStatusText())}" title="${esc(syncStatusText())}">${I.cloud}</button>` : "";
-  $("#bar-acts").innerHTML = syncBtn + `<button class="icon-btn" data-go="desempenho" aria-label="Desempenho" title="Desempenho" ${cur("desempenho")}>${I.stats}</button><button class="icon-btn" data-go="ajustes" aria-label="Ajustes" title="Ajustes" ${cur("ajustes")}>${I.ajustes}</button>`;
-  $("#rail-sync").innerHTML = syncOn() ? `<button class="rail-sync sync-ic s-${SY.situacao()}" data-go="ajustes" title="${esc(syncStatusText())}">${I.cloud}<span>${SY.rotuloCurto()}</span></button>` : "";
+    ? `<button class="kf-trilho-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
+    : `<button class="kf-trilho-it" data-go="${v}" ${cur(v)}>${I[ic]}<span>${l}</span></button>`).join("");
+  // ação própria do Estudo Fácil na barra de cima (no computador, Desempenho fica no trilho)
+  $("#bar-acts").innerHTML = `<button class="icon-btn" data-go="desempenho" aria-label="Desempenho" title="Desempenho" ${cur("desempenho")}>${I.stats}</button>`;
+  // área superior direita padronizada: Ajustes, nuvem e balão
+  if (!$("#topo .kf-topo")) $("#topo").innerHTML = KitFacil.topo.html({ ajustes: true });
+  KitFacil.topo.atualizar();
 }
 
 /* o relógio da sessão atualiza só os números, sem redesenhar a tela */
@@ -819,7 +827,7 @@ const ONB = { passo: 0, dias: null, h: null, semEdital: false };
 function renderOnboarding() {
   document.body.classList.add("onb");
   const t = today();
-  $("#nav").innerHTML = ""; $("#rail-nav").innerHTML = ""; $("#bar-acts").innerHTML = ""; $("#rail-sync").innerHTML = "";
+  $("#nav").innerHTML = ""; $("#rail-nav").innerHTML = ""; $("#bar-acts").innerHTML = "";
   const main = $("#main");
   if (ONB.passo === 0) {
     const bib = BIBLIOTECA.filter(b => !DB.concursos.some(c => c.id === b.id));
@@ -889,14 +897,7 @@ Object.assign(ACT, {
   }
 });
 
-/* ================= sincronização: cartão dos Ajustes (janelas e textos do Kit Fácil) ================= */
-function syncCardHTML() {
-  if (!syncOn()) return `<section class="bloco"><h2 class="b-h">Usar em vários aparelhos</h2>${SY.cartaoHTML()}</section>`;
-  return `<section class="bloco">
-    <div class="b-hr"><h2 class="b-h">Sincronização</h2>${sync.err === "auth" ? '<span class="tag bad">Parada</span>' : `<span class="tag ok">${I.check}Ligada</span>`}</div>
-    ${SY.cartaoHTML()}
-  </section>`;
-}
+/* ================= sincronização: atalhos (as janelas e os textos são do Kit Fácil) ================= */
 Object.assign(ACT, {
   "sync-start": () => SY.dialogoConectar(),
   "sync-dica-off": () => { sync.tipOff = true; saveSync(); render(); }

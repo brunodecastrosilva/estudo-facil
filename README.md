@@ -2,7 +2,7 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
-**Fase de testes** · versão 2.1.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+**Fase de testes** · versão 2.2.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -20,7 +20,8 @@ Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fá
 - Registre simulados e veja a nota calculada pela regra da prova
 - Compare dois editais e veja quantos assuntos eles têm em comum
 - **Use em vários aparelhos (opcional):** os mesmos dados no celular, no tablet e no computador, criptografados num gist secreto da sua conta GitHub
-- **Avalie o app e relate problemas** em Ajustes → Ajude a melhorar
+- **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
+- **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
 - Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
 
 ## Como usar
@@ -31,7 +32,7 @@ Abra o endereço em qualquer navegador, no celular, no tablet ou no computador. 
 - **Android:** no Chrome, menu **⋮ → Instalar app**
 - **Computador:** ícone de instalar na barra de endereço do Chrome ou do Edge
 
-Sem a sincronização, os dados ficam só no aparelho; ative em **Ajustes → Usar em vários aparelhos**.
+Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alto da tela (ou vá em **Ajustes → Sincronização e armazenamento**).
 
 ## Onde ficam os dados
 
@@ -42,7 +43,7 @@ Sem a sincronização, os dados ficam só no aparelho; ative em **Ajustes → Us
 | Editais em PDF | lidos no próprio aparelho; o arquivo não é enviado |
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback` |
 
-A janela **Ajustes → Sobre e privacidade** explica isso para quem usa o app.
+A guia **Ajustes → Privacidade e segurança** explica isso para quem usa o app.
 
 ## Para desenvolver
 
@@ -61,6 +62,17 @@ Os testes simulam o GitHub (sincronização) e o Firebase (avaliações); nada t
 O modo sem internet (service worker) só funciona em `https`, ou seja, no endereço publicado.
 Ao mudar a versão, atualize também o `?v=` dos scripts no `index.html`.
 
+## Interface
+
+Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
+
+- **Alto da tela, à direita:** Ajustes, nuvem da sincronização e balão de avaliação, nessa ordem. À esquerda deles,
+  a ação própria do app (Desempenho). No celular estreito (menos de 400 px), a marca mostra só o ícone
+- **Navegação:** Hoje, Editais, Estudar, Disciplinas e Agenda na barra de baixo (celular e tablet); no computador,
+  menu lateral com Desempenho
+- **Ajustes:** as oito guias comuns e as guias próprias **Rotina e metas** e **Revisões**. Em Notificações, o som e a
+  vibração do fim do tempo podem ser desligados; em Privacidade e segurança, "Apagar todos os dados" (inclusive na nuvem)
+
 ## Estrutura
 
 | Arquivo | Conteúdo |
@@ -71,7 +83,7 @@ Ao mudar a versão, atualize também o `?v=` dos scripts no `index.html`.
 | `cadastros.js` | Editais, Disciplinas, biblioteca e leitura de editais |
 | `editais.js` | o edital da ABDI na biblioteca (disciplinas, assuntos, cronograma e prova) |
 | `leitor-pdf.js` | leitura de editais em PDF, carregada só quando você usa |
-| `comum/` | **Kit Fácil**: avaliação, Sobre e privacidade, tema, motor de sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
+| `comum/` | **Kit Fácil**: sistema de design comum, barra superior, Ajustes, avaliação, sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
 | `tests/` | testes do app |
 

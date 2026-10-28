@@ -16,8 +16,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@500;700&family=Atkinson+Hyperlegible+Next:wght@400;500;700;800&display=swap">
-<link rel="stylesheet" href="comum/kit-facil.css?v=2.1.0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400..700&family=Atkinson+Hyperlegible+Next:wght@400..800&display=swap">
+<link rel="stylesheet" href="comum/kit-facil.css?v=2.2.0">
 <style>
 /* Papel de caderno, tinta de caneta azul e marca-texto.
    O marca-texto é o único elemento chamativo: marca o que já foi estudado no edital e o botão de estudar. */
@@ -29,17 +29,18 @@
   --hl:#DFF65C; --hl-ink:#131A3A; --hl-line:#A2BC12;
   --agora:#1F36B8; --agora-ink:#FFFFFF; --agora-muted:#C9D2FA;
   --rev:#C42F77; --rev-mk:#EC5FA1; --rev-soft:#FBE3EF;
-  --ok:#157A45; --ok-mk:#2BA463; --ok-soft:#DCF2E5;
-  --bad:#BE3328; --bad-soft:#FAE3E0;
-  --warn:#8F5600; --warn-mk:#D98A10; --warn-soft:#FDEFD5;
+  --ok:var(--kf-ok); --ok-mk:#2BA463; --ok-soft:var(--kf-ok-soft);
+  --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft);
+  --warn:var(--kf-warn); --warn-mk:#D98A10; --warn-soft:var(--kf-warn-soft);
   --c1:#2742D3; --c2:#11998A; --c3:#C47012;
   --foco:#0F1530; --foco-2:#1A2247; --foco-ink:#EEF0FA; --foco-muted:#A8B0D6;
   --mark-bg:#2742D3; --mark-line:rgba(255,255,255,.62); --mark-ink:#131A3A;
   --scrim:rgba(13,17,40,.5);
   --shadow:0 1px 2px rgba(19,26,58,.06),0 6px 18px rgba(19,26,58,.07);
   --shadow-lg:0 18px 48px rgba(19,26,58,.26);
-  --f:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --f-mono:"Atkinson Hyperlegible Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  /* fontes do sistema de design comum (comum/kit-facil.css) */
+  --f:var(--kf-font);
+  --f-mono:var(--kf-font-mono);
   --col:1100px; --nav-h:68px; --rail:236px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -50,9 +51,9 @@
   --hl:#D4EE4C; --hl-ink:#10142A; --hl-line:#B9D63A;
   --agora:#22308A; --agora-ink:#FFFFFF; --agora-muted:#BAC4F5;
   --rev:#FF8DC0; --rev-mk:#FF77B5; --rev-soft:#3A1D33;
-  --ok:#66D497; --ok-mk:#46C07F; --ok-soft:#12301F;
-  --bad:#FF8B7E; --bad-soft:#3B1C1A;
-  --warn:#F3B64F; --warn-mk:#E8A23C; --warn-soft:#3A2C10;
+  --ok:var(--kf-ok); --ok-mk:#46C07F; --ok-soft:var(--kf-ok-soft);
+  --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft);
+  --warn:var(--kf-warn); --warn-mk:#E8A23C; --warn-soft:var(--kf-warn-soft);
   --c1:#6A82F0; --c2:#22A592; --c3:#D07F2E;
   --foco:#070A18; --foco-2:#121935;
   --scrim:rgba(0,0,0,.62);
@@ -67,9 +68,9 @@
   --hl:#D4EE4C; --hl-ink:#10142A; --hl-line:#B9D63A;
   --agora:#22308A; --agora-ink:#FFFFFF; --agora-muted:#BAC4F5;
   --rev:#FF8DC0; --rev-mk:#FF77B5; --rev-soft:#3A1D33;
-  --ok:#66D497; --ok-mk:#46C07F; --ok-soft:#12301F;
-  --bad:#FF8B7E; --bad-soft:#3B1C1A;
-  --warn:#F3B64F; --warn-mk:#E8A23C; --warn-soft:#3A2C10;
+  --ok:var(--kf-ok); --ok-mk:#46C07F; --ok-soft:var(--kf-ok-soft);
+  --bad:var(--kf-bad); --bad-soft:var(--kf-bad-soft);
+  --warn:var(--kf-warn); --warn-mk:#E8A23C; --warn-soft:var(--kf-warn-soft);
   --c1:#6A82F0; --c2:#22A592; --c3:#D07F2E;
   --foco:#070A18; --foco-2:#121935;
   --scrim:rgba(0,0,0,.62);
@@ -90,59 +91,28 @@ a{color:var(--pen)}
 :focus-visible{outline:2.5px solid var(--pen);outline-offset:2px;border-radius:8px}
 svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
-/* ---------- moldura: barra do topo (celular), trilho lateral (computador) e abas de baixo ---------- */
-.appbar{position:sticky;top:0;z-index:20;background:var(--paper);padding-top:env(safe-area-inset-top,0px)}
-.appbar-in{max-width:var(--col);margin:0 auto;min-height:60px;display:flex;align-items:center;gap:6px;padding:0 max(10px,env(safe-area-inset-right,0px)) 0 max(14px,env(safe-area-inset-left,0px))}
-.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-.brand-mark{width:36px;height:36px;flex:none;display:block}
-.brand-mark svg{width:100%;height:100%;display:block}
-.wordmark{font-weight:800;font-size:21px;letter-spacing:-.02em;white-space:nowrap}
-.bar-acts{display:flex;gap:2px}
+/* ---------- moldura comum do Kit Fácil: barra de cima, navegação embaixo (celular e tablet) e trilho lateral (computador) ---------- */
 .icon-btn{width:44px;height:44px;display:grid;place-items:center;border:0;background:transparent;border-radius:12px;color:var(--ink);flex:none;padding:0}
 @media (hover:hover){.icon-btn:hover{background:var(--sheet-2)}}
 .icon-btn.boxed{box-shadow:inset 0 0 0 1.5px var(--rule-2);width:46px;height:46px;border-radius:14px;background:var(--sheet)}
 .icon-btn:disabled{opacity:.35;cursor:default}
-.sync-ic{position:relative;color:var(--muted)}
-.sync-ic::after{content:'';position:absolute;right:9px;bottom:11px;width:9px;height:9px;border-radius:50%;background:var(--ok-mk);box-shadow:0 0 0 2px var(--paper)}
-.sync-ic.s-busy::after{background:var(--pen);animation:pisca .8s infinite alternate}
-.sync-ic.s-offline::after{background:var(--faint)}
-.sync-ic.s-error::after{background:var(--bad)}
-@keyframes pisca{to{opacity:.25}}
-
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--sheet);box-shadow:0 -1px 0 var(--rule);display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:6px max(4px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
-.nav-it{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;color:var(--muted);font-size:12.5px;font-weight:600;min-width:0;border-radius:14px}
-.nav-it .nav-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.nav-it[aria-current="page"]{color:var(--ink)}
-.nav-it[aria-current="page"]:not(.nav-go) svg{color:var(--pen)}
-.nav-it[aria-current="page"]:not(.nav-go)::before{content:'';position:absolute;width:42px;height:4px;border-radius:0 0 4px 4px;background:var(--pen);margin-top:-6px}
-.nav-it{position:relative}
-.nav-go{gap:2px;padding-top:0}
+.bar-acts{display:flex;gap:2px;flex:none}
+.bar-acts .icon-btn[aria-current="page"]{background:var(--pen-soft);color:var(--pen)}
+/* Estudar: o botão redondo no meio da barra de baixo e o botão de destaque no trilho */
+.kf-nav-it.nav-go{gap:2px;padding-top:0}
 .nav-fab{width:48px;height:48px;border-radius:50%;background:var(--pen);color:var(--pen-ink);display:grid;place-items:center;margin-top:-18px;box-shadow:0 0 0 4px var(--sheet),var(--shadow)}
 .nav-go.ativo .nav-fab{background:var(--hl);color:var(--hl-ink)}
-.nav-go.ativo .nav-l{font-family:var(--f-mono);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
-
-.rail{display:none}
+.nav-go.ativo .kf-nav-l{font-family:var(--f-mono);font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
 .main{max-width:var(--col);margin:0 auto;padding:4px max(16px,env(safe-area-inset-right,0px)) calc(var(--nav-h) + 40px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 @media (min-width:1024px){
-  .appbar,.tabbar{display:none}
-  .rail{display:flex;flex-direction:column;gap:4px;position:fixed;inset:0 auto 0 0;width:var(--rail);padding:22px 14px;background:var(--sheet);box-shadow:1px 0 0 var(--rule);z-index:20}
-  .rail .brand{flex:none;padding:0 8px 18px}
+  .bar-acts{display:none}
   .rail-nav{display:flex;flex-direction:column;gap:2px}
-  .rail-it{display:flex;align-items:center;gap:12px;border:0;background:none;padding:11px 12px;border-radius:12px;color:var(--muted);font-weight:600;text-align:left}
-  .rail-it:hover{background:var(--sheet-2);color:var(--ink)}
-  .rail-it[aria-current="page"]{background:var(--pen-soft);color:var(--ink)}
-  .rail-it[aria-current="page"] svg{color:var(--pen)}
-  .rail-go{background:var(--pen);color:var(--pen-ink);margin:6px 0 8px;padding:13px 14px;font-weight:700}
-  .rail-go:hover,.rail-go[aria-current="page"]{background:var(--pen-deep);color:var(--pen-ink)}
-  .rail-go[aria-current="page"] svg{color:inherit}
-  .rail-go.ativo{background:var(--hl);color:var(--hl-ink)}
+  .kf-trilho-it.rail-go{background:var(--pen);color:var(--pen-ink);margin:6px 0 8px;padding:13px 14px;font-weight:700}
+  .kf-trilho-it.rail-go:hover,.kf-trilho-it.rail-go[aria-current="page"]{background:var(--pen-deep);color:var(--pen-ink)}
+  .kf-trilho-it.rail-go[aria-current="page"] > svg{color:inherit}
+  .kf-trilho-it.rail-go.ativo{background:var(--hl);color:var(--hl-ink)}
   .rail-go.ativo span{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-  .rail-nav .rail-it:last-child{margin-top:auto}
-  .rail-nav{flex:1}
-  .rail-sync{display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--muted);font-size:14px;padding:10px 12px;border-radius:12px;width:100%}
-  .rail-sync::after{right:auto;left:26px;bottom:12px;box-shadow:0 0 0 2px var(--sheet)}
-  .main{margin-left:var(--rail);max-width:calc(var(--col) + 80px);padding:28px 40px 60px;margin-right:auto}
-  @media (min-width:1420px){.main{margin-left:calc(var(--rail) + (100vw - var(--rail) - var(--col) - 80px) / 2)}}
+  .main{max-width:calc(var(--col) + 80px);padding:20px 40px 60px}
 }
 
 /* ---------- tipografia e peças comuns ---------- */
@@ -268,7 +238,7 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:inset 0 0 0 2px 
 @keyframes fade{from{opacity:0}}
 .toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:14px;font-weight:600;font-size:15px;z-index:95;width:max-content;max-width:calc(100% - 32px);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:14px;animation:sobe .2s ease-out}
 .toast button{border:0;background:none;color:var(--hl);font-weight:700;padding:4px 2px}
-@media (min-width:1024px){.toast{bottom:28px;left:calc(50% + var(--rail) / 2)}}
+@media (min-width:1024px){.toast{bottom:28px;left:calc(50% + var(--kf-trilho-w) / 2)}}
 body.com-foco .toast{bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50%}
 .menu{display:flex;flex-direction:column;gap:4px}
 .menu-it{display:flex;gap:12px;align-items:center;border:0;background:var(--sheet);border-radius:14px;padding:14px;text-align:left;font-size:15.5px}
@@ -281,8 +251,8 @@ body.com-foco .toast{bottom:calc(24px + env(safe-area-inset-bottom,0px));left:50
 
 /* ---------- primeira vez ---------- */
 body.onb .main{padding-top:calc(24px + env(safe-area-inset-top,0px))}
-body.onb .appbar,body.onb .tabbar,body.onb .rail{display:none!important}
-@media (min-width:1024px){body.onb .main{margin:0 auto}}
+body.onb .kf-barra,body.onb .kf-nav,body.onb .kf-trilho{display:none!important}
+@media (min-width:1024px){body.onb.kf-casca{padding-left:0}}
 .onb-wrap{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:16px;padding:8px 0 40px}
 .onb-mark{width:64px;height:64px}
 .onb-mark svg{width:100%;height:100%}
@@ -630,7 +600,6 @@ body.com-foco .tabbar{display:none}
 @media (max-width:440px){.ses{grid-template-columns:minmax(0,1fr) auto}.ses-h{grid-column:1/-1;font-size:13.5px}}
 
 /* ---------- AJUSTES ---------- */
-.aj .bloco{max-width:760px}
 .conc-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .conc-l li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--rule)}
 .conc-l li:first-child{border-top:0}
@@ -683,29 +652,28 @@ body.com-foco .tabbar{display:none}
 .agora.boas .ag-k svg{color:var(--hl)}
 .lead .btn.link,.cont-p .btn.link,.hint .btn.link{display:inline;padding:0;min-height:0;font-size:inherit;vertical-align:baseline}
 
-/* ---------- Kit Fácil: componentes comuns do Projeto Integrador, com as cores do Estudo Fácil ---------- */
+/* ---------- Kit Fácil: a cor de destaque e os neutros do Estudo Fácil ligados ao sistema de design comum (comum/kit-facil.css) ---------- */
 :root{
   --kf-bg:var(--paper); --kf-surface:var(--sheet); --kf-surface-2:var(--sheet-2); --kf-line:var(--rule); --kf-line-2:var(--rule-2);
-  --kf-ink:var(--ink); --kf-muted:var(--muted); --kf-accent:var(--pen); --kf-accent-ink:var(--pen-ink); --kf-accent-soft:var(--pen-soft);
-  --kf-focus:var(--pen); --kf-ok:var(--ok); --kf-ok-soft:var(--ok-soft); --kf-warn:var(--warn); --kf-warn-soft:var(--warn-soft);
-  --kf-bad:var(--bad); --kf-bad-soft:var(--bad-soft); --kf-star:var(--warn-mk); --kf-scrim:var(--scrim); --kf-shadow:var(--shadow-lg);
-  --kf-font:var(--f); --kf-font-display:var(--f); --kf-r-lg:22px; --kf-r-btn:14px; --kf-r-campo:12px;
+  --kf-ink:var(--ink); --kf-muted:var(--muted); --kf-accent:var(--pen); --kf-accent-ink:var(--pen-ink); --kf-accent-soft:var(--pen-soft); --kf-accent-texto:var(--pen);
+  --kf-focus:var(--pen); --kf-scrim:var(--scrim); --kf-shadow:var(--shadow-lg);
+  --kf-col-nav:720px;
 }
-.aj .bloco .kf-seg{max-width:420px}
+.kf-aj .field + .field,.kf-aj .grid2 + .grid2{margin-top:4px}
 </style>
 </head>
-<body>
-<header class="appbar" id="appbar"><div class="appbar-in"><div class="brand"><span class="brand-mark" id="marca"></span><span class="wordmark">Estudo Fácil</span></div><div class="bar-acts" id="bar-acts"></div></div></header>
-<aside class="rail" aria-label="Navegação"><div class="brand"><span class="brand-mark" id="rail-marca"></span><span class="wordmark">Estudo Fácil</span></div><nav class="rail-nav" id="rail-nav"></nav><div id="rail-sync"></div></aside>
+<body class="kf-casca">
+<header class="kf-barra" id="appbar"><div class="kf-barra-in"><div class="kf-marca kf-marca-compacta"><span class="kf-marca-ic kf-cheio" id="marca"></span><span class="kf-marca-nome">Estudo Fácil</span></div><div class="bar-acts" id="bar-acts"></div><div id="topo"></div></div></header>
+<aside class="kf-trilho" aria-label="Navegação"><div class="kf-marca"><span class="kf-marca-ic kf-cheio" id="rail-marca"></span><span class="kf-marca-nome">Estudo Fácil</span></div><nav class="rail-nav" id="rail-nav" aria-label="Seções"></nav></aside>
 <main class="main" id="main"></main>
-<nav class="tabbar" id="nav" aria-label="Seções"></nav>
+<nav class="kf-nav" aria-label="Seções"><div class="kf-nav-in" id="nav"></div></nav>
 <div class="foco" id="foco" hidden></div>
 <div id="sheet-root"></div>
 <noscript><p style="padding:24px">O Estudo Fácil precisa de JavaScript ligado para funcionar.</p></noscript>
-<script src="comum/kit-facil.js?v=2.1.0"></script>
-<script src="editais.js?v=2.1.0"></script>
-<script src="app.js?v=2.1.0"></script>
-<script src="telas.js?v=2.1.0"></script>
-<script src="cadastros.js?v=2.1.0"></script>
+<script src="comum/kit-facil.js?v=2.2.0"></script>
+<script src="editais.js?v=2.2.0"></script>
+<script src="app.js?v=2.2.0"></script>
+<script src="telas.js?v=2.2.0"></script>
+<script src="cadastros.js?v=2.2.0"></script>
 </body>
 </html>

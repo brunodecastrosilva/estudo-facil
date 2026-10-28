@@ -99,7 +99,7 @@ VIEWS.hoje = () => {
   const plano = `<section class="bloco plano" aria-label="Plano de hoje"><div class="b-hr"><h2 class="b-h">Plano de hoje</h2>${P.itens.length ? `<span class="tag">${P.feitos} de ${P.itens.length}</span>` : ""}</div>
     ${P.itens.length ? `<ul class="pl-lista">${P.itens.map(linha).join("")}</ul>` : `<p class="hint">${folga ? "Dia de folga: nenhuma revisão vencida e nenhum assunto novo." : "Nenhuma revisão vencida e nenhum assunto pendente."}</p>`}
     ${P.espera ? `<p class="hint pl-ritmo"><b>${plural(P.espera, "revisão vencida ficou", "revisões vencidas ficaram")} na fila</b> para não passar do seu tempo de hoje. Elas entram nos próximos dias, as mais atrasadas primeiro. <button class="btn link sm" data-act="revisoes">Ver todas</button></p>` : ""}
-    ${R.pend ? `<p class="hint pl-ritmo">${R.n === R.auto ? `Para terminar a teoria até ${dLonga(R.fim)}: ${plural(R.n, "assunto novo", "assuntos novos")} por dia de estudo.` : `${plural(R.n, "assunto novo", "assuntos novos")} por dia, como você definiu.`} <button class="btn link sm" data-go="ajustes">Ajustar</button></p>` : ""}
+    ${R.pend ? `<p class="hint pl-ritmo">${R.n === R.auto ? `Para terminar a teoria até ${dLonga(R.fim)}: ${plural(R.n, "assunto novo", "assuntos novos")} por dia de estudo.` : `${plural(R.n, "assunto novo", "assuntos novos")} por dia, como você definiu.`} <button class="btn link sm" data-act="aj-rotina">Ajustar</button></p>` : ""}
   </section>`;
   // prazos
   const vivos = editaisVivos(), ds = todasDatas(vivos).filter(d => (d.fim || d.ini) >= t).slice(0, 5);
@@ -585,77 +585,67 @@ document.addEventListener("click", e => {
 
 /* ================= AJUSTES ================= */
 const PRESETS = [["1,7,30", "1, 7 e 30 dias (padrão)"], ["1,3,7,15,30", "1, 3, 7, 15 e 30 dias"], ["1,7,15,30,60", "1, 7, 15, 30 e 60 dias"], ["1,2,4,7,14", "Reta final: 1, 2, 4, 7 e 14 dias"]];
+/* Ajustes: as guias comuns do Kit Fácil, na ordem da família, e as guias próprias "Rotina e metas" e "Revisões" */
+const ICONES_AJ = {
+  rotina: '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="m9 15 2 2 4-4"/>',
+  revisoes: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/><path d="M12 8v4l2.5 2"/>',
+};
+const resumoRotina = () => { const C = cfg(); return `${plural(C.dias.length, "dia", "dias")} por semana · ${dec(C.hDia)} h por dia`; };
+const resumoRevisoes = () => `Ciclo de ${cfg().ciclo.join(", ")} dias`;
+const resumoAlarme = () => PREF.alarme === false ? "Sem som no fim do tempo" : "Som e vibração no fim do tempo";
 VIEWS.ajustes = () => {
   const C = cfg(), R = ritmo(), ciclo = C.ciclo.join(",");
-  return `<div class="pg aj">
-    <header class="pg-h"><h1>Ajustes</h1></header>
-    <section class="bloco">
-      <h2 class="b-h">Rotina e metas</h2>
-      <div class="field"><span class="lbl">Dias em que você estuda</span><div class="dias">${[1, 2, 3, 4, 5, 6, 0].map(d => `<label class="dia"><input type="checkbox" value="${d}" ${C.dias.includes(d) ? "checked" : ""} data-on="aj-dia"><span>${WD[d]}</span></label>`).join("")}</div></div>
-      <div class="grid2">
-        <div class="field"><span class="lbl">Horas por dia de estudo</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="hDia" data-d="-0.5" aria-label="Menos meia hora">${I.minus}</button><output>${dec(C.hDia)} h</output><button class="icon-btn boxed" data-act="aj-step" data-k="hDia" data-d="0.5" aria-label="Mais meia hora">${I.plus}</button></div></div>
-        <div class="field"><span class="lbl">Questões por dia</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="qDia" data-d="-5" aria-label="Menos 5 questões">${I.minus}</button><output>${C.qDia || "Sem meta"}</output><button class="icon-btn boxed" data-act="aj-step" data-k="qDia" data-d="5" aria-label="Mais 5 questões">${I.plus}</button></div></div>
-      </div>
-      <div class="grid2">
-        <label class="field"><span class="lbl">Terminar a teoria até</span><input type="date" value="${R.fim}" data-on="aj-teoria"><span class="hint">${C.teoriaAte ? `<button class="btn link sm" data-act="aj-teoria-auto">Voltar ao automático</button>` : "Automático: duas semanas antes da prova."}</span></label>
-        <div class="field"><span class="lbl">Assuntos novos por dia</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="novosDia" data-d="-1" aria-label="Menos um assunto">${I.minus}</button><output>${C.novosDia || `Auto (${R.auto})`}</output><button class="icon-btn boxed" data-act="aj-step" data-k="novosDia" data-d="1" aria-label="Mais um assunto">${I.plus}</button></div></div>
-      </div>
-      <p class="hint">Faltam ${plural(R.pend, "assunto", "assuntos")} com a teoria pendente e ${plural(R.dias, "dia", "dias")} de estudo até ${dLonga(R.fim)}. ${R.n < R.auto ? `<b>Com ${R.n} por dia a teoria não termina a tempo.</b>` : ""}</p>
-    </section>
-    <section class="bloco">
-      <h2 class="b-h">Revisões</h2>
-      <p class="hint">Depois de estudar a teoria, o assunto volta para revisão nestes intervalos. Estudar a teoria de novo reinicia o ciclo.</p>
-      <label class="field"><span class="lbl">Ciclo de revisões</span><select data-on="aj-ciclo">${PRESETS.map(([k, l]) => `<option value="${k}" ${ciclo === k ? "selected" : ""}>${l}</option>`).join("")}${PRESETS.some(p => p[0] === ciclo) ? "" : `<option value="${ciclo}" selected>${C.ciclo.join(", ")} dias</option>`}</select></label>
-      <label class="check"><input type="checkbox" data-on="aj-folga" ${C.moverFolga ? "checked" : ""}><span>Revisão que cair num dia de folga passa para o próximo dia de estudo</span></label>
-    </section>
-    ${syncCardHTML()}
-    <section class="bloco">
-      <h2 class="b-h">Aparência</h2>
-      ${KitFacil.tema.seletorHTML()}
-    </section>
-    ${instalarHTML()}
-    <section class="bloco">
-      <h2 class="b-h">Cópia de segurança</h2>
-      <p class="hint">${syncOn() ? "Com a sincronização ligada, seus dados já ficam guardados na nuvem. A cópia é um arquivo extra." : "Seus dados ficam só neste aparelho. Guarde uma cópia de vez em quando, ou ative a sincronização."}</p>
-      <div class="btns"><button class="btn ghost sm" data-act="bk-baixar">${I.baixar}Baixar cópia</button><label class="btn ghost sm" for="bk-file">${I.subir}Restaurar cópia</label><input type="file" id="bk-file" accept=".json,application/json" data-on="bk-file" hidden></div>
-      <div><button class="btn link sm danger" data-act="apagar-tudo">Apagar todos os dados</button></div>
-    </section>
-    <section class="bloco">
-      <h2 class="b-h">Ajude a melhorar</h2>
-      ${KitFacil.ajudaHTML()}
-    </section>
-    <p class="versao">Estudo Fácil ${VERSAO}</p>
-  </div>`;
+  return `<div class="pg aj">${KitFacil.ajustes.html({
+    resumos: { notificacoes: resumoAlarme() },
+    extras: {
+      notificacoes: `<div class="kf-bloco"><h3>Fim do tempo de estudo</h3>
+        <label class="kf-check"><input type="checkbox" data-on="aj-alarme" ${PREF.alarme === false ? "" : "checked"}><span>Tocar um som e vibrar quando o tempo da sessão acabar</span></label>
+        <p class="kf-ajuda">Vale só neste aparelho. O aviso na tela aparece de qualquer jeito.</p></div>`,
+      privacidade: `<div class="kf-bloco"><h3>Apagar todos os dados</h3>
+        <p class="kf-ajuda">Apaga editais, disciplinas, sessões, revisões, anotações e ajustes${syncOn() ? " deste aparelho e da nuvem (os outros aparelhos conectados também ficam vazios)" : ""}. O app volta à tela inicial, como na primeira vez.</p>
+        <button type="button" class="kf-btn kf-perigo-sec" data-act="apagar-tudo">Apagar todos os dados</button></div>`,
+    },
+    produto: [
+      { id: "rotina", titulo: "Rotina e metas", icone: ICONES_AJ.rotina, resumo: resumoRotina(), html: `<div class="kf-bloco"><h3>Dias e metas</h3>
+        <div class="field"><span class="lbl" id="aj-dias-l">Dias em que você estuda</span><div class="dias" role="group" aria-labelledby="aj-dias-l">${[1, 2, 3, 4, 5, 6, 0].map(d => `<label class="dia"><input type="checkbox" value="${d}" ${C.dias.includes(d) ? "checked" : ""} data-on="aj-dia"><span>${WD[d]}</span></label>`).join("")}</div></div>
+        <div class="grid2">
+          <div class="field"><span class="lbl">Horas por dia de estudo</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="hDia" data-d="-0.5" aria-label="Menos meia hora">${I.minus}</button><output>${dec(C.hDia)} h</output><button class="icon-btn boxed" data-act="aj-step" data-k="hDia" data-d="0.5" aria-label="Mais meia hora">${I.plus}</button></div></div>
+          <div class="field"><span class="lbl">Questões por dia</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="qDia" data-d="-5" aria-label="Menos 5 questões">${I.minus}</button><output>${C.qDia || "Sem meta"}</output><button class="icon-btn boxed" data-act="aj-step" data-k="qDia" data-d="5" aria-label="Mais 5 questões">${I.plus}</button></div></div>
+        </div>
+        <div class="grid2">
+          <label class="field"><span class="lbl">Terminar a teoria até</span><input type="date" value="${R.fim}" data-on="aj-teoria"><span class="hint">${C.teoriaAte ? `<button class="btn link sm" data-act="aj-teoria-auto">Voltar ao automático</button>` : "Automático: duas semanas antes da prova."}</span></label>
+          <div class="field"><span class="lbl">Assuntos novos por dia</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="novosDia" data-d="-1" aria-label="Menos um assunto">${I.minus}</button><output>${C.novosDia || `Auto (${R.auto})`}</output><button class="icon-btn boxed" data-act="aj-step" data-k="novosDia" data-d="1" aria-label="Mais um assunto">${I.plus}</button></div></div>
+        </div>
+        <p class="hint">Faltam ${plural(R.pend, "assunto", "assuntos")} com a teoria pendente e ${plural(R.dias, "dia", "dias")} de estudo até ${dLonga(R.fim)}. ${R.n < R.auto ? `<b>Com ${R.n} por dia a teoria não termina a tempo.</b>` : ""}</p></div>` },
+      { id: "revisoes", titulo: "Revisões", icone: ICONES_AJ.revisoes, resumo: resumoRevisoes(), html: `<div class="kf-bloco"><h3>Intervalos das revisões</h3>
+        <p class="hint">Depois de estudar a teoria, o assunto volta para revisão nestes intervalos. Estudar a teoria de novo reinicia o ciclo.</p>
+        <label class="field"><span class="lbl">Ciclo de revisões</span><select data-on="aj-ciclo">${PRESETS.map(([k, l]) => `<option value="${k}" ${ciclo === k ? "selected" : ""}>${l}</option>`).join("")}${PRESETS.some(p => p[0] === ciclo) ? "" : `<option value="${ciclo}" selected>${C.ciclo.join(", ")} dias</option>`}</select></label>
+        <label class="check"><input type="checkbox" data-on="aj-folga" ${C.moverFolga ? "checked" : ""}><span>Revisão que cair num dia de folga passa para o próximo dia de estudo</span></label></div>` },
+    ],
+  })}</div>`;
 };
-let INSTALL_EVT = null;
-window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); INSTALL_EVT = e; });
-const instalado = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-function instalarHTML() {
-  if (instalado()) return "";
-  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  return `<section class="bloco"><h2 class="b-h">Instalar o app</h2>
-    <p class="hint">${ios ? "No iPhone, abra este endereço no Safari, toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>." : "Assim ele abre como aplicativo e funciona sem internet."}</p>
-    ${INSTALL_EVT ? `<div><button class="btn pri sm" data-act="instalar">Instalar</button></div>` : ios ? "" : `<p class="hint">No Android, use <b>Instalar app</b> no menu do Chrome. No computador, use o ícone de instalar na barra de endereço.</p>`}</section>`;
+VIEWS.ajustes.after = () => KitFacil.ajustes.ligar($("#main"));
+/* cópia de segurança no formato comum da família; as cópias antigas ({ formato: "estudo-facil" }) continuam valendo */
+async function restaurarCopiaEstudo(f) {
+  const j = await KitFacil.copia.ler(f, { antigos: true });
+  const ant = j && j.antigo && j.antigo.formato === "estudo-facil" && j.antigo.dados ? j.antigo : null;
+  const d = j && j.dados ? j.dados : ant ? ant.dados : null;
+  if (!d || typeof d !== "object") return toast("Esse arquivo não é uma cópia do Estudo Fácil.");
+  const quando = String((j && j.em) || (ant && ant.em) || "").slice(0, 10);
+  confirmSheet("Restaurar a cópia?", `A cópia${quando ? ` de ${br(quando)}` : ""} tem ${plural((d.sessoes || []).length, "sessão", "sessões")}. Os dados atuais deste aparelho${syncOn() ? " e dos aparelhos sincronizados" : ""} serão substituídos.`, "Restaurar", () => {
+    // o que mudou em relação ao aparelho ganha a hora de agora e passa a valer também na nuvem
+    const novo = arrumarBanco({ ...d, v: d.v || 1 });
+    for (const c of COLLS) DB[c] = novo[c]; DB.cfg = novo.cfg; DB.ativa = novo.ativa;
+    UI.focoAberto = !!DB.ativa;
+    commit(); toast("Cópia restaurada.");
+  });
 }
-function backupJson() { return JSON.stringify({ formato: "estudo-facil", versao: 2, em: new Date().toISOString(), dados: { v: 2, ...dadosSync() } }, null, 1); }
 Object.assign(ON, {
   "aj-dia": () => { const d = $$('[data-on="aj-dia"]').filter(x => x.checked).map(x => +x.value); if (!d.length) { toast("Escolha pelo menos um dia."); render(); return; } cfg().dias = d.sort(); commit(); },
   "aj-teoria": el => { if (!el.value) return; cfg().teoriaAte = el.value; commit(); },
   "aj-ciclo": el => { cfg().ciclo = el.value.split(",").map(Number); commit(); toast("Ciclo salvo. Vale para as próximas revisões."); },
   "aj-folga": el => { cfg().moverFolga = el.checked; commit(); },
-  "bk-file": async el => {
-    const f = el.files && el.files[0]; el.value = ""; if (!f) return;
-    let j; try { j = JSON.parse(await f.text()); } catch { return toast("Não consegui ler esse arquivo."); }
-    if (!j || j.formato !== "estudo-facil" || !j.dados) return toast("Esse arquivo não é uma cópia do Estudo Fácil.");
-    const d = j.dados;
-    confirmSheet("Restaurar a cópia?", `A cópia de ${br(String(j.em).slice(0, 10))} tem ${plural((d.sessoes || []).length, "sessão", "sessões")}. Os dados atuais deste aparelho${syncOn() ? " e dos aparelhos sincronizados" : ""} serão substituídos.`, "Restaurar", () => {
-      // o que mudou em relação ao aparelho ganha a hora de agora e passa a valer também na nuvem
-      const novo = arrumarBanco({ ...d, v: d.v || 1 });
-      for (const c of COLLS) DB[c] = novo[c]; DB.cfg = novo.cfg; DB.ativa = novo.ativa;
-      UI.focoAberto = !!DB.ativa;
-      commit(); toast("Cópia restaurada.");
-    });
-  }
+  "aj-alarme": el => { PREF.alarme = el.checked; savePref(); KitFacil.ajustes.resumo("notificacoes", resumoAlarme()); toast(el.checked ? "Som e vibração ligados." : "Sem som no fim do tempo."); }
 });
 Object.assign(ACT, {
   "aj-step": el => {
@@ -666,8 +656,7 @@ Object.assign(ACT, {
     commit();
   },
   "aj-teoria-auto": () => { cfg().teoriaAte = ""; commit(); },
-  "instalar": async () => { const e = INSTALL_EVT; if (!e) return; INSTALL_EVT = null; e.prompt(); try { await e.userChoice; } catch {} render(); },
-  "bk-baixar": () => { if (baixar(`estudo-facil-copia-${today()}.json`, new Blob([backupJson()], { type: "application/json" }))) toast("Cópia baixada."); },
+  "aj-rotina": () => KitFacil.ajustes.ir("rotina"),
   "apagar-tudo": () => confirmSheet("Apagar todos os dados?", `Sessões, revisões, anotações e ajustes deste aparelho${syncOn() ? " e da nuvem" : ""} serão apagados, com editais e disciplinas, e o app volta à tela inicial, como na primeira vez.`, "Apagar tudo", () => {
     const novo = bancoNovo();
     for (const c of COLLS) DB[c] = novo[c]; DB.cfg = novo.cfg; DB.ativa = null; UI.focoAberto = false;
