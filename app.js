@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.3.2";
+const VERSAO = "2.4.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -242,7 +242,7 @@ KitFacil.iniciar({
     if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
   },
   emAjustes: () => route().v === "ajustes",
-  novidades: [{ versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
+  novidades: [{ versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
     "O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.",
     "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
     "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",
@@ -788,8 +788,7 @@ function renderShell(r) {
   $("#rail-nav").innerHTML = [...NAV, ...RAIL_MAIS].map(([v, l, ic]) => v === "estudar"
     ? `<button class="kf-trilho-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
     : `<button class="kf-trilho-it" data-go="${v}" ${cur(v)}>${I[ic]}<span>${l}</span></button>`).join("");
-  // ação própria do Estudo Fácil na barra de cima (no computador, Desempenho fica no trilho)
-  $("#bar-acts").innerHTML = `<button class="icon-btn" data-go="desempenho" aria-label="Desempenho" title="Desempenho" ${cur("desempenho")}>${I.stats}</button>`;
+  // Desempenho: no celular, pelo link "Últimos 7 dias → Desempenho" da tela Hoje; no computador, também no trilho
   // Ajustes no pé do trilho (computador)
   if ($("#rail-ajustes")) $("#rail-ajustes").outerHTML = KitFacil.nav.ajustes("trilho", { id: "trilho-ajustes" });
   // área superior direita padronizada: chopp, nuvem e balão
@@ -839,7 +838,7 @@ const ONB = { passo: 0, dias: null, h: null, semEdital: false };
 function renderOnboarding() {
   document.body.classList.add("onb");
   const t = today();
-  $("#nav").innerHTML = ""; $("#rail-nav").innerHTML = ""; $("#bar-acts").innerHTML = "";
+  $("#nav").innerHTML = ""; $("#rail-nav").innerHTML = "";
   const main = $("#main");
   if (ONB.passo === 0) {
     const bib = BIBLIOTECA.filter(b => !DB.concursos.some(c => c.id === b.id));

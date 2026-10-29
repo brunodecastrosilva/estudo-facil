@@ -2,6 +2,13 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.4.0 · 2026-10-29
+
+- O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.
+- No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.
+- A janela do chopp ficou mais simples: um só botão, Copiar código Pix.
+- Kit Fácil 2.1.3.
+
 ## 2.3.2 · 2026-10-29
 
 - **Prazo de guarda:** Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança.
