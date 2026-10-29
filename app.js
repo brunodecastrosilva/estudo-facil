@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.2.0";
+const VERSAO = "2.3.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -242,6 +242,15 @@ KitFacil.iniciar({
     if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
   },
   emAjustes: () => route().v === "ajustes",
+  novidades: [{ versao: "2.3.0", itens: [
+    "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
+    "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",
+    "Novo: \"Pague um chopp para o criador!\", com QR code e Pix copia e cola. É opcional, o app continua gratuito.",
+    "Depois de cada atualização, o app mostra uma vez o que mudou. A lista também fica em Ajustes, Sobre o aplicativo.",
+  ] }],
+  // o primeiro uso é a tela própria do Estudo Fácil (escolha do edital e da rotina): o kit só fica sabendo quem é novo
+  boasVindas: { novo: () => !DB.cfg.pronto },
+  ocupado: () => document.body.classList.contains("onb"),
   copia: { descricao: "Baixe um arquivo com os editais, as disciplinas, as sessões, as revisões e os ajustes.", baixar: () => KitFacil.copia.baixar({ v: 2, ...dadosSync() }, 2), restaurar: f => restaurarCopiaEstudo(f) },
   textos: { notificacoes: "O Estudo Fácil não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto; no fim do tempo de estudo, o app toca um som e vibra (se você deixar ligado abaixo)." },
   privacidade: [
@@ -734,7 +743,7 @@ document.addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" &&
 const UI = { pendingRender: false, alarme: 0, focoAberto: false, edTab: "conteudo", edAberta: new Set(), dsPer: "semana", dsNav: today(), cal: { mes: today().slice(0, 8) + "01", sel: today() }, busca: "", hLim: 30 };
 const VIEWS = {};
 const NAV = [["hoje", "Hoje", "hoje"], ["editais", "Editais", "edital"], ["estudar", "Estudar", "timer"], ["disciplinas", "Disciplinas", "livro"], ["agenda", "Agenda", "agenda"]];
-const RAIL_MAIS = [["desempenho", "Desempenho", "stats"]]; // Ajustes abre pela engrenagem do topo, igual nos três apps
+const RAIL_MAIS = [["desempenho", "Desempenho", "stats"]]; // Ajustes fica no fim da navegação (KitFacil.nav.ajustes), igual nos três apps
 const ABA = { edital: "editais" };
 function route() {
   const h = decodeURIComponent(location.hash.replace(/^#\/?/, "")).split("/");
@@ -774,14 +783,16 @@ function renderShell(r) {
     if (v === "estudar") return `<button class="kf-nav-it nav-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}><span class="nav-fab">${a ? I.timer : I.play}</span><span class="kf-nav-l" ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : l}</span></button>`;
     return `<button class="kf-nav-it" data-go="${v}" ${cur(v)}><span class="kf-nav-ic">${I[ic]}</span><span class="kf-nav-l">${l}</span></button>`;
   };
-  $("#nav").innerHTML = NAV.map(navBtn).join("");
+  $("#nav").innerHTML = NAV.map(navBtn).join("") + KitFacil.nav.ajustes("nav", { id: "nav-ajustes" });
   $("#rail-nav").innerHTML = [...NAV, ...RAIL_MAIS].map(([v, l, ic]) => v === "estudar"
     ? `<button class="kf-trilho-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
     : `<button class="kf-trilho-it" data-go="${v}" ${cur(v)}>${I[ic]}<span>${l}</span></button>`).join("");
   // ação própria do Estudo Fácil na barra de cima (no computador, Desempenho fica no trilho)
   $("#bar-acts").innerHTML = `<button class="icon-btn" data-go="desempenho" aria-label="Desempenho" title="Desempenho" ${cur("desempenho")}>${I.stats}</button>`;
-  // área superior direita padronizada: Ajustes, nuvem e balão
-  if (!$("#topo .kf-topo")) $("#topo").innerHTML = KitFacil.topo.html({ ajustes: true });
+  // Ajustes no pé do trilho (computador)
+  if ($("#rail-ajustes")) $("#rail-ajustes").outerHTML = KitFacil.nav.ajustes("trilho", { id: "trilho-ajustes" });
+  // área superior direita padronizada: chopp, nuvem e balão
+  if (!$("#topo .kf-topo")) $("#topo").innerHTML = KitFacil.topo.html({ principal: true });
   KitFacil.topo.atualizar();
 }
 
