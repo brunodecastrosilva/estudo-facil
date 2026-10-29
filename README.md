@@ -44,7 +44,7 @@ Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alt
 | Editais, disciplinas, sessões, revisões, simulados e ajustes | neste aparelho (armazenamento do navegador, chaves `estudofacil.*`) |
 | Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
 | Editais em PDF | lidos no próprio aparelho; o arquivo não é enviado |
-| Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback` |
+| Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
 
 A guia **Ajustes → Privacidade e segurança** explica isso para quem usa o app.
 
