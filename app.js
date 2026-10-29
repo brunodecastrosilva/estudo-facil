@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.3.1";
+const VERSAO = "2.3.2";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -242,7 +242,7 @@ KitFacil.iniciar({
     if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
   },
   emAjustes: () => route().v === "ajustes",
-  novidades: [{ versao: "2.3.1", itens: [
+  novidades: [{ versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
     "O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.",
     "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
     "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",

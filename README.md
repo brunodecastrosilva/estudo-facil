@@ -2,7 +2,7 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
-**Fase de testes** · versão 2.3.1 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+**Fase de testes** · versão 2.3.2 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
