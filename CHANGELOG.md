@@ -2,6 +2,12 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.9.0 · 2026-10-30
+
+- Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.
+- Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas.
+- Kit Fácil 2.6.0: calendário do Kit em todo campo de data (`KitFacil.data`), movimento comum nas trocas de tela, guias dos Ajustes, listas, calendário, janelas e avisos.
+
 ## 2.8.0 · 2026-10-30
 
 - As listas de escolha (área da prova, tipo de data, assunto, ciclo de revisões e outras) agora são do próprio app,
