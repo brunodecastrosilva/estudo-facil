@@ -2,6 +2,14 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.6.0 · 2026-10-29
+
+- Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.
+- Títulos das telas e listas vazias no mesmo formato nos três apps.
+- Janelas e avisos iguais aos dos outros apps.
+- Botões e links maiores, mais fáceis de tocar (no mínimo 44 px).
+- Kit Fácil 2.3.0: cabeçalho de tela, botão de criar, estado vazio, aviso com ação e janela com subtítulo, altura e largura, comuns aos três apps.
+
 ## 2.5.0 · 2026-10-29
 
 - Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros.

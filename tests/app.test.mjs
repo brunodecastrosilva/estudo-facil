@@ -141,7 +141,7 @@ test('cópia de segurança: formato comum da família, e a cópia antiga continu
   await p.evaluate(() => { DB.materias = []; DB.topicos = []; commit({ quiet: true }); });
   await p.waitForTimeout(300); // a tela pode se redesenhar quando o download termina
   await p.setInputFiles('[data-kf-copia-arquivo]', caminho);
-  await p.click('#sheet-root [data-ok]');
+  await p.click('.kf-dlg [data-ok]');
   assert.ok(await esperar(() => p.evaluate(() => DB.materias.length === 1)), 'não restaurou a cópia nova');
   // formato antigo (2.1 e anteriores)
   const antigo = caminho + '-antigo.json';
@@ -150,7 +150,7 @@ test('cópia de segurança: formato comum da família, e a cópia antiga continu
   const [seletor] = await Promise.all([p.waitForEvent('filechooser'), p.click('#kf-aj-sincronizacao [data-kf="copia-restaurar"]')]);
   await p.evaluate(() => render());
   await seletor.setFiles(antigo);
-  await p.click('#sheet-root [data-ok]');
+  await p.click('.kf-dlg [data-ok]');
   assert.ok(await esperar(() => p.evaluate(() => DB.materias.length === 1 && DB.materias[0].nome === 'Antiga')), 'não restaurou a cópia antiga');
   assert.deepEqual(a.erros, []);
   await a.fechar();

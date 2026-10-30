@@ -21,8 +21,8 @@ VIEWS.editais = () => {
   };
   const sec = (st, tit) => { const l = L.filter(c => c.status === st); return l.length ? `<section class="sec"><h2 class="sec-h">${tit}</h2><ul class="cards">${l.map(card).join("")}</ul></section>` : ""; };
   return `<div class="pg">
-    <header class="pg-h"><h1>Editais</h1><p class="lead">Os concursos que você acompanha. O plano do dia junta os assuntos dos editais marcados como <b>Estudando</b>.</p></header>
-    <div class="btns"><button class="btn pri" data-act="conc-novo">${I.plus}Adicionar edital</button>${DB.concursos.length > 1 ? `<button class="btn ghost" data-act="comparar">Comparar editais</button>` : ""}</div>
+    ${cabecalho("Editais", "Os concursos que você acompanha. O plano do dia junta os assuntos dos editais marcados como <b>Estudando</b>.",
+      { acoes: DB.concursos.length > 1 ? `<button class="btn ghost" data-act="comparar">Comparar editais</button>` : "", criar: { rotulo: "Adicionar edital", attrs: 'data-act="conc-novo"' } })}
     ${L.length ? sec("estudando", "Estudando") + sec("espera", "Em espera") + sec("encerrado", "Encerrados")
       : vazio("Nenhum edital cadastrado", "Adicione o edital do concurso que vai fazer: pronto, lido do PDF ou digitado. Sem edital, o plano usa as disciplinas que você cadastrar.")}
   </div>`;
@@ -543,8 +543,8 @@ VIEWS.disciplinas = r => {
     </button></li>`;
   };
   return `<div class="pg">
-    <header class="pg-h"><h1>Disciplinas</h1><p class="lead">Suas disciplinas e os assuntos de cada uma. Elas valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram.</p></header>
-    <div class="btns"><button class="btn pri" data-act="mat-nova">${I.plus}Nova disciplina</button>${DB.concursos.length ? "" : `<button class="btn ghost" data-act="conc-novo">Adicionar edital</button>`}</div>
+    ${cabecalho("Disciplinas", "Suas disciplinas e os assuntos de cada uma. Elas valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram.",
+      { acoes: DB.concursos.length ? "" : `<button class="btn ghost" data-act="conc-novo">Adicionar edital</button>`, criar: { rotulo: "Nova disciplina", attrs: 'data-act="mat-nova"' } })}
     ${DB.materias.length ? `<label class="busca">${I.busca}<input type="search" id="busca-disc" placeholder="Buscar disciplina ou assunto" value="${esc(UI.buscaD || "")}" autocomplete="off" aria-label="Buscar disciplina"></label>
       ${L.length ? `<ul class="cards">${L.map(card).join("")}</ul>` : vazio("Nada encontrado", "Tente outra palavra.")}`
       : vazio("Nenhuma disciplina cadastrada", "Crie as disciplinas que vai estudar e liste os assuntos de cada uma. Se tem o edital, adicione o edital: o app separa as disciplinas do conteúdo programático.")}

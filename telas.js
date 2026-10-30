@@ -17,7 +17,9 @@ function medidor(valor, total, rot, txtFn) {
   return `<div class="medidor"><div class="med-h"><span>${rot}</span><b>${txtFn ? txtFn(valor, total) : ""}</b></div>
     <div class="barra${p >= 100 ? " cheia" : ""}" role="progressbar" aria-valuenow="${Math.round(p)}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(rot)}"><span style="width:${p}%"></span></div></div>`;
 }
-const vazio = (t, txt, acao = "") => `<div class="vazio"><b>${t}</b><p>${txt}</p>${acao}</div>`;
+// estado vazio e cabeçalho de tela vêm do Kit Fácil (iguais nos três apps)
+const vazio = (titulo, texto, acao = "") => KitFacil.ui.vazio({ titulo, texto, acao });
+const cabecalho = (titulo, sub = "", extra = {}) => KitFacil.ui.cabecalho({ titulo, sub, ...extra });
 function prazoStatus(d, t) {
   const fim = d.fim || d.ini;
   if (fim < t) return { k: "s-passou", txt: "Encerrado" };
@@ -136,7 +138,7 @@ VIEWS.estudar = () => {
       <ul class="tops">${tops.map(t => `<li><button class="top-row" data-act="iniciar-sheet" data-id="${t.id}">${glifo(t)}${nomeTop(t)}<span class="top-r">${revTxt(t)}</span></button></li>`).join("")}</ul></details>`;
   }).join("");
   return `<div class="pg">
-    <header class="pg-h"><h1>Estudar</h1><p class="lead">Escolha o assunto, ligue o cronômetro e marque as questões que resolver.</p></header>
+    ${cabecalho("Estudar", "Escolha o assunto, ligue o cronômetro e marque as questões que resolver.")}
     ${cab}
     ${!a && sug.length ? `<section class="bloco"><h2 class="b-h">Do plano de hoje</h2><ul class="pl-lista">${sug.map(x => `<li class="pl-it"><button class="pl-go" data-act="estudar" data-t="${x.top.id}" data-tipo="${x.tipo}" aria-label="Estudar ${esc(x.top.nome)}">${I.play}</button><button class="pl-txt" data-act="iniciar-sheet" data-id="${x.top.id}"><span class="pl-k ${x.tipo === "revisao" ? "rev" : "novo"}">${x.tipo === "revisao" ? "Revisão" : "Novo"}</span><span class="pl-n">${esc(x.top.nome)}</span><span class="pl-m">${esc(matNome(x.top.m))}</span></button></li>`).join("")}</ul></section>` : ""}
     ${!X.tops.length ? vazio("Nada para estudar ainda", "Adicione um edital ou cadastre suas disciplinas e assuntos.", `<div class="btns"><button class="btn pri" data-act="conc-novo">${I.plus}Adicionar edital</button><button class="btn ghost" data-go="disciplinas">Disciplinas</button></div>`) : `<section class="bloco">
@@ -218,7 +220,7 @@ function atualizarFocoContadores() {
   if (tx) tx.textContent = (qa + qe ? `${pctTxt(pct(qa, qa + qe))} de acerto neste assunto` : "Toque a cada questão que resolver") + (a.itens.length > 1 && tq ? `. ${tq} na sessão` : "");
 }
 document.addEventListener("keydown", e => {
-  if (!UI.focoAberto || !DB.ativa || $("#sheet-root").innerHTML || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (!UI.focoAberto || !DB.ativa || KitFacil.dialogo.aberto() || e.ctrlKey || e.metaKey || e.altKey) return;
   if (document.activeElement && document.activeElement.matches("input,textarea,select")) return;
   const k = e.key.toLowerCase();
   if (k === " ") { e.preventDefault(); alternarPausa(); }
@@ -332,8 +334,8 @@ function revisoesSheet() {
 }
 Object.assign(ACT, {
   "revisoes": () => revisoesSheet(),
-  "rev-feita": el => { const lista = !!el.closest(".sheet") && $(".sheet h2") && $(".sheet h2").textContent === "Revisões vencidas"; closeSheet(true); revisaoFeita(el.dataset.id); if (lista) revisoesSheet(); },
-  "rev-adiar": el => { const lista = !!el.closest(".sheet") && $(".sheet h2") && $(".sheet h2").textContent === "Revisões vencidas"; closeSheet(true); adiarRevisao(el.dataset.id); if (lista) revisoesSheet(); }
+  "rev-feita": el => { const lista = !!el.closest(".kf-dlg") && $(".kf-dlg h2") && $(".kf-dlg h2").textContent === "Revisões vencidas"; closeSheet(true); revisaoFeita(el.dataset.id); if (lista) revisoesSheet(); },
+  "rev-adiar": el => { const lista = !!el.closest(".kf-dlg") && $(".kf-dlg h2") && $(".kf-dlg h2").textContent === "Revisões vencidas"; closeSheet(true); adiarRevisao(el.dataset.id); if (lista) revisoesSheet(); }
 });
 Object.assign(ON, {
   "teoria": el => { marcarTeoria(el.dataset.id, el.checked); toast(el.checked ? "Teoria marcada como concluída." : "Teoria desmarcada."); }
@@ -355,7 +357,7 @@ VIEWS.agenda = () => {
       <span class="cal-n">${dt.getDate()}</span><span class="cal-mk">${marcas.map(k => `<i class="mk ${k}"></i>`).join("")}</span></button>`;
   }
   return `<div class="pg agenda">
-    <header class="pg-h"><h1>Agenda</h1><p class="lead">Datas do edital, revisões programadas, seus eventos e os dias em que estudou.</p></header>
+    ${cabecalho("Agenda", "Datas do edital, revisões programadas, seus eventos e os dias em que estudou.")}
     <div class="ag-grid">
       <section class="bloco cal">
         <div class="cal-bar"><button class="icon-btn" data-act="cal-mes" data-d="-1" aria-label="Mês anterior">${I.chevL}</button><h2 class="cal-t" aria-live="polite">${cap(MESES[mes])} de ${ano}</h2><button class="icon-btn" data-act="cal-mes" data-d="1" aria-label="Próximo mês">${I.chev}</button></div>
@@ -447,7 +449,7 @@ VIEWS.desempenho = () => {
   let metasB = 0; for (let d = P.ini; d <= fimR; d = addD(d, 1)) if (ehDiaEstudo(d) && metaDia(d)) metasB++;
   const nav = UI.dsPer !== "tudo" ? `<div class="per-nav"><button class="icon-btn" data-act="ds-nav" data-d="-1" aria-label="Período anterior">${I.chevL}</button><span>${P.rot}</span><button class="icon-btn" data-act="ds-nav" data-d="1" aria-label="Próximo período" ${P.fim >= t ? "disabled" : ""}>${I.chev}</button></div>` : `<div class="per-nav"><span>${P.rot}</span></div>`;
   return `<div class="pg">
-    <header class="pg-h"><h1>Desempenho</h1></header>
+    ${cabecalho("Desempenho", "Horas estudadas, questões e acertos no período.")}
     <div class="per"><div class="seg" role="group" aria-label="Período">${[["semana", "7 dias"], ["mes", "Mês"], ["tudo", "Tudo"]].map(([k, l]) => `<button data-act="ds-per" data-p="${k}" aria-pressed="${UI.dsPer === k}">${l}</button>`).join("")}</div>${nav}</div>
     <section class="stats">
       <div class="stat"><span>Tempo de estudo</span><b>${dur(tot.s)}</b><small>${diasCom ? `média de ${dur(tot.s / diasCom)} por dia estudado` : "nenhum estudo no período"}</small></div>

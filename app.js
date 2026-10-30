@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.5.0";
+const VERSAO = "2.6.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -233,7 +233,7 @@ let VER = 1;
 KitFacil.iniciar({
   app: "estudo-facil", nome: "Estudo Fácil", versao: VERSAO, icone: "icons/icon-192.png",
   resumo: "Controle de estudos para concursos: editais, disciplinas, plano do dia, cronômetro, revisões e simulados.",
-  tela: () => route().v, toast: m => toast(m), exemploDados: "os editais, as sessões de estudo e as anotações",
+  tela: () => route().v, exemploDados: "os editais, as sessões de estudo e as anotações",
   abrirAjustes: secao => {
     if (route().v !== "ajustes") return go("ajustes");
     if (secao) return;
@@ -242,7 +242,7 @@ KitFacil.iniciar({
     if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
   },
   emAjustes: () => route().v === "ajustes",
-  novidades: [{ versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
+  novidades: [{ versao: "2.6.0", itens: ["Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.", "Títulos das telas e listas vazias no mesmo formato nos três apps.", "Janelas e avisos iguais aos dos outros apps.", "Botões e links maiores, mais fáceis de tocar (no mínimo 44 px)."] }, { versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
     "O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.",
     "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
     "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",
@@ -324,7 +324,7 @@ const scheduleSync = ms => SY.agendar(ms);
 const syncNow = opts => SY.agora(opts);
 const syncStatusText = () => SY.texto();
 const canon = KitFacil.canon;
-const busyTyping = () => !!$("#sheet-root").innerHTML || (document.activeElement && document.activeElement.matches("input,textarea,select"));
+const busyTyping = () => KitFacil.dialogo.aberto() || (document.activeElement && document.activeElement.matches("input,textarea,select"));
 // junta duas listas por id; a versão mais recente de cada registro vence
 function mergeList(L, R, lt, rt, del, onRemote) {
   const rm = new Map(R.map(x => [x.id, x])), used = new Set(), out = [];
@@ -678,42 +678,17 @@ function beep() {
 }
 
 /* ================= avisos, janelas e campos ================= */
-let toastTimer;
-function toast(msg, action) {
-  $(".toast")?.remove(); clearTimeout(toastTimer);
-  const el = document.createElement("div"); el.className = "toast"; el.setAttribute("role", "status");
-  el.textContent = msg;
-  if (action) { const b = document.createElement("button"); b.textContent = action.label; b.onclick = () => { el.remove(); action.run(); }; el.appendChild(b); }
-  document.body.appendChild(el);
-  toastTimer = setTimeout(() => el.remove(), action ? 6000 : 3200);
-}
-let lockedY = null;
-function lockScroll() { if (lockedY !== null) return; lockedY = window.scrollY; Object.assign(document.body.style, { position: "fixed", top: -lockedY + "px", left: "0", right: "0" }); }
-function unlockScroll() { if (lockedY === null) return; const y = lockedY; lockedY = null; Object.assign(document.body.style, { position: "", top: "", left: "", right: "" }); window.scrollTo(0, y); }
-let sheetOnClose = null;
+/* avisos e janelas são os do Kit Fácil (iguais nos três apps); estas funções só traduzem os nomes usados no app */
+function toast(msg, action) { KitFacil.avisar(msg, action); }
 function openSheet({ title, body, foot = "", tall = false, wide = false, onMount, onClose, sub = "" }) {
-  closeSheet(true);
-  const root = $("#sheet-root");
-  root.innerHTML = `<div class="ov" id="ov"><div class="sheet${tall ? " tall" : ""}${wide ? " wide" : ""}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
-    <div class="sh-head"><div class="sh-tt">${sub ? `<p class="sh-sub">${esc(sub)}</p>` : ""}<h2>${esc(title)}</h2></div><button class="icon-btn" data-close aria-label="Fechar">${I.x}</button></div>
-    <div class="sh-body">${body}</div>${foot ? `<div class="sh-foot">${foot}</div>` : ""}</div></div>`;
-  lockScroll();
-  const ov = $("#ov"), sh = $(".sheet", ov);
-  ov.addEventListener("click", e => { if (e.target === ov) closeSheet(); });
-  $("[data-close]", sh).onclick = () => closeSheet();
-  sheetOnClose = onClose || null;
-  $$("input:not([type=checkbox]):not([type=radio]):not([type=file])", sh).forEach(i => { if (!i.hasAttribute("enterkeyhint")) i.setAttribute("enterkeyhint", "done"); });
-  onMount && onMount(sh);
-  return sh;
+  return KitFacil.dialogo.abrir({ titulo: title, sub, corpo: body, pe: foot, classe: [tall && "kf-alto", wide && "kf-largo"].filter(Boolean).join(" "),
+    aoFechar: () => { if (onClose) onClose(); if (UI.pendingRender) render(); },
+    aoMontar: sh => {
+      $$("input:not([type=checkbox]):not([type=radio]):not([type=file])", sh).forEach(i => { if (!i.hasAttribute("enterkeyhint")) i.setAttribute("enterkeyhint", "done"); });
+      onMount && onMount(sh);
+    } });
 }
-function closeSheet(silent) {
-  const root = $("#sheet-root"); if (!root || !root.innerHTML) return;
-  root.innerHTML = ""; unlockScroll();
-  const f = sheetOnClose; sheetOnClose = null;
-  if (!silent && f) f();
-  if (UI.pendingRender) render();
-}
-document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#sheet-root").innerHTML) closeSheet(); });
+function closeSheet(silent) { KitFacil.dialogo.fechar(silent); if (UI.pendingRender) render(); }
 function confirmSheet(title, text, okLabel, onOk, danger = true) {
   openSheet({ title, body: `<p class="lead">${text}</p>`,
     foot: `<button class="btn ghost" data-no>Voltar</button><button class="btn ${danger ? "danger" : "pri"}" data-ok>${esc(okLabel)}</button>`,
