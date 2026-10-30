@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.10.0 · 2026-10-30
+
+- O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho.
+- Kit Fácil 2.7.0: campo de hora do Kit (`KitFacil.hora`) no lugar do relógio do sistema; Guitarra Fácil na família.
+
 ## 2.9.0 · 2026-10-30
 
 - Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.
