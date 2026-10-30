@@ -64,7 +64,7 @@ function matDetails(c, l, t) {
   const X = ix(), tops = l.tops, R = resumoEdital(tops), totM = (X.topsAll.get(l.m) || []).length;
   const sm = X.stM.get(l.m) || { s: 0, a: 0, e: 0 }, qq = sm.a + sm.e, due = tops.filter(x => x.prox && x.prox <= t).length;
   const k = `m:${c.id}:${l.m}`;
-  return `<details class="mat" ${UI.edAberta.has(k) ? "open" : ""} data-k="${k}"><summary>
+  return `<details class="mat" data-kf-secao ${UI.edAberta.has(k) ? "open" : ""} data-k="${k}"><summary>
     <span class="mat-n">${esc(l.mat.nome)}</span>
     <span class="mat-info">${l.q ? `${numTxt(l.q)} ${l.q === 1 ? "questão" : "questões"}, ` : ""}${R.teo} de ${tops.length} concluídos${due ? `, <span class="rev-txt">${plural(due, "revisão", "revisões")}</span>` : ""}</span>
     ${barraMat(R)}${I.down}</summary>
@@ -268,7 +268,7 @@ function dadosSheet(cid) {
   openSheet({ title: c ? "Dados do edital" : "Novo edital", tall: true,
     body: `${campo(CAMPOS_ED[0])}<div class="grid2">${campo(CAMPOS_ED[1])}${campo(CAMPOS_ED[3])}</div>${campo(CAMPOS_ED[2])}
       <div class="grid2"><label class="field"><span class="lbl">Data da prova</span><input type="date" id="ed-dataProva" value="${v.dataProva || ""}"></label>${campo(CAMPOS_ED[5])}</div>
-      <details class="mais-campos" ${c ? "open" : ""}><summary>Mais informações (opcional)</summary>${campo(CAMPOS_ED[4])}${campo(CAMPOS_ED[6])}<div class="grid2">${campo(CAMPOS_ED[7])}${campo(CAMPOS_ED[8])}</div><div class="grid2">${campo(CAMPOS_ED[9])}${campo(CAMPOS_ED[10])}</div></details>`,
+      <details class="mais-campos" data-kf-secao ${c ? "open" : ""}><summary>Mais informações (opcional)</summary>${campo(CAMPOS_ED[4])}${campo(CAMPOS_ED[6])}<div class="grid2">${campo(CAMPOS_ED[7])}${campo(CAMPOS_ED[8])}</div><div class="grid2">${campo(CAMPOS_ED[9])}${campo(CAMPOS_ED[10])}</div></details>`,
     foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn pri" data-ok>${c ? "Salvar" : "Criar e colar o conteúdo"}</button>`,
     onMount: s => {
       $("[data-no]", s).onclick = () => closeSheet();

@@ -134,7 +134,7 @@ VIEWS.estudar = () => {
     const tops = X.topsByMat.get(m.id).filter(t => !q || fold(t.nome).includes(q) || fold(m.nome).includes(q));
     if (!tops.length) return "";
     const aberto = q || UI.edAberta.has("e:" + m.id);
-    return `<details class="mat" ${aberto ? "open" : ""} data-k="e:${m.id}"><summary><span class="mat-n">${esc(m.nome)}</span><span class="mat-c">${tops.filter(t => t.teoria).length}/${tops.length}</span>${I.down}</summary>
+    return `<details class="mat" data-kf-secao ${aberto ? "open" : ""} data-k="e:${m.id}"><summary><span class="mat-n">${esc(m.nome)}</span><span class="mat-c">${tops.filter(t => t.teoria).length}/${tops.length}</span>${I.down}</summary>
       <ul class="tops">${tops.map(t => `<li><button class="top-row" data-act="iniciar-sheet" data-id="${t.id}">${glifo(t)}${nomeTop(t)}<span class="top-r">${revTxt(t)}</span></button></li>`).join("")}</ul></details>`;
   }).join("");
   return `<div class="pg">
@@ -208,7 +208,7 @@ function renderFoco() {
       <button class="btn foco-b" data-act="trocar">${I.swap}Trocar assunto</button>
       <button class="btn foco-b fim" data-act="concluir">${I.stop}Concluir</button>
     </div>
-    <details class="foco-notas" ${a.obs ? "open" : ""}><summary>Anotações da sessão</summary><textarea id="foco-obs" rows="3" placeholder="Dúvidas, páginas, links, o que revisar…" data-on="foco-obs">${esc(a.obs || "")}</textarea></details>
+    <details class="foco-notas" data-kf-secao ${a.obs ? "open" : ""}><summary>Anotações da sessão</summary><textarea id="foco-obs" rows="3" placeholder="Dúvidas, páginas, links, o que revisar…" data-on="foco-obs">${esc(a.obs || "")}</textarea></details>
     <p class="foco-atalhos">No teclado: espaço pausa e retoma, A marca acerto, E marca erro.</p>
   </div>`;
 }

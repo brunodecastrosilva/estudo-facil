@@ -2,6 +2,14 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.8.0 · 2026-10-30
+
+- As listas de escolha (área da prova, tipo de data, assunto, ciclo de revisões e outras) agora são do próprio app,
+  iguais no iPhone, no Android e no computador, com os assuntos agrupados por disciplina.
+- Disciplinas, Mais informações e Anotações da sessão abrem e fecham com movimento suave, como nos outros apps.
+- Kit Fácil 2.5.0: lista de escolha do Kit no lugar da lista do sistema e seções que abrem e fecham com movimento
+  comum (`KitFacil.escolha`, `KitFacil.secao`, `KitFacil.movimento`).
+
 ## 2.7.0 · 2026-10-30
 
 - Agenda com o botão Novo evento, que já marca o dia escolhido no calendário.
