@@ -357,7 +357,7 @@ VIEWS.agenda = () => {
       <span class="cal-n">${dt.getDate()}</span><span class="cal-mk">${marcas.map(k => `<i class="mk ${k}"></i>`).join("")}</span></button>`;
   }
   return `<div class="pg agenda">
-    ${cabecalho("Agenda", "Datas do edital, revisões programadas, seus eventos e os dias em que estudou.")}
+    ${cabecalho("Agenda", "Datas do edital, revisões programadas, seus eventos e os dias em que estudou.", { criar: { rotulo: "Novo evento", attrs: 'data-act="evento"' } })}
     <div class="ag-grid">
       <section class="bloco cal">
         <div class="cal-bar"><button class="icon-btn" data-act="cal-mes" data-d="-1" aria-label="Mês anterior">${I.chevL}</button><h2 class="cal-t" aria-live="polite">${cap(MESES[mes])} de ${ano}</h2><button class="icon-btn" data-act="cal-mes" data-d="1" aria-label="Próximo mês">${I.chev}</button></div>
@@ -395,9 +395,9 @@ function painelDia(d) {
   }
   if (o.ev.length) secs.push(`<h3 class="dia-s">Seus eventos</h3><ul class="dia-l">${o.ev.map(v => `<li><button class="dia-top" data-act="evento" data-id="${v.id}"><span>${v.hora ? `<b>${esc(v.hora)}</b> ` : ""}${esc(v.titulo)}</span><small>${esc(v.tipo || "Evento")}${v.obs ? ": " + esc(v.obs) : ""}</small></button></li>`).join("")}</ul>`);
   if (o.s) { const sx = ix().sess.filter(s => s.d === d); secs.push(`<h3 class="dia-s">Estudo feito</h3><p><b>${dur(o.s)}</b> em ${plural(sx.length, "sessão", "sessões")}${metaDia(d) ? ", meta batida" : ""}.</p><ul class="dia-l">${sx.map(s => `<li><button class="dia-top" data-act="sessao" data-id="${s.id}"><span>${horaDe(s.ini)}: ${esc(s.itens.map(i => i.tn).join(", "))}</span><small>${dur(s.s)}${s.a + s.e ? `, ${s.a}/${s.a + s.e} questões` : ""}</small></button></li>`).join("")}</ul>`); }
-  return `<div class="b-hr"><div><p class="dia-rel">${cap(quando(n))}</p><h2 class="b-h">${cap(dSemana(d))}, ${dLonga(d)}</h2></div><button class="btn ghost sm" data-act="evento" data-d="${d}">${I.plus}Evento</button></div>
+  return `<div class="b-hr"><div><p class="dia-rel">${cap(quando(n))}</p><h2 class="b-h">${cap(dSemana(d))}, ${dLonga(d)}</h2></div></div>
     ${ehDiaEstudo(d) ? "" : `<p class="hint">Dia de folga no seu planejamento.</p>`}
-    ${secs.length ? secs.join("") : `<p class="hint">${d >= t ? "Nada marcado. Adicione um evento, como uma aula ou um simulado." : "Sem registros neste dia."}</p>`}`;
+    ${secs.length ? secs.join("") : `<p class="hint">${d >= t ? "Nada marcado. Toque em <b>Novo evento</b> para marcar uma aula ou um simulado neste dia." : "Sem registros neste dia."}</p>`}`;
 }
 function cargaRevisoes() {
   const t = today(), X = ix(), dias = [];

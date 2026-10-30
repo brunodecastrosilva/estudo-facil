@@ -2,7 +2,7 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
-**Fase de testes** · versão 2.6.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+**Fase de testes** · versão 2.7.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -89,6 +89,27 @@ Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
 | `comum/` | **Kit Fácil**: sistema de design comum, barra superior, Ajustes, avaliação, sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
 | `tests/` | testes do app |
+
+## Modelo de dados
+
+Tudo fica num só objeto (`estudofacil.db`, versão 2 do formato), com estas listas:
+
+| Lista | O que guarda |
+|---|---|
+| `materias` e `topicos` | disciplinas e assuntos. São **globais**: o que você estuda num assunto vale em todos os editais que o cobram |
+| `concursos` | editais: situação (Estudando, Em espera ou Encerrado), dados do concurso, datas, prova (nota mínima, regra de não zerar, áreas) e os vínculos `disc`, um por disciplina, com a área, as questões, os pontos por questão e os assuntos cobrados |
+| `sessoes` | sessões de estudo do cronômetro (assunto, tempo, acertos e erros) |
+| `eventos` | eventos da Agenda (aulas, simulados e outros) |
+| `simulados` | resultados de simulados |
+| `cfg` e `ativa` | preferências e a sessão em andamento |
+
+Regras:
+- o plano do dia junta os assuntos dos editais com a situação Estudando; sem nenhum edital em estudo, usa todas as disciplinas;
+- o peso de cada disciplina é a média da fatia da nota que ela vale em cada edital em estudo;
+- ao importar um edital, disciplinas com o mesmo nome se juntam, e assuntos se juntam pelo nome sem a numeração do edital;
+- os dados da versão 1 do formato migram sozinhos para a versão 2.
+
+Pendência conhecida: o leitor de PDF reconhece mal o conteúdo programático de alguns editais (como o da ABDI). Nesses casos, use a biblioteca ou cole o conteúdo.
 
 ## Serviços externos e configuração
 

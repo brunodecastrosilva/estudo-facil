@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.7.0 · 2026-10-30
+
+- Agenda com o botão Novo evento, que já marca o dia escolhido no calendário.
+- Kit Fácil 2.4.0: tira partes antigas que nenhum app usava mais (`ajudaHTML`, `kf-marca-compacta`, a opção `topo.html({ ajustes })`).
+
 ## 2.6.0 · 2026-10-29
 
 - Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.
