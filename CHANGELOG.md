@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.5.0 · 2026-10-29
+
+- Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros.
+- Kit Fácil 2.2.0: a barra de baixo tem no máximo 5 posições; com mais seções, as principais e o "Mais".
+
 ## 2.4.0 · 2026-10-29
 
 - O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.

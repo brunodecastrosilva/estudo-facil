@@ -3,7 +3,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
-import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ } from '../comum/testes/ambiente.mjs';
+import { preparar, aparelho, githubFalso, firestoreFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, abrirAjustesPelaNav, irPelaNav, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ } from '../comum/testes/ambiente.mjs';
 
 let amb, versao;
 before(async () => { amb = await preparar(); versao = JSON.parse(await readFile(RAIZ + '/package.json', 'utf8')).version; });
@@ -12,7 +12,7 @@ const esperar = async (cond, ms = 8000) => { const fim = Date.now() + ms; while 
 // Ajustes fica na navegação: barra de baixo (celular e tablet) ou pé do trilho (computador)
 const AJ = '.kf-nav [data-kf="ajustes"]:visible, .kf-trilho [data-kf="ajustes"]:visible';
 /* abre uma guia dos Ajustes (no celular, a lista vira a guia aberta) */
-const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await p.click(AJ); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
+const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await abrirAjustesPelaNav(p); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
 const TELAS = [[{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
 
 /* deixa o app pronto (como depois da tela inicial), com uma disciplina e dois assuntos, usando as funções do app */
@@ -59,10 +59,10 @@ test('Ajustes: guias comuns na ordem do padrão, guias do Estudo Fácil e Voltar
   const p = a.page;
   await prontoComDisciplina(p, 'Matemática', ['Frações']);
   await p.goto(amb.url + '#/agenda');
-  await p.click(AJ);
+  await abrirAjustesPelaNav(p);
   assert.deepEqual(await guiasAjustes(p), { comuns: GUIAS_COMUNS, produto: ['Rotina e metas', 'Revisões'] });
   assert.ok((await p.textContent('#main')).includes(`Estudo Fácil ${versao}`), 'falta a versão');
-  assert.equal(await p.getAttribute(AJ, 'aria-current'), 'page');
+  assert.equal(await p.locator('.kf-nav [data-kf=\"ajustes\"]').getAttribute('aria-current'), 'page');
   // guia própria: mudar a meta redesenha a tela e a guia continua aberta
   await guia(p, 'rotina');
   await p.click('[data-act="aj-step"][data-k="hDia"][data-d="0.5"]');
@@ -72,7 +72,7 @@ test('Ajustes: guias comuns na ordem do padrão, guias do Estudo Fácil e Voltar
   assert.ok(await esperar(async () => (await p.getAttribute('[data-kf-aj]', 'data-ativa')) === ''), 'o Voltar não voltou para a lista');
   // Ajustes na navegação, numa guia, volta para a lista; outro item da navegação sai dos Ajustes
   await guia(p, 'revisoes');
-  await p.click(AJ);
+  await abrirAjustesPelaNav(p);
   assert.ok(await esperar(async () => (await p.getAttribute('[data-kf-aj]', 'data-ativa')) === ''), 'Ajustes na navegação não voltou para a lista');
   await p.click('.kf-nav [data-go="agenda"]');
   assert.ok(await esperar(() => p.evaluate(() => route().v === 'agenda')), 'a navegação não saiu dos Ajustes');

@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.4.0";
+const VERSAO = "2.5.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -242,7 +242,7 @@ KitFacil.iniciar({
     if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
   },
   emAjustes: () => route().v === "ajustes",
-  novidades: [{ versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
+  novidades: [{ versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
     "O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.",
     "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
     "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",
@@ -745,6 +745,8 @@ const UI = { pendingRender: false, alarme: 0, focoAberto: false, edTab: "conteud
 const VIEWS = {};
 const NAV = [["hoje", "Hoje", "hoje"], ["editais", "Editais", "edital"], ["estudar", "Estudar", "timer"], ["disciplinas", "Disciplinas", "livro"], ["agenda", "Agenda", "agenda"]];
 const RAIL_MAIS = [["desempenho", "Desempenho", "stats"]]; // Ajustes fica no fim da navegação (KitFacil.nav.ajustes), igual nos três apps
+// barra de baixo (Kit Fácil 2.2): 4 principais (Hoje, Editais, Estudar, Agenda) + "Mais" com Disciplinas, Desempenho e Ajustes
+const NAV_MAIS = new Set(["disciplinas", "desempenho"]);
 const ABA = { edital: "editais" };
 function route() {
   const h = decodeURIComponent(location.hash.replace(/^#\/?/, "")).split("/");
@@ -782,9 +784,9 @@ function renderShell(r) {
   const cur = v => aba === v ? 'aria-current="page"' : "";
   const navBtn = ([v, l, ic]) => {
     if (v === "estudar") return `<button class="kf-nav-it nav-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}><span class="nav-fab">${a ? I.timer : I.play}</span><span class="kf-nav-l" ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : l}</span></button>`;
-    return `<button class="kf-nav-it" data-go="${v}" ${cur(v)}><span class="kf-nav-ic">${I[ic]}</span><span class="kf-nav-l">${l}</span></button>`;
+    return `<button class="kf-nav-it" data-go="${v}" ${cur(v)}${NAV_MAIS.has(v) ? " data-kf-mais" : ""}><span class="kf-nav-ic">${I[ic]}</span><span class="kf-nav-l">${l}</span></button>`;
   };
-  $("#nav").innerHTML = NAV.map(navBtn).join("") + KitFacil.nav.ajustes("nav", { id: "nav-ajustes" });
+  $("#nav").innerHTML = [...NAV, ...RAIL_MAIS].map(navBtn).join("") + KitFacil.nav.ajustes("nav", { id: "nav-ajustes" });
   $("#rail-nav").innerHTML = [...NAV, ...RAIL_MAIS].map(([v, l, ic]) => v === "estudar"
     ? `<button class="kf-trilho-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
     : `<button class="kf-trilho-it" data-go="${v}" ${cur(v)}>${I[ic]}<span>${l}</span></button>`).join("");

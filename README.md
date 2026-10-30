@@ -2,7 +2,7 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
-**Fase de testes** · versão 2.4.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+**Fase de testes** · versão 2.5.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
@@ -22,7 +22,7 @@ Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fá
 - **Use em vários aparelhos (opcional):** os mesmos dados no celular, no tablet e no computador, criptografados num gist secreto da sua conta GitHub
 - **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
 - **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
-- **Ajustes na barra de baixo** (no computador, no pé do menu lateral), com as mesmas guias nos três apps
+- **Barra de baixo com no máximo 5 posições:** as seções principais e "Mais", com o resto e os Ajustes (no computador, tudo no menu lateral)
 - **Pague um chopp para o criador!** O app é gratuito; o chopp no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
 - **Novidades:** depois de cada atualização, o app mostra uma vez o que mudou
 - Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
