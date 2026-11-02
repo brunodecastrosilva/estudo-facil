@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.10.1 · 2026-11-02
+
+- Ajustes internos do Kit Fácil, sem mudança para quem usa.
+- Kit Fácil 2.8.0: tema de fábrica por app e fonte dos títulos por app (Padrão 2.6). O Estudo Fácil continua no tema automático e na Atkinson.
+
 ## 2.10.0 · 2026-10-30
 
 - O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho.

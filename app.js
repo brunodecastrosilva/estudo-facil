@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.10.0";
+const VERSAO = "2.10.1";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
