@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400..700&family=Atkinson+Hyperlegible+Next:wght@400..800&display=swap">
-<link rel="stylesheet" href="comum/kit-facil.css?v=2.11.0">
+<link rel="stylesheet" href="comum/kit-facil.css?v=2.12.0">
 <style>
 /* Papel de caderno, tinta de caneta azul e marca-texto.
    O marca-texto é o único elemento chamativo: marca o que já foi estudado no edital e o botão de estudar. */
@@ -125,7 +125,7 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke
 .b-hr{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
 .b-h{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:13px;padding:11px 16px;font-weight:700;font-size:15.5px;line-height:1.2;background:var(--sheet-2);color:var(--ink);text-decoration:none;min-height:44px;text-align:center;text-wrap:balance}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--kf-r-btn);padding:11px 16px;font-weight:700;font-size:15.5px;line-height:1.2;background:var(--sheet-2);color:var(--ink);text-decoration:none;min-height:var(--kf-btn-h);text-align:center;text-wrap:balance}
 .btn svg{width:19px;height:19px}
 .btn.pri{background:var(--pen);color:var(--pen-ink)}
 @media (hover:hover){.btn.pri:hover{background:var(--pen-deep)}.btn.ghost:hover{background:var(--sheet-2)}}
@@ -134,9 +134,9 @@ svg.i{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke
 .btn.link.muted{color:var(--muted);font-weight:600}
 .btn.danger{color:var(--bad)}
 .btn.pri.danger,.btn.danger:not(.link):not(.ghost){background:var(--bad);color:#fff}
-.btn.sm{font-size:14.5px;padding:8px 12px;min-height:38px;border-radius:11px}
+.btn.sm{font-size:14.5px;padding:8px 12px;min-height:var(--kf-btn-h-p);border-radius:var(--kf-r-btn)}
 .btn.link.sm{padding:4px 2px;min-height:0}
-.btn.lg{font-size:17px;padding:14px 20px;min-height:52px;border-radius:15px}
+.btn.lg{font-size:16px;padding:12px 20px;min-height:var(--kf-btn-h);border-radius:var(--kf-r-btn)}
 .btn:disabled{opacity:.45;cursor:default}
 .btn.back{align-self:flex-start;padding-left:0}
 .tag{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--sheet-2);color:var(--muted);white-space:nowrap}
@@ -169,11 +169,11 @@ input:focus,select:focus,textarea:focus{outline:none;box-shadow:inset 0 0 0 2px 
 .check{display:flex;align-items:flex-start;gap:10px;font-size:15.5px;cursor:pointer;line-height:1.35}
 .check input{width:22px;height:22px;margin:0;flex:none;accent-color:var(--pen)}
 .check.sm{font-size:14px}.check.sm input{width:18px;height:18px}
-.seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg>button,.seg>label>span{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:11px;padding:9px 14px;font-weight:700;font-size:15px;background:var(--sheet-2);color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--rule);cursor:pointer;min-height:42px}
+.seg{display:flex;flex-wrap:wrap;gap:3px;padding:3px;border-radius:var(--kf-r-btn);background:var(--sheet-2);box-shadow:inset 0 0 0 1px var(--rule);width:fit-content;max-width:100%}
+.seg>button,.seg>label>span{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:calc(var(--kf-r-btn) - 3px);padding:6px 14px;font-weight:600;font-size:14.5px;background:none;color:var(--muted);cursor:pointer;min-height:var(--kf-seg-h)}
 .seg>label{position:relative}
 .seg>label>input{position:absolute;opacity:0;pointer-events:none}
-.seg>button[aria-pressed="true"],.seg>label>input:checked+span{background:var(--ink);color:var(--paper);box-shadow:none}
+.seg>button[aria-pressed="true"],.seg>label>input:checked+span{background:var(--kf-seg-on);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14)}
 .seg>label>input:focus-visible+span{outline:2.5px solid var(--pen);outline-offset:2px}
 .stepper{display:flex;align-items:center;gap:10px}
 .stepper output{min-width:96px;text-align:center;font-weight:800;font-size:18px}
@@ -422,11 +422,6 @@ body.com-foco .tabbar{display:none}
 .ed-org{font-size:15px;color:var(--muted)}
 .ed-h h1{font-size:clamp(26px,6.6vw,34px)}
 .ed-perfil{font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;border-bottom:1.5px solid var(--rule);margin:0 -2px}
-.tabs::-webkit-scrollbar{display:none}
-.tabs button{border:0;background:none;padding:10px 14px 12px;font-weight:700;color:var(--muted);font-size:15.5px;position:relative;white-space:nowrap}
-.tabs button[aria-current="page"]{color:var(--ink)}
-.tabs button[aria-current="page"]::after{content:'';position:absolute;left:10px;right:10px;bottom:-1.5px;height:4px;border-radius:4px 4px 0 0;background:var(--hl);box-shadow:inset 0 0 0 1px var(--hl-line)}
 .ed-res{display:flex;flex-direction:column;gap:8px}
 .grupo{display:flex;flex-direction:column;background:var(--sheet);border-radius:18px;padding:16px 16px 4px;box-shadow:var(--shadow)}
 .g-h{display:flex;flex-direction:column;gap:2px;padding-bottom:6px;border-bottom:1.5px solid var(--ink)}
@@ -642,9 +637,9 @@ body.com-foco .tabbar{display:none}
 }
 .kf-aj .field + .field,.kf-aj .grid2 + .grid2{margin-top:4px}
 /* lei 7: alvos de toque de pelo menos 44 px (revisão de 29/10); links pequenos ganham área de toque sem mudar o desenho */
-.btn.sm{min-height:44px}
-.btn.link{min-height:44px}
-.btn.link.sm{min-height:44px;padding-block:12px;margin-block:-12px}
+.btn.sm{min-height:var(--kf-alvo)}
+.btn.link{min-height:var(--kf-alvo)}
+.btn.link.sm{min-height:var(--kf-alvo);padding-block:12px;margin-block:-12px}
 .top-row{min-height:44px}
 </style>
 </head>
@@ -655,10 +650,10 @@ body.com-foco .tabbar{display:none}
 <nav class="kf-nav" aria-label="Seções"><div class="kf-nav-in" id="nav"></div></nav>
 <div class="foco" id="foco" hidden></div>
 <noscript><p style="padding:24px">O Estudo Fácil precisa de JavaScript ligado para funcionar.</p></noscript>
-<script src="comum/kit-facil.js?v=2.11.0"></script>
-<script src="editais.js?v=2.11.0"></script>
-<script src="app.js?v=2.11.0"></script>
-<script src="telas.js?v=2.11.0"></script>
-<script src="cadastros.js?v=2.11.0"></script>
+<script src="comum/kit-facil.js?v=2.12.0"></script>
+<script src="editais.js?v=2.12.0"></script>
+<script src="app.js?v=2.12.0"></script>
+<script src="telas.js?v=2.12.0"></script>
+<script src="cadastros.js?v=2.12.0"></script>
 </body>
 </html>

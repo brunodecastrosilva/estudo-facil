@@ -42,7 +42,7 @@ VIEWS.edital = r => {
       ${p ? `<p class="ed-perfil">Perfil <b>${esc(p.nome)}</b> <button class="btn link sm" data-act="perfil" data-id="${c.id}">Trocar</button></p>` : ""}
       <div class="seg st-seg" role="group" aria-label="Situação do edital">${STATUS.map(([k, l]) => `<button data-act="ed-status" data-id="${c.id}" data-s="${k}" aria-pressed="${c.status === k}">${l}</button>`).join("")}</div>
     </header>
-    <nav class="tabs" aria-label="Partes do edital">${ED_TABS.map(([k, l]) => `<button data-go="edital/${c.id}/${k}" ${k === tab ? 'aria-current="page"' : ""}>${l}</button>`).join("")}</nav>
+    ${KitFacil.ui.abas({ itens: ED_TABS.map(([k, l]) => [`edital/${c.id}/${k}`, l]), atual: `edital/${c.id}/${tab}`, rotulo: "Partes do edital", dado: "go" })}
     ${body}
   </div>`;
 };

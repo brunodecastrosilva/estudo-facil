@@ -2,6 +2,13 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.12.0 · 2026-11-04
+
+- **Mesmo padrão da família (Kit Fácil 2.10, lei 6):** as guias do edital (Conteúdo, Prova, Datas, Sobre) são as guias
+  do Kit, sublinhadas na cor de destaque; as escolhas (segmentos) marcam a opção em claro, como em Ajustes › Aparência,
+  em vez do preto; botões com 48 px (40 px os pequenos) e canto de 12.
+- Confirmações do Kit com Cancelar, como as outras janelas.
+
 ## 2.11.0 · 2026-11-03
 
 - **Restaurar padrões de fábrica** (Ajustes › Privacidade e segurança, Kit Fácil 2.9.0): o app volta como novo neste
