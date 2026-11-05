@@ -160,7 +160,7 @@ else falha('KitFacil.iniciar sem abrirAjustes e emAjustes (o item Ajustes da nav
   for (const f of (await arquivosDoRepo()).filter(f => f.endsWith('.css') && !f.startsWith('comum/') && !f.startsWith('tests/'))) estilos.push(await ler(f));
   const css = estilos.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/@(media|supports)[^{]*\{/g, '');
   const COMP = /^\.(btn|seg|card|cartao|banner|faixa|tabs?|abas?|chip)(\.[\w-]+)*(\s*>?\s*(button|label\s*>\s*span|label\s*>\s*input:checked\s*\+\s*span))?(\[[^\]]*\])?(:[\w-]+)?$/;
-  const medida = v => /^(0|99px|999px|50%|inherit|var\(--kf-[\w-]+\)|calc\(var\(--kf-[\w-]+\)[^;]*\))$/.test(v.trim());
+  const medida = v => /^(0|99px|999px|50%|inherit|var\(--kf-[\w-]+\)|calc\(var\(--kf-[\w-]+\)[^;]*\))$/.test(v.replace(/!important\s*$/, '').trim());
   const erros = new Set();
   for (const [, sel, dec] of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const comps = sel.split(',').map(x => x.trim()).filter(x => COMP.test(x));
