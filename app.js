@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.12.0";
+const VERSAO = "2.13.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -230,6 +230,23 @@ const BIBLIOTECA = [{ id: EDITAL_ABDI.id, sigla: EDITAL_ABDI.sigla, orgao: EDITA
 let DB = (() => { const bruto = LS.get("db", null), d = arrumarBanco(bruto); if (bruto && bruto.v === 1) LS.set("db", d); return d; })();
 let VER = 1;
 /* padrão do Projeto Integrador: avaliação, sobre e privacidade, tema e sincronização vêm do Kit Fácil */
+/* ================= guia do app em 3 níveis (Kit 2.11) ================= */
+const irTela = async v => { if (route().v !== v || route().sub) go(v); await new Promise(r => setTimeout(r, 120)); };
+const pronto = () => !!DB.cfg.pronto;
+const GUIA = [
+  { nivel: 1, se: pronto, ir: () => irTela("hoje"), sel: ".contagem", t: "Contagem para a prova", d: "Quantos dias faltam para a prova do edital que você está estudando e quanto da teoria já está concluído." },
+  { nivel: 1, se: pronto, ir: () => irTela("hoje"), sel: "#main section.agora", t: "O que estudar agora", d: "O app escolhe o próximo assunto pelo peso na prova e pelas revisões vencidas. Toque em Começar para abrir o cronômetro." },
+  { nivel: 2, se: pronto, ir: () => irTela("hoje"), sel: ".bloco.plano", t: "Plano de hoje", d: "As revisões do dia e os assuntos novos no ritmo certo para terminar a teoria antes da prova." },
+  { nivel: 3, se: pronto, ir: () => irTela("hoje"), sel: ".bloco.metas", t: "Meta de hoje", d: "O tempo de estudo combinado para hoje. Ajuste a rotina em Ajustes, Rotina e metas." },
+  { nivel: 3, se: pronto, ir: () => irTela("hoje"), sel: ".bloco.prazos", t: "Próximas datas", d: "Inscrição, pagamento e prova dos editais. Dá para levar as datas para a agenda do celular." },
+  { nivel: 2, se: pronto, ir: () => irTela("hoje"), sel: ".bloco.semana", t: "Últimos 7 dias", d: "O tempo estudado na semana. O link Desempenho mostra acertos, erros e o tempo por disciplina." },
+  { nivel: 1, se: pronto, ir: () => irTela("estudar"), sel: "#main details.mat", alt: "#main", t: "Estudar", d: "Todas as disciplinas e assuntos. Toque num assunto para estudar com o cronômetro em tela cheia." },
+  { nivel: 1, se: pronto, ir: () => irTela("editais"), sel: "#main .ed-card", alt: "#main", t: "Editais", d: "Seus concursos: prontos da biblioteca, lidos do PDF ou digitados. Em cada um, o peso das disciplinas e a nota mínima." },
+  { nivel: 2, se: pronto, ir: () => irTela("disciplinas"), sel: "#main .ed-card", alt: "#main", t: "Disciplinas", d: "As disciplinas valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram." },
+  { nivel: 2, se: pronto, ir: () => irTela("agenda"), sel: "#main", t: "Agenda", d: "O calendário com os dias de estudo, as revisões marcadas e as datas dos concursos." },
+  { nivel: 3, se: pronto, ir: () => irTela("desempenho"), sel: "#main", t: "Desempenho", d: "Tempo de estudo, questões, acertos e simulados por período, com a nota calculada pela regra da prova." },
+];
+
 KitFacil.iniciar({
   app: "estudo-facil", nome: "Estudo Fácil", versao: VERSAO, icone: "icons/icon-192.png",
   resumo: "Controle de estudos para concursos: editais, disciplinas, plano do dia, cronômetro, revisões e simulados.",
@@ -242,7 +259,7 @@ KitFacil.iniciar({
     if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
   },
   emAjustes: () => route().v === "ajustes",
-  novidades: [{ versao: "2.12.0", itens: ["Botões, escolhas e as guias do edital com o mesmo jeito dos outros apps da família."] }, { versao: "2.11.0", itens: ["Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes."] }, { versao: "2.10.0", itens: ["O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho."] }, { versao: "2.9.0", itens: ["Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.", "Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas."] }, { versao: "2.8.0", itens: ["As listas de escolha (área da prova, assunto, ciclo de revisões e outras) agora são do próprio app, iguais no iPhone, no Android e no computador.", "Disciplinas, Mais informações e Anotações da sessão abrem e fecham com movimento suave, como nos outros apps da família."] }, { versao: "2.7.0", itens: ["Agenda com o botão Novo evento, que já marca o dia escolhido no calendário."] }, { versao: "2.6.0", itens: ["Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.", "Títulos das telas e listas vazias no mesmo formato nos três apps.", "Janelas e avisos iguais aos dos outros apps.", "Botões e links maiores, mais fáceis de tocar (no mínimo 44 px)."] }, { versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
+  novidades: [{ versao: "2.13.0", itens: ["Apresentação curta ao abrir o app e guia em 3 níveis: essencial, exploração e completo. Dá para desligar a apresentação em Ajustes."] }, { versao: "2.12.0", itens: ["Botões, escolhas e as guias do edital com o mesmo jeito dos outros apps da família."] }, { versao: "2.11.0", itens: ["Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes."] }, { versao: "2.10.0", itens: ["O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho."] }, { versao: "2.9.0", itens: ["Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.", "Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas."] }, { versao: "2.8.0", itens: ["As listas de escolha (área da prova, assunto, ciclo de revisões e outras) agora são do próprio app, iguais no iPhone, no Android e no computador.", "Disciplinas, Mais informações e Anotações da sessão abrem e fecham com movimento suave, como nos outros apps da família."] }, { versao: "2.7.0", itens: ["Agenda com o botão Novo evento, que já marca o dia escolhido no calendário."] }, { versao: "2.6.0", itens: ["Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.", "Títulos das telas e listas vazias no mesmo formato nos três apps.", "Janelas e avisos iguais aos dos outros apps.", "Botões e links maiores, mais fáceis de tocar (no mínimo 44 px)."] }, { versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
     "O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.",
     "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
     "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",
@@ -251,6 +268,11 @@ KitFacil.iniciar({
   ] }],
   // o primeiro uso é a tela própria do Estudo Fácil (escolha do edital e da rotina): o kit só fica sabendo quem é novo
   boasVindas: { novo: () => !DB.cfg.pronto },
+  apresentacao: { frase: "Seu estudo para concursos, organizado: o app diz o que estudar a cada dia.", pontos: [
+    ["Cadastre o edital", "Pronto da biblioteca, lido do PDF ou digitado com o conteúdo programático."],
+    ["Estude com o cronômetro", "Marque acertos e erros; as revisões entram sozinhas, em 1, 7 e 30 dias."],
+    ["Acompanhe o progresso", "Contagem para a prova, meta do dia e desempenho por disciplina."]] },
+  guia: { get passos() { return GUIA; }, semPassos: "Termine o primeiro cadastro para fazer o guia." },
   ocupado: () => document.body.classList.contains("onb"),
   copia: { descricao: "Baixe um arquivo com os editais, as disciplinas, as sessões, as revisões e os ajustes.", baixar: () => KitFacil.copia.baixar({ v: 2, ...dadosSync() }, 2), restaurar: f => restaurarCopiaEstudo(f) },
   textos: { notificacoes: "O Estudo Fácil não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto; no fim do tempo de estudo, o app toca um som e vibra (se você deixar ligado abaixo)." },

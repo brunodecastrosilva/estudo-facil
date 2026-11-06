@@ -2,13 +2,14 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
-**Fase de testes** · versão 2.12.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+**Fase de testes** · versão 2.13.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
-Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil e Estudo Fácil) e segue o padrão comum descrito em
+Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o padrão comum descrito em
 [`comum/PADRAO.md`](comum/PADRAO.md).
 
 ## O que o app faz
 
+- Apresentação curta ao abrir (desligável em Ajustes) e guia em 3 níveis: essencial, exploração e completo
 - Cadastre editais de três jeitos: prontos da biblioteca (hoje, o Processo Seletivo ABDI 2026), lidos do PDF ou digitados com o conteúdo programático colado
 - Mantenha suas disciplinas e assuntos num só lugar. Eles valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram
 - Informe, em cada edital, as questões e o valor de cada disciplina, as áreas da prova e a nota mínima
@@ -69,7 +70,7 @@ Ao mudar a versão, atualize também o `?v=` dos scripts no `index.html`.
 
 Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
 
-- **Alto da tela, à direita:** Ajustes, nuvem da sincronização e balão de avaliação, nessa ordem. À esquerda deles,
+- **Alto da tela, à direita:** nuvem da sincronização, chopp para o criador e balão de avaliação, nessa ordem; Ajustes fica na barra de baixo (no computador, no pé do menu lateral). À esquerda deles,
   a ação própria do app (Desempenho). No celular estreito (menos de 400 px), a marca mostra só o ícone
 - **Navegação:** Hoje, Editais, Estudar, Disciplinas e Agenda na barra de baixo (celular e tablet); no computador,
   menu lateral com Desempenho
