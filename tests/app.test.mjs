@@ -15,7 +15,7 @@ const AJ = '.kf-nav [data-kf="ajustes"]:visible, .kf-trilho [data-kf="ajustes"]:
 const guia = async (p, id) => { if (!(await p.locator('[data-kf-aj]').count())) await abrirAjustesPelaNav(p); await p.click(`.kf-aj-lista [data-kf-aj-ir="${id}"]`); await p.locator(`#kf-aj-${id}.kf-aberta, [data-kf-aj][data-ativa="${id}"]`).first().waitFor(); };
 const TELAS = [[{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
 
-/* deixa o app pronto (como depois da tela inicial), com uma disciplina e dois assuntos, usando as funções do app */
+/* deixa o app com uma disciplina e dois assuntos, usando as funções do app */
 const prontoComDisciplina = (p, nome, assuntos) => p.evaluate(([nome, assuntos]) => {
   const m = { id: uid(), nome };
   DB.materias.push(m);
@@ -26,7 +26,7 @@ const prontoComDisciplina = (p, nome, assuntos) => p.evaluate(([nome, assuntos])
 test('abre sem erros em celular, tablet e computador, sem rolagem lateral', async () => {
   for (const [viewport, nome] of TELAS) {
     const a = await aparelho(amb, { viewport });
-    await a.page.locator('.onb-wrap').waitFor();
+    await a.page.locator('#main section.agora').waitFor();
     assert.equal(await a.page.getAttribute('html', 'lang'), 'pt-BR');
     assert.ok(await semRolagemLateral(a.page), `rolagem lateral na tela inicial no ${nome}`);
     await prontoComDisciplina(a.page, 'Português', ['Crase', 'Concordância']);
@@ -171,7 +171,7 @@ test('aparência: o tema escuro fica guardado junto com as outras preferências 
   await a.fechar();
 });
 
-test('sincronização: o outro aparelho entra pela tela inicial e recebe disciplinas, assuntos e exclusões', async () => {
+test('sincronização: o outro aparelho entra pela nuvem e recebe disciplinas, assuntos e exclusões', async () => {
   const gh = githubFalso();
   const A = await aparelho(amb, { github: gh });
   const B = await aparelho(amb, { github: gh });
@@ -186,13 +186,13 @@ test('sincronização: o outro aparelho entra pela tela inicial e recebe discipl
   const arq = gh.arquivo('estudo-facil.json');
   assert.ok(arq && !/Direito Constitucional/.test(arq.conteudo), 'o gist deveria estar criptografado');
 
-  // B ainda na tela inicial: "Já uso o Estudo Fácil em outro aparelho"
-  await B.page.click('[data-act="onb-conectar"]');
+  // B sem nada cadastrado (não há tela de primeiro uso): liga a sincronização pela nuvem
+  await B.page.click('[data-kf-nuvem]');
+  await B.page.click('.kf-dlg [data-kf="sync-ativar"]');
   await B.page.fill('#kf-token', TOKEN_TESTE);
   await B.page.click('[data-kf-conectar]');
-  assert.ok(await esperar(() => B.page.evaluate(() => DB.cfg.pronto && DB.materias.some(m => m.nome === 'Direito Constitucional'))), 'B não recebeu os dados');
+  assert.ok(await esperar(() => B.page.evaluate(() => DB.materias.some(m => m.nome === 'Direito Constitucional'))), 'B não recebeu os dados');
   await B.page.locator('#main .pg, #main section').first().waitFor();
-  assert.equal(await B.page.locator('.onb-wrap').count(), 0, 'B continuou na tela inicial');
 
   // assunto alterado e depois excluído no B some no A, sem regravar o gist à toa depois
   await B.page.evaluate(() => { const t = DB.topicos.find(x => x.nome === 'Organização do Estado'); t.nota = 'revisar'; commit(); });

@@ -64,7 +64,8 @@ VIEWS.hoje = () => {
   if (semNada && !a) {
     agora = `<section class="agora boas"><p class="ag-k">${I.check}Primeiro passo</p><h2 class="ag-h">Cadastre o que você vai estudar</h2>
       <p class="ag-m">Adicione o edital do seu concurso, pronto, do PDF ou digitado, ou cadastre suas disciplinas e assuntos. O plano do dia aparece aqui.</p>
-      <div class="btns"><button class="btn pri lg" data-act="conc-novo">${I.plus}Adicionar edital</button><button class="btn ghost" data-go="disciplinas">Cadastrar disciplinas</button></div></section>`;
+      <div class="btns"><button class="btn pri lg" data-act="conc-novo">${I.plus}Adicionar edital</button><button class="btn ghost" data-go="disciplinas">Cadastrar disciplinas</button></div>
+      <p class="ag-m">Sua rotina: ${esc(resumoRotina())}. <button class="btn link sm" data-act="aj-rotina">Ajustar a rotina</button></p></section>`;
   } else if (a) {
     const it = atual(a);
     agora = `<section class="agora em-curso"><p class="ag-k">${I.timer}Sessão em andamento</p><h2 class="ag-h">${esc(topNome(it.t))}</h2><p class="ag-m">${esc(matNome(it.m))}, ${TIPO_TXT[it.tipo].toLowerCase()}. <span data-tick="estudo-real">${dur(estudoTotal(a, Date.now()))}</span> de estudo.</p>
@@ -662,7 +663,7 @@ Object.assign(ACT, {
   "apagar-tudo": () => confirmSheet("Apagar todos os dados?", `Sessões, revisões, anotações e ajustes deste aparelho${syncOn() ? " e da nuvem" : ""} serão apagados, com editais e disciplinas, e o app volta à tela inicial, como na primeira vez.`, "Apagar tudo", () => {
     const novo = bancoNovo();
     for (const c of COLLS) DB[c] = novo[c]; DB.cfg = novo.cfg; DB.ativa = null; UI.focoAberto = false;
-    commit(); ONB.passo = 0; ONB.semEdital = false; history.replaceState({ d: 0 }, "", "#/hoje"); render(); toast("Dados apagados.");
+    commit(); history.replaceState({ d: 0 }, "", "#/hoje"); render(); toast("Dados apagados.");
   })
 });
 

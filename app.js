@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "2.13.3";
+const VERSAO = "2.14.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -232,7 +232,7 @@ let VER = 1;
 /* padrão do Projeto Integrador: avaliação, sobre e privacidade, tema e sincronização vêm do Kit Fácil */
 /* ================= guia do app em 3 níveis (Kit 2.11) ================= */
 const irTela = async v => { if (route().v !== v || route().sub) go(v); await new Promise(r => setTimeout(r, 120)); };
-const pronto = () => !!DB.cfg.pronto;
+const pronto = () => !!(DB.concursos.length || DB.materias.length);
 const GUIA = [
   { nivel: 1, se: pronto, ir: () => irTela("hoje"), sel: ".contagem", t: "Contagem para a prova", d: "Quantos dias faltam para a prova do edital que você está estudando e quanto da teoria já está concluído." },
   { nivel: 1, se: pronto, ir: () => irTela("hoje"), sel: "#main section.agora", t: "O que estudar agora", d: "O app escolhe o próximo assunto pelo peso na prova e pelas revisões vencidas. Toque em Começar para abrir o cronômetro." },
@@ -259,21 +259,20 @@ KitFacil.iniciar({
     if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
   },
   emAjustes: () => route().v === "ajustes",
-  novidades: [{ versao: "2.13.3", itens: ["No celular, o destaque do guia acompanha a tela sem atraso."] }, { versao: "2.13.1", itens: ["O guia do app não cobre mais o que está destacado, nem em telas baixas. Quem acabou de começar não recebe mais a janela de Novidades logo depois do primeiro cadastro."] }, { versao: "2.13.0", itens: ["Apresentação curta ao abrir o app e guia em 3 níveis: essencial, exploração e completo. Dá para desligar a apresentação em Ajustes."] }, { versao: "2.12.0", itens: ["Botões, escolhas e as guias do edital com o mesmo jeito dos outros apps da família."] }, { versao: "2.11.0", itens: ["Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes."] }, { versao: "2.10.0", itens: ["O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho."] }, { versao: "2.9.0", itens: ["Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.", "Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas."] }, { versao: "2.8.0", itens: ["As listas de escolha (área da prova, assunto, ciclo de revisões e outras) agora são do próprio app, iguais no iPhone, no Android e no computador.", "Disciplinas, Mais informações e Anotações da sessão abrem e fecham com movimento suave, como nos outros apps da família."] }, { versao: "2.7.0", itens: ["Agenda com o botão Novo evento, que já marca o dia escolhido no calendário."] }, { versao: "2.6.0", itens: ["Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.", "Títulos das telas e listas vazias no mesmo formato nos três apps.", "Janelas e avisos iguais aos dos outros apps.", "Botões e links maiores, mais fáceis de tocar (no mínimo 44 px)."] }, { versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
+  novidades: [{ versao: "2.14.0", itens: ["Sem tela inicial separada: o app abre direto na tela Hoje, com o primeiro passo e a rotina padrão (Ajustar a rotina muda os dias e as horas)."] }, { versao: "2.13.3", itens: ["No celular, o destaque do guia acompanha a tela sem atraso."] }, { versao: "2.13.1", itens: ["O guia do app não cobre mais o que está destacado, nem em telas baixas. Quem acabou de começar não recebe mais a janela de Novidades logo depois do primeiro cadastro."] }, { versao: "2.13.0", itens: ["Apresentação curta ao abrir o app e guia em 3 níveis: essencial, exploração e completo. Dá para desligar a apresentação em Ajustes."] }, { versao: "2.12.0", itens: ["Botões, escolhas e as guias do edital com o mesmo jeito dos outros apps da família."] }, { versao: "2.11.0", itens: ["Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes."] }, { versao: "2.10.0", itens: ["O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho."] }, { versao: "2.9.0", itens: ["Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.", "Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas."] }, { versao: "2.8.0", itens: ["As listas de escolha (área da prova, assunto, ciclo de revisões e outras) agora são do próprio app, iguais no iPhone, no Android e no computador.", "Disciplinas, Mais informações e Anotações da sessão abrem e fecham com movimento suave, como nos outros apps da família."] }, { versao: "2.7.0", itens: ["Agenda com o botão Novo evento, que já marca o dia escolhido no calendário."] }, { versao: "2.6.0", itens: ["Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.", "Títulos das telas e listas vazias no mesmo formato nos três apps.", "Janelas e avisos iguais aos dos outros apps.", "Botões e links maiores, mais fáceis de tocar (no mínimo 44 px)."] }, { versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
     "O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.",
     "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
     "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",
     "Novo: \"Pague um chopp para o criador!\", com QR code e Pix copia e cola. É opcional, o app continua gratuito.",
     "Depois de cada atualização, o app mostra uma vez o que mudou. A lista também fica em Ajustes, Sobre o aplicativo.",
   ] }],
-  // o primeiro uso é a tela própria do Estudo Fácil (escolha do edital e da rotina): o kit só fica sabendo quem é novo
-  boasVindas: { novo: () => !DB.cfg.pronto },
+  // Código do Projeto Fácil: sem tela de primeiro uso; quem chega vê a janela de boas-vindas do Kit e começa na tela Hoje
+  boasVindas: { novo: () => !DB.cfg.pronto && !DB.concursos.length && !DB.materias.length && !DB.sessoes.length },
   apresentacao: { frase: "Seu estudo para concursos, organizado: o app diz o que estudar a cada dia.", pontos: [
     ["Cadastre o edital", "Pronto da biblioteca, lido do PDF ou digitado com o conteúdo programático."],
     ["Estude com o cronômetro", "Marque acertos e erros; as revisões entram sozinhas, em 1, 7 e 30 dias."],
     ["Acompanhe o progresso", "Contagem para a prova, meta do dia e desempenho por disciplina."]] },
-  guia: { get passos() { return GUIA; }, semPassos: "Termine o primeiro cadastro para fazer o guia." },
-  ocupado: () => document.body.classList.contains("onb"),
+  guia: { get passos() { return GUIA; }, semPassos: "Cadastre um edital ou uma disciplina para fazer o guia." },
   copia: { descricao: "Baixe um arquivo com os editais, as disciplinas, as sessões, as revisões e os ajustes.", baixar: () => KitFacil.copia.baixar({ v: 2, ...dadosSync() }, 2), restaurar: f => restaurarCopiaEstudo(f) },
   textos: { notificacoes: "O Estudo Fácil não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto; no fim do tempo de estudo, o app toca um som e vibra (se você deixar ligado abaixo)." },
   privacidade: [
@@ -758,9 +757,7 @@ function go(path, replace) {
 window.addEventListener("popstate", () => { closeSheet(true); render({ top: true }); });
 
 function render(opts = {}) {
-  if (!DB.cfg.pronto) { renderOnboarding(); return; }
   const r = route();
-  document.body.classList.remove("onb");
   renderShell(r);
   const main = $("#main");
   const act = document.activeElement;
@@ -834,80 +831,13 @@ document.addEventListener("change", ev => {
   try { fn(el, ev); } catch (e) { console.error(e); }
 });
 
-/* ================= tela inicial (primeiro uso) ================= */
-const ONB = { passo: 0, dias: null, h: null, semEdital: false };
-function renderOnboarding() {
-  document.body.classList.add("onb");
-  const t = today();
-  $("#nav").innerHTML = ""; $("#rail-nav").innerHTML = "";
-  const main = $("#main");
-  if (ONB.passo === 0) {
-    const bib = BIBLIOTECA.filter(b => !DB.concursos.some(c => c.id === b.id));
-    const ja = DB.concursos;
-    main.innerHTML = `<section class="onb-wrap">
-      <div class="onb-mark">${MARCA}</div>
-      <h1 class="onb-h">Seu estudo para concursos, organizado.</h1>
-      <p class="lead">Você cadastra o edital e as disciplinas. O Estudo Fácil diz o que estudar a cada dia, cronometra o estudo e agenda as revisões.</p>
-      ${ja.length ? `<div class="aviso ok"><p><b>Já adicionado:</b> ${esc(ja.map(nomeEdital).join(", "))}.</p><button class="btn pri sm" data-act="onb-rotina">Continuar</button></div>` : ""}
-      <h2 class="onb-q">Como quer começar?</h2>
-      <div class="opcoes">
-        ${bib.map(b => `<button class="opcao" data-act="bib-abdi"><span class="op-k">Edital pronto</span><span class="op-n">${esc(b.orgao)} (${esc(b.sigla)})</span><span class="op-d">${esc(b.cargo)}. Banca ${esc(b.banca)}, prova em ${dLonga(b.dataProva)}${b.dataProva >= t ? `, daqui a ${plural(diffD(t, b.dataProva), "dia", "dias")}` : ""}. Já vem com disciplinas, assuntos, pesos e datas.</span></button>`).join("")}
-        <label class="opcao" for="onb-pdf"><span class="op-k">${I.arquivo}PDF do edital</span><span class="op-n">Tenho o edital em PDF</span><span class="op-d">O app lê o arquivo aqui no aparelho e separa disciplinas, assuntos e datas. Você confere antes de salvar.</span></label>
-        <input type="file" id="onb-pdf" accept="application/pdf,.pdf" data-on="pdf" hidden>
-        <button class="opcao" data-act="ed-novo-mao"><span class="op-k">${I.lapis}À mão</span><span class="op-n">Cadastrar o edital</span><span class="op-d">Digite órgão, cargo e data da prova. Depois cole o conteúdo programático ou escolha as disciplinas.</span></button>
-        <button class="opcao" data-act="onb-sem-edital"><span class="op-k">${I.livro}Sem edital</span><span class="op-n">Só minhas disciplinas</span><span class="op-d">Cadastre as disciplinas e os assuntos que vai estudar. O plano do dia usa todos eles. Dá para adicionar um edital depois.</span></button>
-      </div>
-      <div class="onb-foot"><button class="btn link" data-act="onb-conectar">Já uso o Estudo Fácil em outro aparelho</button></div>
-    </section>`;
-  } else {
-    const dias = ONB.dias || cfg().dias, h = ONB.h ?? cfg().hDia;
-    const X = ix(), totT = X.tops.length, c = provaProx();
-    const fim = c ? addD(c.dataProva, -14) : addD(t, 60);
-    let nd = 0; for (let d = t; d <= fim; d = addD(d, 1)) if (dias.includes(toD(d).getDay())) nd++;
-    const porDia = nd ? Math.ceil(totT / nd) : totT;
-    main.innerHTML = `<section class="onb-wrap">
-      <button class="btn link back" data-act="onb-voltar">${I.chevL}Voltar</button>
-      <h1 class="onb-h">Sua rotina de estudo</h1>
-      <p class="lead">Com isso o app monta o plano de cada dia. Você ajusta quando quiser.</p>
-      <div class="field"><span class="lbl">Dias em que você estuda</span>
-        <div class="dias">${[1, 2, 3, 4, 5, 6, 0].map(d => `<label class="dia"><input type="checkbox" value="${d}" ${dias.includes(d) ? "checked" : ""} data-on="onb-dia"><span>${WD[d]}</span></label>`).join("")}</div></div>
-      <div class="field"><span class="lbl">Horas por dia de estudo</span>
-        <div class="stepper"><button class="icon-btn boxed" data-act="onb-h" data-d="-0.5" aria-label="Menos meia hora">${I.minus}</button><output id="onb-h">${dec(h)} h</output><button class="icon-btn boxed" data-act="onb-h" data-d="0.5" aria-label="Mais meia hora">${I.plus}</button></div></div>
-      <div class="onb-calc">${totT ? `<p><b>${plural(totT, "assunto", "assuntos")}</b> ${X.ativos.length ? `no edital ${esc(X.ativos.map(nomeEdital).join(" e "))}` : "nas suas disciplinas"}.</p>
-        <p>Para terminar a teoria até ${dLonga(fim)}${c ? ", duas semanas antes da prova" : ""}, o plano sugere <b>${plural(porDia, "assunto novo", "assuntos novos")} por dia</b>, mais as revisões.</p>`
-        : `<p>Depois desta etapa, cadastre suas disciplinas e os assuntos de cada uma. O plano do dia começa a partir delas.</p>`}</div>
-      <div class="onb-foot"><button class="btn pri lg" data-act="onb-fim">${totT ? "Começar a estudar" : "Cadastrar disciplinas"}</button></div>
-    </section>`;
-  }
-}
-/* depois de criar um edital: no primeiro uso segue para a rotina; depois, abre o edital */
+/* depois de criar um edital, abre o edital (não há tela de primeiro uso: Código do Projeto Fácil) */
 function editalCriado(c, msg) {
   closeSheet(true);
-  if (!DB.cfg.pronto) { ONB.passo = 1; commit({ quiet: true }); renderOnboarding(); window.scrollTo(0, 0); if (msg) toast(msg); return; }
   commit({ quiet: true });
   go("edital/" + c.id);
   if (msg) toast(msg);
 }
-Object.assign(ON, {
-  "onb-dia": () => { ONB.dias = $$('[data-on="onb-dia"]').filter(x => x.checked).map(x => +x.value); if (!ONB.dias.length) ONB.dias = null; renderOnboarding(); }
-});
-Object.assign(ACT, {
-  "onb-rotina": () => { ONB.passo = 1; renderOnboarding(); window.scrollTo(0, 0); },
-  "onb-sem-edital": () => { ONB.semEdital = true; ONB.passo = 1; renderOnboarding(); window.scrollTo(0, 0); },
-  "onb-voltar": () => { ONB.passo = 0; renderOnboarding(); },
-  "onb-h": el => { ONB.h = clamp((ONB.h ?? cfg().hDia) + +el.dataset.d, 0.5, 14); renderOnboarding(); },
-  "onb-conectar": () => SY.dialogoConectar(),
-  "onb-fim": () => {
-    const dias = ONB.dias || cfg().dias;
-    if (!dias.length) return toast("Escolha pelo menos um dia de estudo.");
-    Object.assign(DB.cfg, { dias: dias.slice().sort(), hDia: ONB.h ?? cfg().hDia, pronto: true });
-    commit({ quiet: true });
-    const vazio = !ix().tops.length;
-    history.replaceState({ d: 0 }, "", vazio ? "#/disciplinas" : "#/hoje");
-    render({ top: true });
-    if (vazio) materiaSheet(null); else toast("Pronto. Este é o seu plano de hoje.");
-  }
-});
 
 /* ================= sincronização: atalhos (as janelas e os textos são do Kit Fácil) ================= */
 Object.assign(ACT, {

@@ -1,6 +1,6 @@
 {
   "name": "estudo-facil",
-  "version": "2.13.3",
+  "version": "2.14.0",
   "description": "Estudo Fácil: controle de estudos para concursos. App web instalável (PWA) do Projeto Integrador.",
   "private": true,
   "type": "module",

@@ -4,8 +4,8 @@ Controle de estudos para concursos, direto no celular e no computador. Você cad
 
 **Fase de testes** · versão 2.13.3 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
-Faz parte do **Projeto Integrador** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o padrão comum descrito em
-[`comum/PADRAO.md`](comum/PADRAO.md).
+Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
+[Código do Projeto Fácil](comum/CODIGO.md).
 
 ## O que o app faz
 
@@ -59,7 +59,7 @@ npm start                         # abre em http://localhost:8080/estudo-facil/
 npm install                       # primeira vez: instala o Playwright, usado nos testes
 npx playwright install chromium   # primeira vez: baixa o navegador dos testes
 npm test                          # testes do Kit Fácil e do app, sem internet
-npm run verificar                 # padrão do Projeto Integrador, segredos e versão
+npm run verificar                 # Código do Projeto Fácil, segredos e versão
 ```
 
 Os testes simulam o GitHub (sincronização) e o Firebase (avaliações); nada toca nos dados reais.
@@ -68,12 +68,16 @@ Ao mudar a versão, atualize também o `?v=` dos scripts no `index.html`.
 
 ## Interface
 
-Segue o padrão comum da família (veja [`comum/PADRAO.md`](comum/PADRAO.md)):
+Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
 
-- **Alto da tela, à direita:** nuvem da sincronização, chopp para o criador e balão de avaliação, nessa ordem; Ajustes fica na barra de baixo (no computador, no pé do menu lateral). À esquerda deles,
-  a ação própria do app (Desempenho). No celular estreito (menos de 400 px), a marca mostra só o ícone
-- **Navegação:** Hoje, Editais, Estudar, Disciplinas e Agenda na barra de baixo (celular e tablet); no computador,
-  menu lateral com Desempenho
+- **Alto da tela, à direita:** nuvem da sincronização, chopp para o criador e balão de avaliação, nessa ordem, e nada
+  mais. No celular estreito (menos de 400 px), a marca mostra só o ícone
+- **Navegação:** Hoje, Editais, Estudar, Agenda e Mais (Disciplinas, Desempenho e Ajustes) na barra de baixo (celular e
+  tablet); no computador, menu lateral com tudo e Ajustes no pé. Desempenho também abre pelo link "Últimos 7 dias →
+  Desempenho" da tela Hoje
+- **Abertura:** não há tela de primeiro uso. Quem chega vê a tela Hoje com o primeiro passo (adicionar o edital ou
+  cadastrar disciplinas) e a rotina padrão, que se ajusta em "Ajustar a rotina"; a janela de boas-vindas do Kit abre
+  ao abrir o app (desligável)
 - **Ajustes:** as oito guias comuns e as guias próprias **Rotina e metas** e **Revisões**. Em Notificações, o som e a
   vibração do fim do tempo podem ser desligados; em Privacidade e segurança, "Apagar todos os dados" (inclusive na nuvem)
 

@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.14.0 · 2026-11-07
+
+- **Sem tela de primeiro uso (Código do Projeto Fácil, Art. 67):** o app abre direto na tela Hoje, com o primeiro passo (adicionar o edital ou cadastrar disciplinas) e a rotina padrão, segunda a sábado e 3 horas por dia. O atalho Ajustar a rotina leva a Ajustes, Rotina e metas. A janela de boas-vindas do Kit abre ao abrir o app (desligável); para usar em outro aparelho, toque na nuvem.
+- **Kit Fácil 2.13.0:** as Leis Globais e o Padrão viraram o Código do Projeto Fácil (`comum/CODIGO.md`).
+
 ## 2.13.3 · 2026-11-06
 
 - **Kit Fácil 2.12.1:** no guia ao vivo, a ação só começa depois do toque em Mostrar, num ritmo mais calmo (este app adota o guia ao vivo na vez dele).
