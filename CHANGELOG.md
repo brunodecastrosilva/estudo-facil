@@ -2,6 +2,11 @@
 
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`.
 
+## 2.15.0 · 2026-11-08
+
+- **Segurança (Código do Projeto Fácil 3.1, Título IV, capítulo Da segurança; Kit Fácil 2.14.0):** avaliações com limite de uma por minuto e dez por dia em cada aparelho; *Sobre o aplicativo* mostra o endereço oficial e o final da chave Pix do apoio; política de segurança de conteúdo (CSP) no `index.html`; impressão digital (SRI) nas bibliotecas do cdnjs; suporte ao App Check (reCAPTCHA v3), ligado quando a chave do site for configurada.
+- **Código 3.1:** artigos renumerados e anexos em arquivo à parte (`comum/ANEXOS.md`); regras do Firestore mais fechadas (`comum/regras-firestore-feedback.txt`).
+
 ## 2.14.0 · 2026-11-07
 
 - **Sem tela de primeiro uso (Código do Projeto Fácil, Art. 67):** o app abre direto na tela Hoje, com o primeiro passo (adicionar o edital ou cadastrar disciplinas) e a rotina padrão, segunda a sábado e 3 horas por dia. O atalho Ajustar a rotina leva a Ajustes, Rotina e metas. A janela de boas-vindas do Kit abre ao abrir o app (desligável); para usar em outro aparelho, toque na nuvem.

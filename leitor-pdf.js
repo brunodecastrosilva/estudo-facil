@@ -680,10 +680,11 @@ function analisarPdfEdital(paginas, arquivo) {
 const PDFJS_V = "3.11.174";
 const PDFJS_URL = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_V}/pdf.min.js`;
 const PDFJS_WORKER = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_V}/pdf.worker.min.js`;
+const PDFJS_SRI = "sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e"; // impressão digital do pdf.min.js (SRI)
 const espera = ms => new Promise(r => setTimeout(r, ms));
-function carregarScript(src) { return new Promise((ok, err) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = err; document.head.appendChild(s); }); }
+function carregarScript(src, sri) { return new Promise((ok, err) => { const s = document.createElement("script"); s.src = src; if (sri) { s.crossOrigin = "anonymous"; s.integrity = sri; } s.onload = ok; s.onerror = err; document.head.appendChild(s); }); }
 async function pdfLib() {
-  if (!window.pdfjsLib) { try { await carregarScript(PDFJS_URL); } catch (e) { throw new Error("sem-biblioteca"); } }
+  if (!window.pdfjsLib) { try { await carregarScript(PDFJS_URL, PDFJS_SRI); } catch (e) { throw new Error("sem-biblioteca"); } }
   for (let i = 0; i < 60 && !window.pdfjsLib; i++) await espera(100);
   const lib = window.pdfjsLib; if (!lib) throw new Error("sem-biblioteca");
   try { if (lib.GlobalWorkerOptions && !lib.GlobalWorkerOptions.workerSrc) lib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; } catch (e) { }
