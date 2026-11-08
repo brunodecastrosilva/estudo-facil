@@ -2,7 +2,7 @@
 // Arquivos do app: busca a versão nova primeiro e usa a guardada se estiver sem internet.
 // Bibliotecas (fontes e leitor de PDF) têm versão fixa: usa a guardada.
 // O cache leva a versão do app (package.json); cada app só apaga as próprias cópias antigas.
-const CACHE = 'estudo-facil-2.15.0';
+const CACHE = 'estudo-facil-2.15.1';
 const APP = ['./', './index.html', './comum/kit-facil.js', './comum/kit-facil.css', './editais.js', './app.js', './telas.js', './cadastros.js', './leitor-pdf.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/favicon-32.png'];
 const LIBS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
@@ -19,12 +19,13 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin === location.origin) {
     if (!url.pathname.startsWith(new URL('./', self.registration.scope).pathname)) return;
-    e.respondWith(fetch(req).then(res => {
+    e.respondWith(fetch(req, { cache: 'no-cache' }).then(res => { // confere com o servidor: nunca junta arquivo novo com antigo
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }
       return res;
     }).catch(() => caches.match(req, { ignoreSearch: true, cacheName: CACHE }).then(r => r || caches.match('./index.html', { cacheName: CACHE }))));
   } else if (LIBS.includes(url.hostname)) {
-    e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
+    // cópia "opaca" (guardada sem CORS) não passa na conferência da impressão digital (SRI): busca de novo
+    e.respondWith(caches.match(req, { cacheName: CACHE }).then(hit => (hit && hit.type !== 'opaque') ? hit : fetch(req).then(res => {
       const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return res;
     })));
   }
