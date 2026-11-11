@@ -111,6 +111,7 @@ test('balão: avaliar o app e relatar um problema saem com o nome do app, a vers
   await p.fill('#kf-msg', 'Queria importar edital de outra banca.');
   await p.click('[data-kf-enviar]');
   await p.locator('text=Recebemos sua mensagem').waitFor();
+  await p.evaluate(() => localStorage.removeItem('kitfacil.estudo-facil.envios')); // limite de 1 envio por minuto (Art. 46)
   await p.keyboard.press('Escape');
   await p.click('.kf-topo [data-kf="feedback"]');
   await p.click('.kf-dlg [data-kf="problema"]');
