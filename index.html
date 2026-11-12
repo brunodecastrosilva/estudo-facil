@@ -339,6 +339,8 @@ body.com-foco .kf-toast{bottom:calc(24px + env(safe-area-inset-bottom,0px));left
 
 /* ---------- modo foco ---------- */
 .foco{position:fixed;inset:0;z-index:60;background:var(--foco);color:var(--foco-ink);overflow:auto;overscroll-behavior:contain}
+/* com o guia aberto, o cronômetro fica logo abaixo do guia, para o cartão e o destaque aparecerem (Código, Art. 79) */
+:root:has(.kf-guia) .foco{z-index:44}
 body.com-foco{overflow:hidden}
 body.com-foco .tabbar{display:none}
 .foco-in{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:18px;padding:calc(8px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}
@@ -613,9 +615,9 @@ body.com-foco .tabbar{display:none}
 <div class="foco" id="foco" hidden></div>
 <noscript><p style="padding:24px">O Estudo Fácil precisa de JavaScript ligado para funcionar.</p></noscript>
 <script src="comum/kit-facil.js?v=0.5.0"></script>
-<script src="editais.js?v=0.3.0"></script>
-<script src="app.js?v=0.3.0"></script>
-<script src="telas.js?v=0.3.0"></script>
-<script src="cadastros.js?v=0.3.0"></script>
+<script src="editais.js?v=0.4.0"></script>
+<script src="app.js?v=0.4.0"></script>
+<script src="telas.js?v=0.4.0"></script>
+<script src="cadastros.js?v=0.4.0"></script>
 </body>
 </html>

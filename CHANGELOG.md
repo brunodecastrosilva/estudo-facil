@@ -3,6 +3,12 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 0.4.0 · 2026-11-12
+
+- **Guia completo ao vivo (Código, Arts. 77 e 78):** cada um dos 10 passos tem ação. A pessoa lê, toca em Mostrar e o app faz o passo na tela, trocando de tela pela barra de baixo (ou pelo "Mais"), como a pessoa faria. A demonstração usa uma cópia dos dados (ou o edital da ANPD, se o app estiver vazio) e não grava nada, nem na nuvem.
+- **Plano começa pelo que mais vale:** as disciplinas avançam por igual; no empate, vai primeiro a que tem a maior fatia da nota. Antes, o desempate favorecia disciplinas com poucos assuntos (na ANPD, o plano começava por Microeconomia; agora começa pela LGPD).
+- **Correção (Código, Art. 79):** com o guia aberto, o cronômetro em tela cheia ficava por cima do cartão do guia.
+
 ## 0.3.0 · 2026-11-12
 
 - **Tela Hoje mais simples:** uma coluna só, com a contagem, o que estudar agora e o plano do dia. A meta de tempo fica dentro do plano. As próximas datas saem da tela (estão na Agenda) e os últimos 7 dias viram o link para o Desempenho.

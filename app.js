@@ -3,7 +3,7 @@
    na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
    Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
 "use strict";
-const VERSAO = "0.3.0";
+const VERSAO = "0.4.0";
 
 /* ================= utilidades ================= */
 const $ = (s, r = document) => r.querySelector(s);
@@ -236,20 +236,70 @@ function trocarPerfil(c, pid) {
 let DB = (() => { const bruto = LS.get("db", null), d = arrumarBanco(bruto); if (bruto && bruto.v === 1) LS.set("db", d); return d; })();
 let VER = 1;
 /* padrão do Projeto Integrador: avaliação, sobre e privacidade, tema e sincronização vêm do Kit Fácil */
-/* ================= guia do app em 2 níveis: Simplificado e Completo (Código, Art. 77) ================= */
+/* ================= guia do app em 2 níveis (Código, Arts. 77 e 78) =================
+   Simplificado: poucos passos, só com destaque. Completo: o app faz cada ação na tela, ao vivo, numa demonstração que
+   não salva nada (preparar troca os dados por uma cópia e fim recarrega os dados guardados no aparelho). */
 const irTela = async v => { if (route().v !== v || route().sub) go(v); await new Promise(r => setTimeout(r, 120)); };
 const pronto = () => !!(DB.concursos.length || DB.materias.length);
-const GUIA = [
-  { nivel: 1, se: pronto, ir: () => irTela("hoje"), sel: ".contagem", t: "Contagem para a prova", d: "Quantos dias faltam para a prova e quanto da teoria já está concluído." },
-  { nivel: 1, se: pronto, ir: () => irTela("hoje"), sel: "#main section.agora", t: "O que estudar agora", d: "O app escolhe o próximo assunto pelo peso na prova e pelas revisões vencidas. Toque em Estudar agora para abrir o cronômetro." },
-  { nivel: 1, se: pronto, ir: () => irTela("hoje"), sel: ".bloco.plano", t: "Plano de hoje", d: "A meta de tempo, as revisões do dia e os assuntos novos no ritmo certo para terminar a teoria antes da prova." },
-  { nivel: 1, se: pronto, ir: () => irTela("estudar"), sel: "#main details.mat", alt: "#main", t: "Estudar", d: "Todas as disciplinas e assuntos. Toque num assunto para estudar com o cronômetro em tela cheia." },
-  { nivel: 1, se: pronto, ir: () => irTela("editais"), sel: "#main .ed-card", alt: "#main", t: "Editais", d: "Seus concursos: prontos da biblioteca, lidos do PDF ou digitados. Em cada um, o peso das disciplinas e a nota mínima." },
-  { nivel: 2, se: pronto, ir: () => irTela("hoje"), sel: ".pl-mais", t: "Últimos 7 dias", d: "O link leva ao Desempenho: tempo, acertos e erros por disciplina." },
-  { nivel: 2, se: pronto, ir: () => irTela("disciplinas"), sel: "#main .ed-card", alt: "#main", t: "Disciplinas", d: "As disciplinas valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram." },
-  { nivel: 2, se: pronto, ir: () => irTela("agenda"), sel: "#main", t: "Agenda", d: "O calendário com os dias de estudo, as revisões e as datas dos concursos, como inscrição e prova." },
-  { nivel: 2, se: pronto, ir: () => irTela("desempenho"), sel: "#main", t: "Desempenho", d: "Tempo de estudo, questões, acertos e simulados por período, com a nota calculada pela regra da prova." },
-];
+let GUIA_DEMO = false;
+const navVisivel = v => $$(`#rail-nav [data-go="${v}"], #nav [data-go="${v}"]`).find(el => el.getClientRects().length && !el.closest(".kf-nav-oculto") && !el.classList.contains("kf-nav-oculto"));
+const NAV_SEL = v => `#rail-nav [data-go="${v}"], #nav [data-go="${v}"], #nav [data-kf-nav-mais]`;
+/* troca de tela tocando na barra, como a pessoa faria; no celular, Disciplinas, Desempenho e Ajustes ficam no "Mais" */
+async function tocarNaBarra(m, v, rotulo) {
+  if (v === "estudar") { await m.tocar($$("#rail-nav [data-act=nav-estudar], #nav [data-act=nav-estudar]").find(el => el.getClientRects().length)); return m.esperar(400); }
+  if (v === "ajustes") { const aj = $$("#trilho-ajustes, #nav-ajustes").find(el => el.getClientRects().length && !el.classList.contains("kf-nav-oculto")); if (aj) { await m.tocar(aj); return m.esperar(400); } }
+  else { const el = navVisivel(v); if (el) { await m.tocar(el); return m.esperar(400); } }
+  await m.tocar("#nav [data-kf-nav-mais]"); await m.esperar(500);
+  await m.tocar($$(".kf-mais-lista [data-kf-mais-i]").find(b => b.textContent.trim() === rotulo));
+  await m.esperar(400);
+}
+const fecharJanela = async m => { const x = $$(".kf-ov [data-kf-fechar]").find(el => el.getClientRects().length); if (x) await m.tocar(x); else closeSheet(true); await m.esperar(300); };
+const GUIA_PASSOS_SIMPLES = [
+  { t: "Contagem para a prova", sel: ".contagem", ir: () => irTela("hoje"), d: "Quantos dias faltam para a prova e quanto da teoria já está concluído." },
+  { t: "O que estudar agora", sel: "#main section.agora", ir: () => irTela("hoje"), d: "O app escolhe o próximo assunto pelo peso na prova e pelas revisões vencidas. Toque em Estudar agora para abrir o cronômetro." },
+  { t: "Plano de hoje", sel: ".bloco.plano", ir: () => irTela("hoje"), d: "A meta de tempo, as revisões do dia e os assuntos novos no ritmo certo para terminar a teoria antes da prova." },
+  { t: "Editais", sel: "#main .ed-card", alt: "#main", ir: () => irTela("editais"), d: "Seus concursos: prontos da biblioteca, lidos do PDF ou digitados. Em cada um, o peso das disciplinas e a nota mínima." },
+  { t: "Estudar", sel: "#main details.mat", alt: "#main", ir: () => irTela("estudar"), d: "Todas as disciplinas e assuntos. Toque num assunto para estudar com o cronômetro em tela cheia." },
+].map(p => ({ ...p, niveis: [1], se: pronto }));
+const GUIA_PASSOS_COMPLETO = [
+  { t: "Tela Hoje", sel: NAV_SEL("hoje"), alt: "#main", ir: () => irTela("hoje"), fim: ".contagem", d: "Tudo começa aqui: os dias até a prova e quanto da teoria já está concluído.",
+    acao: async m => { await tocarNaBarra(m, "hoje", "Hoje"); m.destacar(".contagem"); await m.esperar(1400); } },
+  { t: "Adicionar um edital", sel: NAV_SEL("editais"), alt: "#main", fim: ".kf-ov .opcoes", d: "Em Editais, o botão Adicionar edital traz os editais prontos da biblioteca, a leitura do PDF e o cadastro à mão.",
+    acao: async m => { await tocarNaBarra(m, "editais", "Editais"); await m.tocar('[data-act="conc-novo"]'); await m.esperar(500); m.destacar(".kf-ov .opcoes"); await m.esperar(1600); await fecharJanela(m); } },
+  { t: "O peso de cada disciplina", sel: "#main .ed-card", alt: "#main", fim: "#main .pesos", d: "Dentro do edital, a guia Prova mostra quanto vale cada parte. O plano dá mais tempo ao que vale mais.",
+    acao: async m => { await m.tocar("#main .ed-card"); await m.esperar(400); await m.tocar('#main [data-go$="/prova"]'); await m.esperar(400); m.destacar("#main .pesos"); await m.esperar(1400); } },
+  { t: "Disciplinas e assuntos", sel: "#rail-nav [data-act=nav-estudar], #nav [data-act=nav-estudar]", alt: "#main", fim: "#main details.mat", d: "Estudar lista todas as disciplinas. Toque numa para ver os assuntos e o que já foi estudado.",
+    acao: async m => { await tocarNaBarra(m, "estudar", "Estudar"); await m.tocar("#main details.mat summary"); await m.esperar(800); } },
+  { t: "Estudar agora", sel: NAV_SEL("hoje"), alt: "#main", fim: "#foco .relogio", d: "De volta a Hoje, Estudar agora abre o cronômetro em tela cheia no assunto certo.",
+    acao: async m => { await tocarNaBarra(m, "hoje", "Hoje"); await m.tocar('#main section.agora [data-act="estudar"]'); await m.esperar(600); } },
+  { t: "Acertos e erros", sel: "#foco .foco-q", alt: "#foco", fim: '#rail-nav [data-act=nav-estudar], #nav [data-act=nav-estudar]', d: "Toque em Acertei ou Errei a cada questão. Minimize para usar o app; o tempo continua na barra.",
+    acao: async m => { await m.tocar('#foco [data-act="q"][data-k="a"][data-d="1"]'); await m.tocar('#foco [data-act="q"][data-k="a"][data-d="1"]'); await m.tocar('#foco [data-act="q"][data-k="e"][data-d="1"]'); await m.tocar('#foco [data-act="foco-min"]'); await m.esperar(400); } },
+  { t: "Plano e desempenho", sel: ".bloco.plano", alt: "#main", fim: "#main", d: "O plano traz a meta de tempo e as revisões do dia. O link do fim abre o Desempenho da semana.",
+    acao: async m => { m.destacar(".pl-meta"); await m.esperar(1300); await m.tocar(".pl-mais button"); await m.esperar(600); } },
+  { t: "Agenda", sel: NAV_SEL("agenda"), alt: "#main", fim: "#main", d: "O calendário com os dias de estudo, as revisões e as datas dos concursos.",
+    acao: async m => { await tocarNaBarra(m, "agenda", "Agenda"); await m.esperar(800); } },
+  { t: "Disciplinas", sel: NAV_SEL("disciplinas"), alt: "#main", fim: "#main .ed-card", d: "As disciplinas valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram.",
+    acao: async m => { await tocarNaBarra(m, "disciplinas", "Disciplinas"); await m.esperar(800); } },
+  { t: "Rotina e metas", sel: "#trilho-ajustes, #nav-ajustes, #nav [data-kf-nav-mais]", alt: "#main", fim: "#main", d: "Em Ajustes, Rotina e metas muda os dias e as horas de estudo. Revisões muda o ciclo de 1, 7 e 30 dias.",
+    acao: async m => { await tocarNaBarra(m, "ajustes", "Ajustes"); await m.esperar(800); } },
+].map(p => ({ ...p, niveis: [2] }));
+const GUIA = [...GUIA_PASSOS_SIMPLES, ...GUIA_PASSOS_COMPLETO];
+/* demonstração do guia Completo: usa uma cópia dos dados (ou o edital da ANPD, se o app estiver vazio) e não grava nada */
+function guiaPreparar(nivel) {
+  if (nivel !== 2) { if (GUIA_DEMO) { GUIA_DEMO = false; DB = arrumarBanco(LS.get("db", null)); snapAll(); VER++; render(); } return; }
+  if (GUIA_DEMO) return;
+  GUIA_DEMO = true;
+  DB = arrumarBanco(clone(DB)); DB.ativa = null;
+  if (!DB.concursos.length) { adicionarModelo(EDITAL_ANPD, ""); }
+  DB.cfg.pronto = true; VER++; render();
+}
+function guiaFim() {
+  if (!GUIA_DEMO) return;
+  GUIA_DEMO = false;
+  UI.focoAberto = false; liberarWakeLock(); closeSheet(true);
+  DB = arrumarBanco(LS.get("db", null)); snapAll(); VER++;
+  go("hoje", true);
+}
 
 KitFacil.iniciar({
   app: "estudo-facil", nome: "Estudo Fácil", versao: VERSAO, icone: "icons/icon-192.png",
@@ -263,7 +313,7 @@ KitFacil.iniciar({
     if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
   },
   emAjustes: () => route().v === "ajustes",
-  novidades: [{ versao: "0.3.0", itens: ["Tela Hoje mais simples: o que estudar agora e o plano do dia, com a meta de tempo no próprio plano. As próximas datas ficam na Agenda.", "Novo na biblioteca: o edital previsto da ANPD (Especialista em Regulação de Proteção de Dados), com o conteúdo provável e um plano de estudos em três fases.", "Guia do app em dois níveis: Simplificado e Completo."] }, { versao: "0.2.1", itens: ["O aviso com Desfazer não some enquanto você está com o dedo, o mouse ou o teclado nele."] }, { versao: "0.2.0", itens: ["Com o teclado aberto, a janela fica acima dele, e o campo em que você digita não fica escondido.", "Quando uma janela muda de tamanho ou de lugar, ela desliza até a nova posição, em vez de pular.", "Os avisos rápidos não cobrem mais os botões de uma janela aberta.", "Nas janelas, a explicação curta vem logo abaixo do título.", "No guia, o dedo não cobre o que você está digitando, e o cartão do guia não cobre a parte que você está conhecendo."] }, { versao: "0.1.0", itens: ["Recomeço: o app está em fase de testes, e a numeração das versões recomeçou em 0.1.0."] }, { versao: "2.15.2", itens: ["Avaliações protegidas contra robôs pelo App Check do Firebase, com o reCAPTCHA do Google."] }, { versao: "2.15.1", itens: ["Por dentro: depois de uma atualização, o app nunca mistura arquivos novos com antigos, e as bibliotecas de fora são sempre conferidas."] }, { versao: "2.15.0", itens: ["Avaliações mais protegidas: no máximo uma mensagem por minuto e dez por dia em cada aparelho, contra envios automáticos.", "Sobre o aplicativo mostra o endereço oficial e o final da chave Pix do apoio, para você reconhecer cópias falsas.", "Por dentro: o app só carrega código dos endereços conhecidos e confere a impressão digital das bibliotecas de fora."] }, { versao: "2.14.0", itens: ["Sem tela inicial separada: o app abre direto na tela Hoje, com o primeiro passo e a rotina padrão (Ajustar a rotina muda os dias e as horas)."] }, { versao: "2.13.3", itens: ["No celular, o destaque do guia acompanha a tela sem atraso."] }, { versao: "2.13.1", itens: ["O guia do app não cobre mais o que está destacado, nem em telas baixas. Quem acabou de começar não recebe mais a janela de Novidades logo depois do primeiro cadastro."] }, { versao: "2.13.0", itens: ["Apresentação curta ao abrir o app e guia em 3 níveis: essencial, exploração e completo. Dá para desligar a apresentação em Ajustes."] }, { versao: "2.12.0", itens: ["Botões, escolhas e as guias do edital com o mesmo jeito dos outros apps da família."] }, { versao: "2.11.0", itens: ["Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes."] }, { versao: "2.10.0", itens: ["O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho."] }, { versao: "2.9.0", itens: ["Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.", "Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas."] }, { versao: "2.8.0", itens: ["As listas de escolha (área da prova, assunto, ciclo de revisões e outras) agora são do próprio app, iguais no iPhone, no Android e no computador.", "Disciplinas, Mais informações e Anotações da sessão abrem e fecham com movimento suave, como nos outros apps da família."] }, { versao: "2.7.0", itens: ["Agenda com o botão Novo evento, que já marca o dia escolhido no calendário."] }, { versao: "2.6.0", itens: ["Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.", "Títulos das telas e listas vazias no mesmo formato nos três apps.", "Janelas e avisos iguais aos dos outros apps.", "Botões e links maiores, mais fáceis de tocar (no mínimo 44 px)."] }, { versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
+  novidades: [{ versao: "0.4.0", itens: ["Guia completo ao vivo: o app mostra cada ação na tela, com um dedo que toca nos botões, numa demonstração que não salva nada.", "O plano começa pelas disciplinas que mais valem na prova.", "Com o guia aberto, o cronômetro em tela cheia não cobre mais o cartão do guia."] }, { versao: "0.3.0", itens: ["Tela Hoje mais simples: o que estudar agora e o plano do dia, com a meta de tempo no próprio plano. As próximas datas ficam na Agenda.", "Novo na biblioteca: o edital previsto da ANPD (Especialista em Regulação de Proteção de Dados), com o conteúdo provável e um plano de estudos em três fases.", "Guia do app em dois níveis: Simplificado e Completo."] }, { versao: "0.2.1", itens: ["O aviso com Desfazer não some enquanto você está com o dedo, o mouse ou o teclado nele."] }, { versao: "0.2.0", itens: ["Com o teclado aberto, a janela fica acima dele, e o campo em que você digita não fica escondido.", "Quando uma janela muda de tamanho ou de lugar, ela desliza até a nova posição, em vez de pular.", "Os avisos rápidos não cobrem mais os botões de uma janela aberta.", "Nas janelas, a explicação curta vem logo abaixo do título.", "No guia, o dedo não cobre o que você está digitando, e o cartão do guia não cobre a parte que você está conhecendo."] }, { versao: "0.1.0", itens: ["Recomeço: o app está em fase de testes, e a numeração das versões recomeçou em 0.1.0."] }, { versao: "2.15.2", itens: ["Avaliações protegidas contra robôs pelo App Check do Firebase, com o reCAPTCHA do Google."] }, { versao: "2.15.1", itens: ["Por dentro: depois de uma atualização, o app nunca mistura arquivos novos com antigos, e as bibliotecas de fora são sempre conferidas."] }, { versao: "2.15.0", itens: ["Avaliações mais protegidas: no máximo uma mensagem por minuto e dez por dia em cada aparelho, contra envios automáticos.", "Sobre o aplicativo mostra o endereço oficial e o final da chave Pix do apoio, para você reconhecer cópias falsas.", "Por dentro: o app só carrega código dos endereços conhecidos e confere a impressão digital das bibliotecas de fora."] }, { versao: "2.14.0", itens: ["Sem tela inicial separada: o app abre direto na tela Hoje, com o primeiro passo e a rotina padrão (Ajustar a rotina muda os dias e as horas)."] }, { versao: "2.13.3", itens: ["No celular, o destaque do guia acompanha a tela sem atraso."] }, { versao: "2.13.1", itens: ["O guia do app não cobre mais o que está destacado, nem em telas baixas. Quem acabou de começar não recebe mais a janela de Novidades logo depois do primeiro cadastro."] }, { versao: "2.13.0", itens: ["Apresentação curta ao abrir o app e guia em 3 níveis: essencial, exploração e completo. Dá para desligar a apresentação em Ajustes."] }, { versao: "2.12.0", itens: ["Botões, escolhas e as guias do edital com o mesmo jeito dos outros apps da família."] }, { versao: "2.11.0", itens: ["Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes."] }, { versao: "2.10.0", itens: ["O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho."] }, { versao: "2.9.0", itens: ["Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.", "Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas."] }, { versao: "2.8.0", itens: ["As listas de escolha (área da prova, assunto, ciclo de revisões e outras) agora são do próprio app, iguais no iPhone, no Android e no computador.", "Disciplinas, Mais informações e Anotações da sessão abrem e fecham com movimento suave, como nos outros apps da família."] }, { versao: "2.7.0", itens: ["Agenda com o botão Novo evento, que já marca o dia escolhido no calendário."] }, { versao: "2.6.0", itens: ["Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.", "Títulos das telas e listas vazias no mesmo formato nos três apps.", "Janelas e avisos iguais aos dos outros apps.", "Botões e links maiores, mais fáceis de tocar (no mínimo 44 px)."] }, { versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
     "O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.",
     "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
     "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",
@@ -276,7 +326,7 @@ KitFacil.iniciar({
     ["Cadastre o edital", "Pronto da biblioteca, lido do PDF ou digitado com o conteúdo programático."],
     ["Estude com o cronômetro", "Marque acertos e erros; as revisões entram sozinhas, em 1, 7 e 30 dias."],
     ["Acompanhe o progresso", "Contagem para a prova, meta do dia e desempenho."]] },
-  guia: { get passos() { return GUIA; }, niveis: [{ nome: "Simplificado" }, { nome: "Completo" }], semPassos: "Cadastre um edital ou uma disciplina para fazer o guia." },
+  guia: { get passos() { return GUIA; }, niveis: [{ nome: "Simplificado" }, { nome: "Completo" }], preparar: guiaPreparar, fim: guiaFim, semPassos: "Cadastre um edital ou uma disciplina para fazer o guia." },
   copia: { descricao: "Baixe um arquivo com os editais, as disciplinas, as sessões, as revisões e os ajustes.", baixar: () => KitFacil.copia.baixar({ v: 2, ...dadosSync() }, 2), restaurar: f => restaurarCopiaEstudo(f) },
   textos: { notificacoes: "O Estudo Fácil não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto; no fim do tempo de estudo, o app toca um som e vibra (se você deixar ligado abaixo)." },
   privacidade: [
@@ -289,7 +339,7 @@ const SY = KitFacil.sync.criar({
   carimbar: () => stampAll(), aplicar: R => applyRemote(R), pacote: () => syncPayload(),
   mesmo: (out, remote) => canon(out) === canon({ v: remote.v, cfg: remote.cfg, ativa: remote.ativa ?? null, ...Object.fromEntries(COLLS.map(c => [c, remote[c]])), st: remote.st, del: remote.del }),
   redesenhar: () => render(),
-  ocupado: () => busyTyping(),
+  ocupado: () => busyTyping() || GUIA_DEMO,
 });
 const sync = SY.estado;
 const saveSync = () => SY.salvar();
@@ -324,10 +374,12 @@ function stampAll() {
   return ch;
 }
 function persist() {
+  if (GUIA_DEMO) return;
   if (!LS.set("db", DB)) toast("O armazenamento do aparelho está cheio. Baixe uma cópia de segurança em Ajustes.");
 }
 let renderQ = false;
 function commit(opts = {}) {
+  if (GUIA_DEMO) { VER++; if (!opts.quiet) agendarRender(); return; } // guia Completo: demonstração, nada é gravado
   const ch = stampAll();
   persist(); VER++;
   if (ch && syncOn()) scheduleSync(opts.syncMs);
@@ -337,7 +389,7 @@ function agendarRender() { if (renderQ) return; renderQ = true; requestAnimation
 
 /* outra aba (ou o app instalado aberto junto com o navegador) mudou os dados */
 window.addEventListener("storage", e => {
-  if (e.key === KEY + "db") { DB = arrumarBanco(LS.get("db", null)); snapAll(); VER++; agendarRender(); }
+  if (e.key === KEY + "db" && !GUIA_DEMO) { DB = arrumarBanco(LS.get("db", null)); snapAll(); VER++; agendarRender(); }
 });
 
 /* ================= sincronização entre aparelhos ================= */
@@ -536,7 +588,7 @@ function planoHoje() {
   for (const id of hojeTeoria) { const x = X.topById.get(id); if (x && !usado.has(id) && X.topsByMat.has(x.m)) { novos.push({ tipo: "teoria", top: x, feito: true }); usado.add(id); } }
   const alvo = ehDiaEstudo(t) ? R.n : 0;
   if (novos.length < alvo) {
-    const tot = new Map(), feitos = new Map(), maxPeso = Math.max(0.0001, ...X.mats.map(m => peso(m.id)));
+    const tot = new Map(), feitos = new Map(), fatia = m => X.share.get(m) || 0, maxFatia = Math.max(0.0001, ...X.mats.map(m => fatia(m.id)));
     for (const m of X.mats) { const l = X.topsByMat.get(m.id); tot.set(m.id, l.length); feitos.set(m.id, l.filter(x => x.teoria && x.tc !== t).length); }
     for (const n of novos) feitos.set(n.top.m, (feitos.get(n.top.m) || 0) + 1);
     while (novos.length < alvo) {
@@ -544,7 +596,7 @@ function planoHoje() {
       for (const m of X.mats) {
         const cand = X.topsByMat.get(m.id).filter(x => (!x.teoria || x.tc === t) && !usado.has(x.id));
         if (!cand.length) continue;
-        const sc = (feitos.get(m.id) || 0) / Math.max(1, tot.get(m.id)) - 0.12 * peso(m.id) / maxPeso;
+        const sc = (feitos.get(m.id) || 0) / Math.max(1, tot.get(m.id)) - 0.12 * fatia(m.id) / maxFatia; // avança as disciplinas por igual; no empate, a que vale mais na prova
         if (sc < bestSc) { bestSc = sc; best = { m, cand }; }
       }
       if (!best) break;
@@ -559,13 +611,12 @@ function planoHoje() {
 /* sugestão quando o plano de hoje acabou: o próximo tópico novo pela mesma regra */
 function proximoTopico(excluir = new Set()) {
   const X = ix(), t = today();
-  const peso = m => (X.share.get(m) || 0) / Math.max(1, (X.topsByMat.get(m) || []).length);
-  const maxPeso = Math.max(0.0001, ...X.mats.map(m => peso(m.id)));
+  const fatia = m => X.share.get(m) || 0, maxFatia = Math.max(0.0001, ...X.mats.map(m => fatia(m.id)));
   let best = null, bestSc = Infinity;
   for (const m of X.mats) {
     const l = X.topsByMat.get(m.id), cand = l.filter(x => !x.teoria && !excluir.has(x.id));
     if (!cand.length) continue;
-    const sc = l.filter(x => x.teoria).length / l.length - 0.12 * peso(m.id) / maxPeso;
+    const sc = l.filter(x => x.teoria).length / l.length - 0.12 * fatia(m.id) / maxFatia;
     if (sc < bestSc) { bestSc = sc; best = cand.find(y => y.ult && y.ult !== t) || cand[0]; }
   }
   return best;

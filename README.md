@@ -2,14 +2,14 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
-**Fase de testes** · versão 0.3.0 · Kit Fácil 0.5.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+**Fase de testes** · versão 0.4.0 · Kit Fácil 0.5.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md).
 
 ## O que o app faz
 
-- Apresentação curta ao abrir (desligável em Ajustes) e guia em 2 níveis: Simplificado e Completo
+- Apresentação curta ao abrir (desligável em Ajustes) e guia em 2 níveis: Simplificado (só destaque) e Completo (o app faz cada ação na tela, numa demonstração que não salva nada)
 - Cadastre editais de três jeitos: prontos da biblioteca (hoje, o Processo Seletivo ABDI 2026 e o edital previsto da ANPD 2027), lidos do PDF ou digitados com o conteúdo programático colado
 - Mantenha suas disciplinas e assuntos num só lugar. Eles valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram
 - Informe, em cada edital, as questões e o valor de cada disciplina, as áreas da prova e a nota mínima
@@ -111,6 +111,7 @@ Tudo fica num só objeto (`estudofacil.db`, versão 2 do formato), com estas lis
 Regras:
 - o plano do dia junta os assuntos dos editais com a situação Estudando; sem nenhum edital em estudo, usa todas as disciplinas;
 - o peso de cada disciplina é a média da fatia da nota que ela vale em cada edital em estudo;
+- os assuntos novos avançam as disciplinas por igual; no empate, vai primeiro a disciplina com a maior fatia da nota;
 - ao importar um edital, disciplinas com o mesmo nome se juntam, e assuntos se juntam pelo nome sem a numeração do edital;
 - os dados da versão 1 do formato migram sozinhos para a versão 2;
 - edital da biblioteca marcado como `previsto` mostra a faixa "Edital ainda não publicado"; os pesos e a data são estimativas.

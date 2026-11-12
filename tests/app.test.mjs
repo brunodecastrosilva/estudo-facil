@@ -258,3 +258,38 @@ test('tela Hoje focada: contagem, agora e plano com a meta; sem datas nem gráfi
   await a.page.waitForFunction(() => route().v === 'desempenho');
   await a.fechar?.();
 });
+
+/* guia Completo ao vivo (Código, Arts. 77 e 78): cada passo tem ação, começa só em Mostrar e nada é gravado */
+for (const [viewport, nome] of [[{ width: 390, height: 844 }, 'celular'], [{ width: 1440, height: 900 }, 'computador']]) {
+  test(`guia Completo ao vivo no ${nome}: todos os passos rodam e a demonstração não salva nada`, async () => {
+    const a = await aparelho(amb, { viewport });
+    const erros = []; a.page.on('pageerror', e => erros.push(e.message));
+    await a.page.emulateMedia({ reducedMotion: 'reduce' });
+    await a.page.locator('#main section.agora').waitFor();
+    await a.page.evaluate(() => { KitFacil.dialogo && KitFacil.dialogo.fechar && KitFacil.dialogo.fechar(true); });
+    const antes = await a.page.evaluate(() => localStorage.getItem('estudofacil.db'));
+    await a.page.evaluate(() => KitFacil.guia.iniciar(2));
+    const total = await a.page.evaluate(() => KitFacil.guia.passos(2).length);
+    assert.equal(total, 10);
+    for (let i = 0; i < total; i++) {
+      const mostrar = a.page.locator('[data-kf-guia-mostrar]');
+      await mostrar.waitFor({ timeout: 10000 });
+      await mostrar.click();
+      const prox = a.page.locator('.kf-guia-cartao [data-kf-guia="1"]:not([disabled])');
+      await prox.waitFor({ timeout: 30000 });
+      if (i === 2) assert.ok(await a.page.evaluate(() => GUIA_DEMO && DB.concursos.length > 0), 'demonstração com edital');
+      await prox.click();
+    }
+    assert.equal(await a.page.evaluate(() => GUIA_DEMO), false, 'demonstração encerrada');
+    assert.equal(await a.page.evaluate(() => localStorage.getItem('estudofacil.db')), antes, 'nada gravado pelo guia');
+    assert.equal(await a.page.evaluate(() => DB.concursos.length + DB.sessoes.length), 0);
+    assert.deepEqual(erros, []);
+  });
+}
+
+test('plano: no começo, o primeiro assunto novo é da disciplina que mais vale na prova', async () => {
+  const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
+  await a.page.locator('#main section.agora').waitFor();
+  const m = await a.page.evaluate(() => { adicionarModelo(modeloDe('anpd-2027'), ''); commit(); return matNome(proximoTopico().m); });
+  assert.equal(m, 'LGPD (Lei 13.709/2018)');
+});
