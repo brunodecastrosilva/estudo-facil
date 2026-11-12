@@ -46,7 +46,7 @@ VIEWS.hoje = () => {
   // contagem
   const folha = c ? `<div class="folha" aria-hidden="true"><span class="folha-a">faltam</span><b>${n}</b><span class="folha-b">${n === 1 ? "dia" : "dias"}</span></div>` : "";
   const outros = X.ativos.filter(x => x !== c && x.dataProva && x.dataProva >= t);
-  const provaTxt = c ? `<b>${esc(nomeEdital(c))}</b>: ${n > 0 ? `${dSemana(c.dataProva)}, ${dLonga(c.dataProva)}${c.horaProva ? `, das ${esc(c.horaProva)}` : ""}${c.local ? `. ${esc(c.local)}` : ""}.` : `a prova é hoje${c.horaProva ? `, das ${esc(c.horaProva)}` : ""}. Boa prova!`}`
+  const provaTxt = c ? `<b>${esc(nomeEdital(c))}</b>: ${n > 0 ? `${dSemana(c.dataProva)}, ${dLonga(c.dataProva)}${c.previsto ? " (data estimada)" : ""}${c.horaProva ? `, das ${esc(c.horaProva)}` : ""}${c.local ? `. ${esc(c.local)}` : ""}.` : `a prova é hoje${c.horaProva ? `, das ${esc(c.horaProva)}` : ""}. Boa prova!`}`
     : X.ativos.length ? `Cadastre a data da prova em <button class="btn link sm" data-go="edital/${X.ativos[0].id}/datas">${esc(nomeEdital(X.ativos[0]))}, Datas</button> para ver a contagem.`
     : DB.concursos.length ? "Nenhum edital marcado como Estudando. O plano usa todas as suas disciplinas." : "Sem edital: o plano usa todas as suas disciplinas.";
   const cont = semNada ? "" : `<section class="contagem" aria-label="${c ? "Contagem para a prova" : "Progresso"}">
@@ -83,13 +83,12 @@ VIEWS.hoje = () => {
       <div class="btns"><button class="btn pri lg" data-act="estudar" data-t="${prox.id}" data-tipo="teoria">${I.play}Estudar este</button><button class="btn ghost" data-go="estudar">Escolher outro</button></div>`
       : `<h2 class="ag-h">Toda a teoria está concluída.</h2><p class="ag-m">Agora é revisar e resolver questões. Escolha um assunto em Estudar.</p><div class="btns"><button class="btn pri lg" data-go="estudar">${I.play}Estudar</button></div>`}</section>`;
   }
-  // metas
+  // meta do dia, dentro do plano
   const h = cfg().hDia, q = cfg().qDia, qd = o.a + o.e;
-  const metas = `<section class="bloco metas" aria-label="Meta de hoje"><div class="b-hr"><h2 class="b-h">Meta de hoje</h2>${metaDia(t) && (o.s || qd) ? `<span class="tag ok">${I.check}Batida</span>` : folga ? `<span class="tag">Folga</span>` : ""}</div>
-    ${h ? medidor(o.s, h * 3600, "Tempo de estudo", (v, tt) => `${dur(v)} de ${dur(tt)}`) : ""}
-    ${q ? medidor(qd, q, "Questões", (v, tt) => `${v} de ${tt}${v ? `, ${pctTxt(pct(o.a, v))} certas` : ""}`) : ""}
-    ${!h && !q ? `<p class="hint">Defina metas diárias em Ajustes.</p>` : ""}
-  </section>`;
+  const meta = `<div class="pl-meta">
+    ${h ? medidor(o.s, h * 3600, metaDia(t) && (o.s || qd) ? "Meta de hoje batida" : folga ? "Hoje é folga" : "Meta de hoje", (v, tt) => `${dur(v)} de ${dur(tt)}`) : ""}
+    ${q ? `<p class="hint">${qd} de ${q} questões${qd ? `, ${pctTxt(pct(o.a, qd))} certas` : ""}.</p>` : ""}
+  </div>`;
   // plano
   const R = P.ritmo;
   const linha = x => {
@@ -100,28 +99,16 @@ VIEWS.hoje = () => {
         <span class="pl-n">${esc(top.nome)}</span><span class="pl-m">${esc(m)}</span></button></li>`;
   };
   const plano = `<section class="bloco plano" aria-label="Plano de hoje"><div class="b-hr"><h2 class="b-h">Plano de hoje</h2>${P.itens.length ? `<span class="tag">${P.feitos} de ${P.itens.length}</span>` : ""}</div>
+    ${meta}
     ${P.itens.length ? `<ul class="pl-lista">${P.itens.map(linha).join("")}</ul>` : `<p class="hint">${folga ? "Dia de folga: nenhuma revisão vencida e nenhum assunto novo." : "Nenhuma revisão vencida e nenhum assunto pendente."}</p>`}
     ${P.espera ? `<p class="hint pl-ritmo"><b>${plural(P.espera, "revisão vencida ficou", "revisões vencidas ficaram")} na fila</b> para não passar do seu tempo de hoje. Elas entram nos próximos dias, as mais atrasadas primeiro. <button class="btn link sm" data-act="revisoes">Ver todas</button></p>` : ""}
     ${R.pend ? `<p class="hint pl-ritmo">${R.n === R.auto ? `Para terminar a teoria até ${dLonga(R.fim)}: ${plural(R.n, "assunto novo", "assuntos novos")} por dia de estudo.` : `${plural(R.n, "assunto novo", "assuntos novos")} por dia, como você definiu.`} <button class="btn link sm" data-act="aj-rotina">Ajustar</button></p>` : ""}
-  </section>`;
-  // prazos
-  const vivos = editaisVivos(), ds = todasDatas(vivos).filter(d => (d.fim || d.ini) >= t).slice(0, 5);
-  const prazos = !vivos.length ? "" : `<section class="bloco prazos" aria-label="Próximas datas"><div class="b-hr"><h2 class="b-h">Próximas datas</h2><button class="btn link sm" data-go="agenda">Agenda</button></div>
-    ${ds.length ? `<ul class="pz-lista">${ds.map(d => { const s = prazoStatus(d, t); return `<li class="pz${d.acao ? " acao" : ""}${d.tipo === "prova" ? " prova" : ""}"><span class="pz-d">${dataRot(d)}</span><span class="pz-t">${esc(d.titulo)}${vivos.length > 1 ? ` <small>${esc(nomeEdital(d.c))}</small>` : ""}</span><span class="pz-s ${s.k}">${s.txt}</span></li>`; }).join("")}</ul>` : `<p class="hint">Nenhuma data pela frente.</p>`}
-  </section>`;
-  // semana
-  const dias = []; for (let i = 6; i >= 0; i--) dias.push(addD(t, -i));
-  const maxS = Math.max(h * 3600, ...dias.map(d => (X.days.get(d) || { s: 0 }).s), 1);
-  const seq = sequencia();
-  const semana = `<section class="bloco semana" aria-label="Últimos 7 dias"><div class="b-hr"><h2 class="b-h">Últimos 7 dias</h2><button class="btn link sm" data-go="desempenho">Desempenho</button></div>
-    <div class="sem" role="img" aria-label="Horas de estudo nos últimos 7 dias">${dias.map(d => { const v = (X.days.get(d) || { s: 0 }).s, ok = metaDia(d) && v > 0; return `<div class="sem-c${d === t ? " hoje" : ""}${ehDiaEstudo(d) ? "" : " folga"}" title="${WD[toD(d).getDay()]} ${brs(d)}: ${v ? dur(v) : "sem estudo"}"><span class="sem-v">${v ? dur(v) : ""}</span><span class="sem-b"><i class="${ok ? "ok" : ""}" style="height:${v ? Math.max(4, v / maxS * 100) : 0}%"></i>${h ? `<em style="bottom:${h * 3600 / maxS * 100}%"></em>` : ""}</span><span class="sem-d">${WD[toD(d).getDay()].slice(0, 3)}</span></div>`; }).join("")}</div>
-    <p class="hint">${seq ? `${plural(seq, "dia seguido", "dias seguidos")} batendo a meta.` : "Bata a meta hoje para começar uma sequência."}${h ? " A linha marca a meta de horas." : ""}</p>
+    <p class="pl-mais"><button class="btn link sm" data-go="desempenho">Últimos 7 dias → Desempenho</button></p>
   </section>`;
   const dica = !syncOn() && !sync.tipOff && DB.sessoes.length >= 1 ? `<div class="aviso dica"><p><b>Estuda no celular e no computador?</b> Ative a sincronização e tenha o mesmo plano, cronômetro e histórico em todos os aparelhos.</p><div class="btns"><button class="btn pri sm" data-act="sync-start">Ativar</button><button class="btn ghost sm" data-act="sync-dica-off">Agora não</button></div></div>` : "";
   return `<div class="hoje">
     <p class="data-hoje">${cap(dSemana(t))}, ${dLonga(t)}</p>
-    <div class="col-a">${cont}${dica}${agora}${semNada ? "" : plano}</div>
-    <div class="col-b">${metas}${prazos}${semana}</div>
+    ${cont}${dica}${agora}${semNada ? "" : plano}
   </div>`;
 };
 

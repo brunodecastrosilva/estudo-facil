@@ -5,6 +5,8 @@
 
 const EDITAL_ABDI = {
   id: "abdi-2026",
+  base: "abdi",
+  notaPesos: "O edital não divide as 20 questões específicas entre os temas do perfil. A estimativa por tema segue o número de assuntos de cada um.",
   sigla: "ABDI",
   orgao: "Agência Brasileira de Desenvolvimento Industrial",
   cargo: "Analista de Produtividade e Inovação",
@@ -609,4 +611,205 @@ const EDITAL_ABDI = {
       ] }
     ]
   }
+};
+
+/* Edital previsto: ANPD, Especialista em Regulação de Proteção de Dados (concurso autorizado em 2026, edital ainda não publicado).
+   Disciplinas e pesos estimados a partir da Lei 15.352/2026, da LGPD, dos regulamentos da ANPD e do que se repete
+   nos concursos de agências reguladoras. A data da prova é provisória. Trocar pelo edital oficial quando sair. */
+const EDITAL_ANPD = {
+  id: "anpd-2027",
+  base: "anpd",
+  previsto: true,
+  resumoPrevisto: "Edital ainda não publicado: conteúdo provável e prova estimada para abril de 2027.",
+  notaPesos: "Pesos estimados: o edital ainda não saiu. Específicos (proteção de dados e regulação) valem mais, como nas agências reguladoras.",
+  sigla: "ANPD",
+  orgao: "Agência Nacional de Proteção de Dados",
+  cargo: "Especialista em Regulação de Proteção de Dados",
+  banca: "A definir",
+  numero: "",
+  site: "https://www.gov.br/anpd/",
+  email: "",
+  remuneracao: "R$ 17.726,42 (inicial)",
+  taxa: "",
+  lotacao: "Brasília/DF",
+  regime: "Estatutário (Lei 8.112/1990), carreira própria criada pela Lei 15.352/2026",
+  validade: "",
+  vagas: "50 imediatas (31 ampla concorrência, 13 pessoas negras, 3 PcD, 2 indígenas, 1 quilombola)",
+  dataProva: "2027-04-18",
+  horaProva: "",
+  local: "",
+  provaNotas: [
+    "Edital ainda não publicado. Banca, conteúdo, número de questões e data da prova são estimativas.",
+    "A estrutura provável segue a das agências reguladoras: conhecimentos gerais e conhecimentos específicos, com os específicos valendo mais.",
+    "Antes do edital, estude a base que quase certamente será cobrada: LGPD, regulamentos da ANPD, regulação e Direito Administrativo.",
+    "Quando o edital sair, confira o conteúdo na aba Conteúdo, ajuste questões e pesos e troque a data da prova."
+  ],
+  plano: [
+    "Fase 1, até o edital sair: LGPD e regulamentos da ANPD todos os dias; alterne com Regulação, Direito Administrativo e Constitucional. Português e Inglês duas vezes por semana.",
+    "Fase 2, do edital até 30 dias antes da prova: siga o plano do dia do app com o edital oficial. Resolva questões de cada assunto logo depois da teoria.",
+    "Fase 3, últimos 30 dias: só revisões, lei seca (LGPD, Lei 13.848, Lei 15.352 e ECA Digital) e simulados semanais registrados no app.",
+    "Até a banca ser definida, treine com provas de agências reguladoras (ANATEL, ANAC, ANS) e do processo seletivo da ANPD de 2025."
+  ],
+  prova: {
+    minPct: 50,
+    naoZerar: false,
+    grupos: [
+      { id: "gerais", nome: "Conhecimentos gerais", q: 40, valor: 1 },
+      { id: "esp", nome: "Conhecimentos específicos", q: 60, valor: 1.5 }
+    ]
+  },
+  etapas: [
+    { nome: "Prova objetiva", tipo: "Provável, eliminatória e classificatória", texto: "Conhecimentos gerais e específicos. Número de questões e pontos a confirmar no edital." },
+    { nome: "Prova discursiva", tipo: "Possível", texto: "Comum em carreiras de agência reguladora. Treine respostas curtas sobre LGPD e regulação." },
+    { nome: "Curso de formação", tipo: "Previsto na carreira, eliminatório e classificatório", texto: "Detalhes a confirmar no edital." }
+  ],
+  datas: [
+    { id: "d01", tipo: "aviso", titulo: "Concurso autorizado: 50 vagas de Especialista", ini: "2026-06-24" },
+    { id: "d02", tipo: "aviso", titulo: "Comissão organizadora instituída (Portaria nº 759, DOU de 11/11)", ini: "2026-11-11" },
+    { id: "d03", tipo: "publicacao", titulo: "Prazo previsto para publicar o edital", ini: "2027-01-03", acao: true },
+    { id: "d04", tipo: "prova", titulo: "Prova (data estimada, confirme no edital)", ini: "2027-04-18", acao: true }
+  ],
+  materias: [
+    { id: "anpd-lp", grupo: "gerais", nome: "Língua Portuguesa", q: 10, topicos: [
+      "Compreensão e interpretação de textos",
+      "Tipologia e gêneros textuais",
+      "Ortografia e acentuação",
+      "Coesão e coerência: referenciação e conectores",
+      "Classes de palavras e emprego de tempos e modos verbais",
+      "Coordenação e subordinação",
+      "Pontuação",
+      "Concordância verbal e nominal",
+      "Regência verbal e nominal e crase",
+      "Colocação pronominal",
+      "Reescrita de frases e parágrafos",
+      "Redação oficial: Manual de Redação da Presidência da República"
+    ] },
+    { id: "anpd-ing", grupo: "gerais", nome: "Língua Inglesa", q: 5, topicos: [
+      "Compreensão de textos técnicos sobre privacidade e tecnologia",
+      "Vocabulário de proteção de dados (GDPR, data subject, controller, processor)",
+      "Estruturas gramaticais e conectores",
+      "Inferência e ideia principal"
+    ] },
+    { id: "anpd-dc", grupo: "gerais", nome: "Direito Constitucional", q: 8, topicos: [
+      "Princípios fundamentais da Constituição",
+      "Direitos e garantias fundamentais",
+      "Proteção de dados pessoais como direito fundamental (EC 115/2022, art. 5º, LXXIX)",
+      "Intimidade, vida privada, sigilo das comunicações e habeas data",
+      "Organização do Estado e competência da União sobre proteção de dados (art. 22, XXX)",
+      "Administração pública: princípios e disposições gerais (arts. 37 a 41)",
+      "Poder Executivo e Poder Legislativo: atribuições e processo legislativo",
+      "Controle de constitucionalidade: noções",
+      "Ordem econômica: princípios e atuação do Estado como regulador (arts. 170 a 174)"
+    ] },
+    { id: "anpd-da", grupo: "gerais", nome: "Direito Administrativo", q: 12, topicos: [
+      "Regime jurídico-administrativo e princípios",
+      "Organização administrativa: autarquias, autarquias especiais e agências",
+      "Poderes administrativos, com ênfase no poder de polícia",
+      "Atos administrativos",
+      "Processo administrativo federal (Lei 9.784/1999)",
+      "Licitações e contratos (Lei 14.133/2021)",
+      "Agentes públicos e regime da Lei 8.112/1990",
+      "Responsabilidade civil do Estado",
+      "Controle da administração: interno, externo (TCU) e judicial",
+      "Improbidade administrativa (Lei 8.429/1992)",
+      "Lei Anticorrupção (Lei 12.846/2013)",
+      "Lei do Governo Digital (Lei 14.129/2021)"
+    ] },
+    { id: "anpd-etica", grupo: "gerais", nome: "Ética, integridade e acesso à informação", q: 5, topicos: [
+      "Código de Ética do Servidor Público Federal (Decreto 1.171/1994)",
+      "Conflito de interesses (Lei 12.813/2013)",
+      "Lei de Acesso à Informação (Lei 12.527/2011) e Decreto 7.724/2012",
+      "LAI e LGPD: convivência entre transparência e proteção de dados",
+      "Governança pública e integridade (Decreto 9.203/2017)"
+    ] },
+    { id: "anpd-lgpd", grupo: "esp", nome: "LGPD (Lei 13.709/2018)", q: 14, topicos: [
+      "Aplicação da lei: abrangência territorial e exceções (arts. 1º a 4º)",
+      "Conceitos: dado pessoal, sensível, anonimizado, titular, controlador, operador e encarregado (art. 5º)",
+      "Princípios do tratamento (art. 6º)",
+      "Bases legais do tratamento (art. 7º)",
+      "Consentimento: requisitos e revogação (arts. 8º e 9º)",
+      "Legítimo interesse (art. 10)",
+      "Dados pessoais sensíveis (arts. 11 a 13)",
+      "Dados de crianças e adolescentes (art. 14)",
+      "Término do tratamento e eliminação (arts. 15 e 16)",
+      "Direitos do titular (arts. 17 a 22)",
+      "Decisões automatizadas e revisão (art. 20)",
+      "Tratamento pelo poder público (arts. 23 a 32)",
+      "Transferência internacional de dados (arts. 33 a 36)",
+      "Agentes de tratamento, registro das operações e relatório de impacto (arts. 37 a 41)",
+      "Responsabilidade e ressarcimento de danos (arts. 42 a 45)",
+      "Segurança e sigilo dos dados (arts. 46 a 49)",
+      "Boas práticas e governança (arts. 50 e 51)",
+      "Sanções administrativas (arts. 52 a 54)",
+      "ANPD e Conselho Nacional de Proteção de Dados (arts. 55-A a 58-B)"
+    ] },
+    { id: "anpd-reg", grupo: "esp", nome: "Regulamentos e orientações da ANPD", q: 10, topicos: [
+      "Fiscalização e processo administrativo sancionador (Resolução CD/ANPD nº 1/2021)",
+      "Agentes de tratamento de pequeno porte (Resolução CD/ANPD nº 2/2022)",
+      "Dosimetria e aplicação de sanções (Resolução CD/ANPD nº 4/2023)",
+      "Comunicação de incidente de segurança (Resolução CD/ANPD nº 15/2024)",
+      "Atuação do encarregado (Resolução CD/ANPD nº 18/2024)",
+      "Transferência internacional e cláusulas-padrão contratuais (Resolução CD/ANPD nº 19/2024)",
+      "Decisão de adequação da União Europeia (Resolução CD/ANPD nº 32/2026)",
+      "Agenda regulatória e processo normativo da ANPD",
+      "Guias orientativos: agentes de tratamento e encarregado",
+      "Guias orientativos: legítimo interesse e tratamento pelo poder público",
+      "Guias orientativos: cookies, segurança da informação e relatório de impacto",
+      "Enunciados e decisões relevantes do Conselho Diretor"
+    ] },
+    { id: "anpd-inst", grupo: "esp", nome: "A ANPD como agência e o ECA Digital", q: 6, topicos: [
+      "Lei 15.352/2026: transformação da ANPD em agência reguladora",
+      "Natureza de autarquia especial: autonomia técnica, decisória, administrativa e financeira",
+      "Estrutura: Conselho Diretor, Conselho Nacional de Proteção de Dados e órgãos internos",
+      "Carreira de Especialista em Regulação de Proteção de Dados: atribuições",
+      "Competências da ANPD na LGPD e na lei de criação",
+      "ECA Digital (Lei 15.211/2025): proteção de crianças e adolescentes em ambientes digitais",
+      "ECA Digital: deveres de plataformas, verificação de idade e supervisão parental",
+      "ECA Digital: fiscalização e sanções a cargo da ANPD",
+      "Planejamento estratégico e relatórios de gestão da ANPD"
+    ] },
+    { id: "anpd-regul", grupo: "esp", nome: "Regulação e agências reguladoras", q: 10, topicos: [
+      "Estado regulador: fundamentos e evolução no Brasil",
+      "Falhas de mercado: externalidades, assimetria de informação, poder de mercado e bens públicos",
+      "Teorias da regulação: interesse público, captura e escolha pública",
+      "Lei Geral das Agências Reguladoras (Lei 13.848/2019)",
+      "Gestão de recursos humanos das agências (Lei 9.986/2000) e carreiras (Lei 10.871/2004)",
+      "Análise de Impacto Regulatório (Decreto 10.411/2020) e avaliação de resultado regulatório",
+      "Lei de Liberdade Econômica (Lei 13.874/2019): abuso do poder regulatório e AIR",
+      "Consulta e audiência públicas, agenda regulatória e transparência",
+      "Regulação responsiva, sandbox regulatório e enforcement",
+      "Controle das agências: TCU, Congresso e Judiciário",
+      "Articulação entre reguladores e com o CADE"
+    ] },
+    { id: "anpd-econ", grupo: "esp", nome: "Economia da regulação e concorrência", q: 4, topicos: [
+      "Microeconomia aplicada: estruturas de mercado e eficiência",
+      "Economia dos dados e de plataformas digitais: efeitos de rede e mercados de dois lados",
+      "Defesa da concorrência (Lei 12.529/2011) e interface com proteção de dados",
+      "Análise custo-benefício e indicadores regulatórios"
+    ] },
+    { id: "anpd-ti", grupo: "esp", nome: "Tecnologia, segurança da informação e IA", q: 10, topicos: [
+      "Segurança da informação: confidencialidade, integridade, disponibilidade e autenticidade",
+      "Gestão de riscos e controles (ISO/IEC 27001, 27002 e 27701)",
+      "Criptografia, controle de acesso e autenticação",
+      "Incidentes de segurança: tipos de ataque, resposta e notificação",
+      "Anonimização, pseudonimização e técnicas de reidentificação",
+      "Privacy by design e privacy by default",
+      "Bancos de dados, modelagem e qualidade de dados",
+      "Computação em nuvem e transferência de dados",
+      "Big data, ciência de dados e perfilamento",
+      "Inteligência artificial: conceitos, riscos e vieses",
+      "Regulação de IA no Brasil (PL 2.338/2023) e no mundo (AI Act da União Europeia)",
+      "Cookies, rastreamento on-line e publicidade direcionada"
+    ] },
+    { id: "anpd-dig", grupo: "esp", nome: "Direito digital e proteção de dados no mundo", q: 6, topicos: [
+      "Marco Civil da Internet (Lei 12.965/2014) e Decreto 8.771/2016",
+      "Crimes cibernéticos (Lei 12.737/2012) e Convenção de Budapeste",
+      "Código de Defesa do Consumidor aplicado ao ambiente digital",
+      "Cadastro Positivo (Lei 12.414/2011)",
+      "GDPR da União Europeia: princípios, bases legais e autoridades",
+      "Convenção 108+ do Conselho da Europa e diretrizes da OCDE",
+      "Jurisprudência do STF sobre proteção de dados (ADI 6387 e compartilhamento de dados)",
+      "Proteção de dados no setor público: compartilhamento e interoperabilidade"
+    ] }
+  ]
 };

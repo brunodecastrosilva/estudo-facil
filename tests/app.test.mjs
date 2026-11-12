@@ -223,3 +223,38 @@ test('estudo com cronômetro continua funcionando', async () => {
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
+
+test('biblioteca: edital previsto da ANPD entra direto, com faixa de aviso, plano em três fases e sem rolagem lateral', async () => {
+  for (const viewport of [{ width: 360, height: 740 }, { width: 1440, height: 900 }]) {
+    const a = await aparelho(amb, { viewport });
+    await a.page.locator('#main section.agora').waitFor();
+    await a.page.evaluate(() => { const c = adicionarModelo(modeloDe('anpd-2027'), ''); commit(); go('edital/' + c.id + '/sobre'); });
+    await a.page.locator('.kf-faixa').first().waitFor();
+    assert.match(await a.page.textContent('.kf-faixa'), /Edital ainda não publicado/);
+    assert.match(await a.page.textContent('#main'), /Plano de estudos sugerido/);
+    const r = await a.page.evaluate(() => { const c = DB.concursos.find(x => x.id === 'anpd-2027'); return { disc: c.disc.length, previsto: c.previsto, prova: c.dataProva, q: estrutura(c).q }; });
+    assert.deepEqual(r, { disc: 12, previsto: true, prova: '2027-04-18', q: 100 });
+    assert.ok(await semRolagemLateral(a.page), 'rolagem lateral no edital da ANPD');
+    await a.fechar?.();
+  }
+});
+
+test('biblioteca: a ABDI continua pedindo o perfil e os ids dos assuntos não mudam', async () => {
+  const a = await aparelho(amb, { viewport: { width: 390, height: 844 } });
+  await a.page.locator('#main section.agora').waitFor();
+  const ids = await a.page.evaluate(() => { const c = adicionarModelo(modeloDe('abdi-2026'), 'dados'); commit(); return c.disc.map(l => l.m); });
+  assert.ok(ids.includes('abdi-lp') && ids.includes('abdi-dados-1'), 'ids fixos da ABDI');
+  await a.fechar?.();
+});
+
+test('tela Hoje focada: contagem, agora e plano com a meta; sem datas nem gráfico da semana', async () => {
+  const a = await aparelho(amb, { viewport: { width: 1440, height: 900 } });
+  await a.page.locator('#main section.agora').waitFor();
+  await prontoComDisciplina(a.page, 'Português', ['Crase', 'Concordância']);
+  await a.page.goto(amb.url + '#/hoje');
+  await a.page.locator('.bloco.plano .pl-meta').waitFor();
+  assert.equal(await a.page.locator('.prazos, .semana, .metas, .col-b').count(), 0);
+  await a.page.click('.pl-mais button');
+  await a.page.waitForFunction(() => route().v === 'desempenho');
+  await a.fechar?.();
+});

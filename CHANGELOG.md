@@ -3,6 +3,14 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 0.3.0 · 2026-11-12
+
+- **Tela Hoje mais simples:** uma coluna só, com a contagem, o que estudar agora e o plano do dia. A meta de tempo fica dentro do plano. As próximas datas saem da tela (estão na Agenda) e os últimos 7 dias viram o link para o Desempenho.
+- **Edital previsto da ANPD na biblioteca:** Especialista em Regulação de Proteção de Dados, com 12 disciplinas e 117 assuntos prováveis, pesos estimados, prova provisória em 18/04/2027 e um plano de estudos em três fases. Uma faixa avisa que o edital ainda não foi publicado.
+- **Biblioteca com vários editais:** o app aceita mais de um edital pronto, com ou sem perfis.
+- **Guia em dois níveis (Código, Art. 77):** Simplificado e Completo, no lugar de Essencial, Exploração e Completo.
+- **Por dentro:** o `?v=` dos scripts volta a acompanhar a versão do app.
+
 ## 0.2.1 · 2026-11-11
 
 - **Aviso rápido (Kit Fácil 0.5.0, Código 0.4):** o aviso com Desfazer não some enquanto tem o foco ou o ponteiro em cima; ao sair, a contagem recomeça.

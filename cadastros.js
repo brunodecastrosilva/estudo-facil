@@ -15,7 +15,7 @@ VIEWS.editais = () => {
     return `<li><button class="ed-card" data-go="edital/${c.id}">
       <span class="ed-c-h"><b>${esc(nomeEdital(c))}</b><span class="tag${c.status === "estudando" ? " ok" : ""}">${statusTxt(c.status)}</span></span>
       <span class="ed-c-s">${esc([c.cargo, p ? "perfil " + p.nome : ""].filter(Boolean).join(", "))}${c.sigla && c.orgao ? `<small>${esc(c.orgao)}</small>` : ""}</span>
-      <span class="ed-c-i">${prova}. ${E.n ? `${E.teo} de ${plural(E.n, "assunto", "assuntos")} com a teoria concluída.` : "Ainda sem conteúdo."}</span>
+      <span class="ed-c-i">${c.previsto ? "Edital previsto, ainda não publicado. " : ""}${prova}${c.previsto && c.dataProva ? " (estimativa)" : ""}. ${E.n ? `${E.teo} de ${plural(E.n, "assunto", "assuntos")} com a teoria concluída.` : "Ainda sem conteúdo."}</span>
       ${E.n ? barraMat(E) : ""}
     </button></li>`;
   };
@@ -42,6 +42,7 @@ VIEWS.edital = r => {
       ${p ? `<p class="ed-perfil">Perfil <b>${esc(p.nome)}</b> <button class="btn link sm" data-act="perfil" data-id="${c.id}">Trocar</button></p>` : ""}
       <div class="seg st-seg" role="group" aria-label="Situação do edital">${STATUS.map(([k, l]) => `<button data-act="ed-status" data-id="${c.id}" data-s="${k}" aria-pressed="${c.status === k}">${l}</button>`).join("")}</div>
     </header>
+    ${c.previsto ? KitFacil.ui.faixa({ tipo: "alerta", html: "<b>Edital ainda não publicado.</b> Disciplinas, pesos e data da prova são estimativas. Quando o edital sair, confira o conteúdo e a data." }) : ""}
     ${KitFacil.ui.abas({ itens: ED_TABS.map(([k, l]) => [`edital/${c.id}/${k}`, l]), atual: `edital/${c.id}/${tab}`, rotulo: "Partes do edital", dado: "go" })}
     ${body}
   </div>`;
@@ -85,7 +86,7 @@ function edProva(c) {
     <table class="tb"><thead><tr><th>Disciplina</th><th class="n">Questões</th><th class="n">Pontos</th></tr></thead><tbody>
       ${E.grupos.map(g => (g.nome ? `<tr class="tb-g"><td>${esc(g.nome)}</td><td class="n">${dec(g.q)}</td><td class="n">${dec(g.pts)}</td></tr>` : "") + g.links.map(l => `<tr><td>${esc(l.mat.nome)}</td><td class="n">${l.q ? (Math.abs(l.q - Math.round(l.q)) > 0.01 ? "≈" + dec(l.q) : dec(l.q)) : "—"}</td><td class="n">${dec(l.pts)}</td></tr>`).join("")).join("")}
     </tbody></table>
-    ${c.modelo === EDITAL_ABDI.id ? `<p class="hint">O edital não divide as 20 questões específicas entre os temas do perfil. A estimativa por tema segue o número de assuntos de cada um.</p>` : ""}
+    ${notaPesos(c) ? `<p class="hint">${esc(notaPesos(c))}</p>` : ""}
   </section>` : `<section class="bloco"><h2 class="b-h">Quanto vale cada parte</h2><p class="hint">Ainda sem questões cadastradas. Em Conteúdo, toque em <b>Questões e assuntos</b> em cada disciplina e informe quantas questões ela tem e quanto vale cada uma.</p></section>`;
   const corte = P.minPct && E.q ? Math.ceil(E.q * P.minPct / 100) : 0;
   const crit = `<section class="aviso"><p>${P.minPct ? `<b>Para passar na prova:</b> acertar pelo menos ${corte ? `${corte} das ${dec(E.q)} questões (${P.minPct}%)` : `${P.minPct}% das questões`}${P.naoZerar ? " e não zerar nenhuma das áreas" : ""}.` : "A nota mínima para passar não foi informada."}${P.grupos.length ? ` Áreas: ${esc(P.grupos.map(g => g.nome).join(", "))}.` : ""}</p>
@@ -176,9 +177,10 @@ function edSobre(c) {
   return `<section class="bloco">${kv.length ? `<dl class="dl">${kv.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>` : ""}
     <div class="btns"><button class="btn ghost sm" data-act="ed-dados" data-id="${c.id}">${I.lapis}Editar dados</button>${c.site ? `<a class="btn ghost sm" href="${esc(c.site)}" target="_blank" rel="noopener">${I.externo}Página do concurso</a>` : ""}${c.email ? `<a class="btn ghost sm" href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ""}</div></section>
   ${p ? `<section class="bloco"><h2 class="b-h">Requisitos do perfil ${esc(p.nome)}</h2><p>${esc(p.requisito)}</p><p class="hint">Os documentos são exigidos só na contratação.</p></section>` : ""}
+  ${c.plano && c.plano.length ? `<section class="bloco"><h2 class="b-h">Plano de estudos sugerido</h2><ol class="notas">${c.plano.map(n => `<li>${esc(n)}</li>`).join("")}</ol></section>` : ""}
   ${c.provaNotas && c.provaNotas.length ? `<section class="bloco"><h2 class="b-h">Como é a prova</h2><ul class="notas">${c.provaNotas.map(n => `<li>${esc(n)}</li>`).join("")}</ul></section>` : ""}
-  ${c.etapas && c.etapas.length ? `<section class="bloco"><h2 class="b-h">Etapas e pontuação</h2><ul class="etapas">${c.etapas.map(e => `<li><div class="et-h"><b>${esc(e.nome)}</b><span>${dec(e.pontos)} pontos</span></div><p class="hint">${esc(e.tipo)}. ${esc(e.texto)}</p></li>`).join("")}</ul>
-    <p class="hint">A nota final soma as etapas, até ${dec(sum(c.etapas.map(e => e.pontos)))} pontos.${c.desempate ? ` Desempate: ${esc(c.desempate)}` : ""}</p></section>` : ""}
+  ${c.etapas && c.etapas.length ? `<section class="bloco"><h2 class="b-h">Etapas e pontuação</h2><ul class="etapas">${c.etapas.map(e => `<li><div class="et-h"><b>${esc(e.nome)}</b>${e.pontos != null ? `<span>${dec(e.pontos)} pontos</span>` : ""}</div><p class="hint">${esc(e.tipo)}. ${esc(e.texto)}</p></li>`).join("")}</ul>
+    ${c.etapas.every(e => e.pontos != null) ? `<p class="hint">A nota final soma as etapas, até ${dec(sum(c.etapas.map(e => e.pontos)))} pontos.${c.desempate ? ` Desempate: ${esc(c.desempate)}` : ""}</p>` : ""}</section>` : ""}
   <p class="centro"><button class="btn link sm danger" data-act="ed-excluir" data-id="${c.id}">${I.lixo}Excluir este edital</button></p>`;
 }
 
@@ -293,10 +295,19 @@ function definirDataProva(c, d) {
   c.datas.sort((a, b) => a.ini.localeCompare(b.ini));
   c.dataProva = d;
 }
-function perfilSheet(cid) {
-  const c = cid ? editalPorId(cid) : null, perfis = c ? c.perfis || [] : EDITAL_ABDI.perfis;
-  openSheet({ title: c ? "Trocar de perfil" : `${EDITAL_ABDI.sigla}: escolha o perfil`, tall: true, sub: c ? "" : EDITAL_ABDI.cargo,
-    body: `<p class="hint">${c ? "Os conhecimentos gerais e institucionais continuam iguais. Os específicos do perfil atual que você já estudou ficam guardados em Disciplinas e voltam se escolher o perfil de novo." : "Os conhecimentos gerais e institucionais são iguais para todos. O perfil define os 20 conhecimentos específicos. Dá para trocar depois."}</p>
+const notaPesos = c => c.notaPesos || (modeloDe(c.modelo) || {}).notaPesos || "";
+/* edital da biblioteca: com perfis, escolhe o perfil; sem perfis, entra direto */
+function bibliotecaAdicionar(id) {
+  const E = modeloDe(id); if (!E) return;
+  if ((E.perfis || []).length) return perfilSheet(null, id);
+  editalCriado(adicionarModelo(E, ""), `Edital ${E.previsto ? "previsto " : ""}da ${E.sigla} adicionado.`);
+}
+function perfilSheet(cid, mid) {
+  const c = cid ? editalPorId(cid) : null, E = modeloDe(c ? c.modelo : mid);
+  if (!E) return;
+  const perfis = c ? c.perfis || [] : E.perfis;
+  openSheet({ title: c ? "Trocar de perfil" : `${E.sigla}: escolha o perfil`, tall: true, sub: c ? "" : E.cargo,
+    body: `<p class="hint">${c ? "As disciplinas comuns continuam iguais. Os específicos do perfil atual que você já estudou ficam guardados em Disciplinas e voltam se escolher o perfil de novo." : "As disciplinas comuns são iguais para todos. O perfil define os conhecimentos específicos. Dá para trocar depois."}</p>
       <div class="perfis" role="radiogroup" aria-label="Perfil">${perfis.map(p => `<label class="perfil${c && c.perfil === p.id ? " on" : ""}"><input type="radio" name="pf" value="${p.id}" ${c && c.perfil === p.id ? "checked" : ""}><span class="perfil-n">${esc(p.nome)}</span><span class="perfil-v">${plural(p.vagas, "vaga", "vagas")} e ${p.cr} no cadastro reserva</span></label>`).join("")}</div>`,
     foot: `<button class="btn ghost" data-no>Cancelar</button><button class="btn pri" data-ok>${c ? "Trocar" : "Adicionar edital"}</button>`,
     onMount: s => {
@@ -306,8 +317,7 @@ function perfilSheet(cid) {
         const v = ($('input[name="pf"]:checked', s) || {}).value;
         if (!v) return toast("Escolha um perfil.");
         if (c) { closeSheet(true); if (v !== c.perfil) trocarPerfil(c, v); return; }
-        const nc = adicionarAbdi(v);
-        editalCriado(nc, `Edital da ${EDITAL_ABDI.sigla} adicionado.`);
+        editalCriado(adicionarModelo(E, v), `Edital da ${E.sigla} adicionado.`);
       };
     } });
 }
@@ -401,7 +411,7 @@ function gerarIcs() {
 const STATUS_MSG = { estudando: "Os assuntos deste edital entram no plano do dia.", espera: "Edital em espera: sai do plano do dia, mas as datas continuam na agenda.", encerrado: "Edital encerrado: sai do plano e da agenda. O histórico continua." };
 Object.assign(ACT, {
   "perfil": el => perfilSheet(el.dataset.id),
-  "bib-abdi": () => perfilSheet(null),
+  "bib": el => bibliotecaAdicionar(el.dataset.id),
   "ed-novo-mao": () => dadosSheet(null),
   "ed-dados": el => dadosSheet(el.dataset.id),
   "ed-status": el => { const c = editalPorId(el.dataset.id); if (!c || c.status === el.dataset.s) return; c.status = el.dataset.s; commit(); toast(STATUS_MSG[c.status]); },
@@ -427,7 +437,7 @@ function novoConcursoSheet() {
   const bib = BIBLIOTECA.filter(b => !DB.concursos.some(c => c.id === b.id)), t = today();
   openSheet({ title: "Adicionar edital",
     body: `<div class="opcoes">
-      ${bib.map(b => `<button class="opcao" data-act="bib-abdi"><span class="op-k">Edital pronto</span><span class="op-n">${esc(b.orgao)} (${esc(b.sigla)})</span><span class="op-d">${esc(b.cargo)}. Banca ${esc(b.banca)}, prova em ${dLonga(b.dataProva)}${b.dataProva >= t ? `, daqui a ${plural(diffD(t, b.dataProva), "dia", "dias")}` : ""}.</span></button>`).join("")}
+      ${bib.map(b => `<button class="opcao" data-act="bib" data-id="${b.id}"><span class="op-k">${b.previsto ? "Edital previsto" : "Edital pronto"}</span><span class="op-n">${esc(b.orgao)} (${esc(b.sigla)})</span><span class="op-d">${esc(b.cargo)}. ${b.previsto ? esc(b.resumoPrevisto) : `Banca ${esc(b.banca)}, prova em ${dLonga(b.dataProva)}${b.dataProva >= t ? `, daqui a ${plural(diffD(t, b.dataProva), "dia", "dias")}` : ""}.`}</span></button>`).join("")}
       <label class="opcao" for="pdf-in"><span class="op-k">${I.arquivo}PDF do edital</span><span class="op-n">Ler o PDF</span><span class="op-d">O app lê o arquivo aqui no aparelho e separa disciplinas, assuntos e datas. Você confere antes de salvar.</span></label>
       <input type="file" id="pdf-in" accept="application/pdf,.pdf" data-on="pdf" hidden>
       <button class="opcao" data-act="ed-novo-mao"><span class="op-k">${I.lapis}À mão</span><span class="op-n">Cadastrar o edital</span><span class="op-d">Digite órgão, cargo e data da prova. Depois cole o conteúdo programático ou escolha as disciplinas.</span></button>

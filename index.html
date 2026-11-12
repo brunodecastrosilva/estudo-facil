@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400..700&family=Atkinson+Hyperlegible+Next:wght@400..800&display=swap">
-<link rel="stylesheet" href="comum/kit-facil.css?v=0.1.0">
+<link rel="stylesheet" href="comum/kit-facil.css?v=0.5.0">
 <style>
 /* Papel de caderno, tinta de caneta azul e marca-texto.
    O marca-texto é o único elemento chamativo: marca o que já foi estudado no edital e o botão de estudar. */
@@ -243,13 +243,9 @@ body.com-foco .kf-toast{bottom:calc(24px + env(safe-area-inset-bottom,0px));left
 /* ---------- HOJE ---------- */
 .hoje{display:flex;flex-direction:column;gap:16px}
 .data-hoje{font-size:15px;color:var(--muted);font-weight:600;padding-top:4px}
-.col-a,.col-b{display:contents}
-.contagem{order:1}.aviso.dica{order:2}.agora{order:3}.metas{order:4}.plano{order:5}.prazos{order:6}.semana{order:7}
-@media (min-width:1024px){
-  .hoje{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:22px 28px;align-items:start}
-  .data-hoje{grid-column:1/-1}
-  .col-a,.col-b{display:flex;flex-direction:column;gap:20px}
-}
+@media (min-width:1024px){.hoje{max-width:720px;gap:20px}}
+.pl-meta{display:flex;flex-direction:column;gap:6px}
+.pl-mais{margin:0}
 .contagem{display:flex;gap:16px;align-items:center;padding:6px 0 4px}
 .folha{width:86px;flex:none;background:var(--sheet);border-radius:12px;text-align:center;padding-bottom:9px;position:relative;box-shadow:0 1px 0 var(--rule-2),0 5px 0 -2px var(--sheet),0 5px 0 -1px var(--rule-2),var(--shadow)}
 .folha-a{display:block;background:var(--pen);color:var(--pen-ink);font-size:13px;font-weight:700;padding:9px 0 5px;border-radius:12px 12px 0 0;position:relative}
@@ -301,27 +297,6 @@ body.com-foco .kf-toast{bottom:calc(24px + env(safe-area-inset-bottom,0px));left
 .pl-ritmo{border-top:1px solid var(--rule);padding-top:10px}
 .rv-acts{display:flex;gap:2px;flex:none}
 .rv-acts .icon-btn{color:var(--muted)}
-.pz-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.pz{display:grid;grid-template-columns:5.6em minmax(0,1fr);gap:2px 12px;padding:9px 0;border-top:1px solid var(--rule)}
-.pz:first-child{border-top:0;padding-top:0}
-.pz-d{font-weight:700;font-size:14.5px;grid-row:span 2;font-variant-numeric:tabular-nums}
-.pz-t{font-size:15px;line-height:1.35}
-.pz-s{font-size:13.5px;color:var(--muted);font-weight:600}
-.pz-s.s-agora,.pz-s.s-logo{color:var(--warn)}
-.pz.acao .pz-t::after{content:'Depende de você';display:inline-block;margin-left:6px;font-size:12px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:99px;padding:1px 8px;vertical-align:1px}
-.pz.prova .pz-d,.pz.prova .pz-t{color:var(--bad);font-weight:700}
-.pz.prova .pz-t::after{display:none}
-.sem{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;height:132px}
-.sem-c{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
-.sem-v{font-size:12px;color:var(--muted);height:16px;white-space:nowrap;font-variant-numeric:tabular-nums}
-.sem-b{flex:1;width:100%;max-width:24px;position:relative;display:flex;align-items:flex-end}
-.sem-b i{display:block;width:100%;background:var(--pen);border-radius:4px 4px 0 0}
-.sem-b i.ok{background:var(--pen)}
-.sem-b em{position:absolute;left:-5px;right:-5px;height:0;border-top:2px solid var(--ink);opacity:.35}
-.sem-d{font-size:13px;color:var(--muted);font-weight:600}
-.sem-c.hoje .sem-d{color:var(--ink);font-weight:800}
-.sem-c.folga .sem-d{color:var(--faint)}
-.sem-c{border-bottom:1px solid var(--rule)}
 
 /* ---------- ESTUDAR e listas de tópicos ---------- */
 .mats{display:flex;flex-direction:column}
@@ -612,7 +587,6 @@ body.com-foco .tabbar{display:none}
 .mais-campos>summary{cursor:pointer;font-weight:700;padding:10px 0;color:var(--pen)}
 .mais-campos>.field,.mais-campos>.grid2{margin-top:10px}
 .tb.cp tr.mute td{color:var(--faint)}
-.pz-t small,.dia-l small{color:var(--muted);font-weight:400}
 .agora.boas .ag-k svg{color:var(--hl)}
 .lead .btn.link,.cont-p .btn.link,.hint .btn.link{display:inline;padding:0;min-height:0;font-size:inherit;vertical-align:baseline}
 
@@ -638,10 +612,10 @@ body.com-foco .tabbar{display:none}
 <nav class="kf-nav" aria-label="Seções"><div class="kf-nav-in" id="nav"></div></nav>
 <div class="foco" id="foco" hidden></div>
 <noscript><p style="padding:24px">O Estudo Fácil precisa de JavaScript ligado para funcionar.</p></noscript>
-<script src="comum/kit-facil.js?v=0.1.0"></script>
-<script src="editais.js?v=0.1.0"></script>
-<script src="app.js?v=0.1.0"></script>
-<script src="telas.js?v=0.1.0"></script>
-<script src="cadastros.js?v=0.1.0"></script>
+<script src="comum/kit-facil.js?v=0.5.0"></script>
+<script src="editais.js?v=0.3.0"></script>
+<script src="app.js?v=0.3.0"></script>
+<script src="telas.js?v=0.3.0"></script>
+<script src="cadastros.js?v=0.3.0"></script>
 </body>
 </html>

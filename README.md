@@ -2,19 +2,19 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
-**Fase de testes** · versão 0.2.1 · Kit Fácil 0.5.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+**Fase de testes** · versão 0.3.0 · Kit Fácil 0.5.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md).
 
 ## O que o app faz
 
-- Apresentação curta ao abrir (desligável em Ajustes) e guia em 3 níveis: essencial, exploração e completo
-- Cadastre editais de três jeitos: prontos da biblioteca (hoje, o Processo Seletivo ABDI 2026), lidos do PDF ou digitados com o conteúdo programático colado
+- Apresentação curta ao abrir (desligável em Ajustes) e guia em 2 níveis: Simplificado e Completo
+- Cadastre editais de três jeitos: prontos da biblioteca (hoje, o Processo Seletivo ABDI 2026 e o edital previsto da ANPD 2027), lidos do PDF ou digitados com o conteúdo programático colado
 - Mantenha suas disciplinas e assuntos num só lugar. Eles valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram
 - Informe, em cada edital, as questões e o valor de cada disciplina, as áreas da prova e a nota mínima
 - Acompanhe vários concursos ao mesmo tempo. O plano do dia junta os editais marcados como Estudando e dá mais tempo ao que vale mais na prova
-- Veja o plano de cada dia: as revisões vencidas e os assuntos novos no ritmo certo para terminar a teoria antes da prova
+- Veja na tela Hoje só o que importa: o que estudar agora e o plano do dia, com a meta de tempo, as revisões vencidas e os assuntos novos no ritmo certo para terminar a teoria antes da prova
 - Estude com o cronômetro em tela cheia, marque acertos e erros e troque de assunto sem parar o tempo
 - Receba as revisões no ciclo de 1, 7 e 30 dias (ou outro que você escolher)
 - Confira o cronograma de cada concurso, com as datas que dependem de você, e leve as datas para a agenda do celular
@@ -74,7 +74,7 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
   mais. No celular estreito (menos de 400 px), a marca mostra só o ícone
 - **Navegação:** Hoje, Editais, Estudar, Agenda e Mais (Disciplinas, Desempenho e Ajustes) na barra de baixo (celular e
   tablet); no computador, menu lateral com tudo e Ajustes no pé. Desempenho também abre pelo link "Últimos 7 dias →
-  Desempenho" da tela Hoje
+  Desempenho", no fim do plano da tela Hoje
 - **Abertura:** não há tela de primeiro uso. Quem chega vê a tela Hoje com o primeiro passo (adicionar o edital ou
   cadastrar disciplinas) e a rotina padrão, que se ajusta em "Ajustar a rotina"; a janela de boas-vindas do Kit abre
   ao abrir o app (desligável)
@@ -89,7 +89,7 @@ Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
 | `app.js` | dados, sincronização, plano do dia e cronômetro |
 | `telas.js` | Hoje, Estudar, Agenda, Desempenho e Ajustes |
 | `cadastros.js` | Editais, Disciplinas, biblioteca e leitura de editais |
-| `editais.js` | o edital da ABDI na biblioteca (disciplinas, assuntos, cronograma e prova) |
+| `editais.js` | os editais da biblioteca: ABDI 2026 e o previsto da ANPD (disciplinas, assuntos, cronograma, prova e plano) |
 | `leitor-pdf.js` | leitura de editais em PDF, carregada só quando você usa |
 | `comum/` | **Kit Fácil**: sistema de design comum, barra superior, Ajustes, avaliação, sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
@@ -112,7 +112,8 @@ Regras:
 - o plano do dia junta os assuntos dos editais com a situação Estudando; sem nenhum edital em estudo, usa todas as disciplinas;
 - o peso de cada disciplina é a média da fatia da nota que ela vale em cada edital em estudo;
 - ao importar um edital, disciplinas com o mesmo nome se juntam, e assuntos se juntam pelo nome sem a numeração do edital;
-- os dados da versão 1 do formato migram sozinhos para a versão 2.
+- os dados da versão 1 do formato migram sozinhos para a versão 2;
+- edital da biblioteca marcado como `previsto` mostra a faixa "Edital ainda não publicado"; os pesos e a data são estimativas.
 
 Pendência conhecida: o leitor de PDF reconhece mal o conteúdo programático de alguns editais (como o da ABDI). Nesses casos, use a biblioteca ou cole o conteúdo.
 
