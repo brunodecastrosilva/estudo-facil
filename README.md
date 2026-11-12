@@ -2,7 +2,7 @@
 
 Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
 
-**Fase de testes** · versão 0.4.0 · Kit Fácil 0.5.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+**Fase de testes** · versão 0.5.0 · Kit Fácil 0.6.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
 [Código do Projeto Fácil](comum/CODIGO.md).
@@ -24,7 +24,7 @@ Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e
 - **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
 - **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
 - **Barra de baixo com no máximo 5 posições:** as seções principais e "Mais", com o resto e os Ajustes (no computador, tudo no menu lateral)
-- **Pague um chopp para o criador!** O app é gratuito; o chopp no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
+- **Mande um presente para o criador!** O app é gratuito; o presente no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
 - **Novidades:** depois de cada atualização, o app mostra uma vez o que mudou
 - Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
 
@@ -70,7 +70,7 @@ Ao mudar a versão, atualize também o `?v=` dos scripts no `index.html`.
 
 Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
 
-- **Alto da tela, à direita:** nuvem da sincronização, chopp para o criador e balão de avaliação, nessa ordem, e nada
+- **Alto da tela, à direita:** nuvem da sincronização, presente para o criador e balão de avaliação, nessa ordem, e nada
   mais. No celular estreito (menos de 400 px), a marca mostra só o ícone
 - **Navegação:** Hoje, Editais, Estudar, Agenda e Mais (Disciplinas, Desempenho e Ajustes) na barra de baixo (celular e
   tablet); no computador, menu lateral com tudo e Ajustes no pé. Desempenho também abre pelo link "Últimos 7 dias →

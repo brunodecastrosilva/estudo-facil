@@ -3,6 +3,10 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 0.5.0 · 2026-11-12
+
+- **Presente no lugar do chopp (Kit Fácil 0.6.0, Código 0.5):** o convite de apoio agora é "Gostando do app? Mande um presente para o criador!". O ícone é um presente colorido, em 3D, que dá uma volta quando o app abre e ao ser tocado; quem pede menos movimento no aparelho vê o presente parado. A janela do Pix e *Sobre o aplicativo* mostram o presente maior, com papel de bolinhas e laço.
+
 ## 0.4.0 · 2026-11-12
 
 - **Guia completo ao vivo (Código, Arts. 77 e 78):** cada um dos 10 passos tem ação. A pessoa lê, toca em Mostrar e o app faz o passo na tela, trocando de tela pela barra de baixo (ou pelo "Mais"), como a pessoa faria. A demonstração usa uma cópia dos dados (ou o edital da ANPD, se o app estiver vazio) e não grava nada, nem na nuvem.
