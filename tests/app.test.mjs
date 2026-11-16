@@ -224,6 +224,8 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   await nav(p, 'cadernos');
   assert.match(await p.locator('#view [aria-labelledby="cd-p"]').innerText(), /43 questões oficiais[\s\S]*ANATEL 2024[\s\S]*43 questões[\s\S]*ANAC 2024[\s\S]*Folha de respostas/);
   assert.equal(await p.locator('#view [aria-labelledby="cd-p"] [data-act="abrir-prova"]').count(), 6, 'as provas sem texto no aparelho abrem a folha de respostas');
+  // o botão de abrir o arquivo fica à vista mesmo com todas as provas cadastradas já no aparelho
+  assert.equal(await p.evaluate(() => { const g = DB.textos; DB.textos = PROVAS.map(x => ({ id: x.id, itens: g[0].itens, grupos: [], em: 1 })); render(); const tem = !!document.querySelector('#pv-abrir') && !!document.querySelector('#pv-arquivo'); DB.textos = g; render(); return tem; }), true);
   await p.click('#view [data-act="abrir-cad"][data-id="p:anatel24-cb1"]'); await p.locator('#cad-ir').waitFor();
   assert.equal(await p.locator('#view .cad-q').count(), 43); assert.deepEqual(await p.locator('#view .sub-t').allInnerTexts(), ['Língua Portuguesa', 'Língua Inglesa', 'Regulação e agências reguladoras', 'Direito Administrativo', 'Direito Constitucional']);
   await p.click('#cad-ir'); await p.locator('#treino.dentro').waitFor();

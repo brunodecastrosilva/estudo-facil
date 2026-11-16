@@ -3,6 +3,11 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.12.1 · 2026-11-16
+
+- **Correção:** o botão "Abrir arquivo das provas" sumia quando as provas antigas já estavam no aparelho. Agora fica sempre à vista, no fim de Cadernos.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado).
+
 ## 1.12.0 · 2026-11-16
 
 - **Expansão massiva das provas do Cebraspe:** levantamento automático de 623 cadernos de 57 concursos (2023 a 2026). Entraram 234 cadernos de 46 concursos, com cerca de 4,7 mil questões oficiais de certo ou errado nas disciplinas do edital.

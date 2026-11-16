@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.12.0';
+const VERSAO = '1.12.1';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -419,7 +419,9 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { if (typeof TX !== 'undefined' && TX.ok) b.textos = DB.textos; DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.12.0', itens: [
+const NOVIDADES = [{ versao: '1.12.1', itens: [
+  'O botão "Abrir arquivo das provas" voltou e agora fica sempre à vista, em Cadernos.',
+] }, { versao: '1.12.0', itens: [
   'Expansão das provas do Cebraspe: mais de 230 cadernos e 4,7 mil questões oficiais, de 46 concursos.',
   'Cada questão entra na disciplina e no assunto do seu edital, automaticamente.',
   'O texto das provas agora cabe no aparelho sem lotar o armazenamento.',
