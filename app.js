@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.7.0';
+const VERSAO = '1.7.1';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -328,8 +328,14 @@ function planoDoDia() {
     const minFeito = soma(S.filter(s => s.t === px.t.id && s.tipo !== 'revisao'), s => s.seg / 60);
     const tipo = tipoDoEstudo(px.t.id, px.tipo);
     const nq = tipo === 'questoes' && temBanco(px.t.id) ? qBloco || questoesDoAssunto(px.t.id).length : 0;
-    blocos.push({ tipo, t: px.t.id, m: d.m, min: c.bloco, nq, feito: minFeito >= c.bloco * 0.8 || (px.tipo === 'teoria' && !!px.t.teoria && minFeito > 0) || (nq > 0 && qNaMateria(d.m) >= nq * (ja + 1)), minFeito });
+    blocos.push({ tipo, t: px.t.id, m: d.m, min: c.bloco, nq, base: minFeito >= c.bloco * 0.8 || (px.tipo === 'teoria' && !!px.t.teoria && minFeito > 0), minFeito });
   }
+  // a soma das questões do plano fecha a meta do dia: o que uma disciplina não tem passa para as outras
+  const cabe = b => typeof questoesDaDisciplina === 'function' ? questoesDaDisciplina(b.m).length : b.nq;
+  blocos.forEach(b => { if (b.nq) b.nq = Math.max(1, Math.min(b.nq, cabe(b))); });
+  let falta = c.metaQ - soma(blocos, b => b.nq);
+  for (const b of blocos) { if (falta <= 0) break; const d = b.nq ? Math.min(falta, cabe(b) - b.nq) : 0; if (d > 0) { b.nq += d; falta -= d; } }
+  blocos.forEach(b => { b.feito = b.base || (b.nq > 0 && qNaMateria(b.m) >= soma(blocos.slice(0, blocos.indexOf(b) + 1).filter(x => x.m === b.m), x => x.nq)); delete b.base; });
   const itens = [...revs.slice(0, 5), ...feitasHoje, ...blocos];
   return { itens, proximo: itens.find(x => !x.feito) || null, minutos: minutosDoDia(h), meta: c.metaMin, revisoesAMais: Math.max(0, revs.length - 5) };
 }
@@ -411,7 +417,9 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.7.0', itens: [
+const NOVIDADES = [{ versao: '1.7.1', itens: [
+  'Plano de hoje: quando uma disciplina tem poucas questões, as outras completam a meta do dia.',
+] }, { versao: '1.7.0', itens: [
   'O app ficou integrado: o que você resolve no plano de hoje aparece nos cadernos, e o contrário também.',
   'Cada questão de prova tem o seu assunto, e cada segundo numa questão soma no tempo desse assunto e na meta do dia.',
   'Acabaram as questões do assunto? O treino segue no próximo assunto da disciplina.',

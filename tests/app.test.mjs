@@ -66,7 +66,7 @@ test('edital da ANPD: itens somam as áreas, pesos somam 100% e os fatos trazem 
 test('plano do dia: dois blocos, o primeiro de questões da LGPD; revisões vencidas vêm antes', async () => {
   const a = await abrir(), p = a.page;
   let pl = await p.evaluate(() => planoDoDia().itens.map(i => [i.tipo, i.m, i.nq || i.min]));
-  assert.equal(pl.length, 2); assert.deepEqual(pl[0], ['questoes', 'anpd-lgpd', 25], 'o plano traz questões que somam a meta do dia (50), em duas disciplinas'); assert.notEqual(pl[1][1], 'anpd-lgpd');
+  assert.equal(pl.length, 2); assert.deepEqual(pl[0], ['questoes', 'anpd-lgpd', 36], 'a LGPD completa o que a outra disciplina não tem'); assert.equal(pl[0][2] + pl[1][2], 50, 'o plano traz questões que somam a meta do dia, em duas disciplinas'); assert.notEqual(pl[1][1], 'anpd-lgpd');
   await estudar(p, { dia: '2026-11-15', min: 40 });
   pl = await p.evaluate(() => planoDoDia().itens.map(i => [i.tipo, i.t]));
   assert.equal(pl[0][0], 'revisao', 'a revisão de 1 dia abre o plano de hoje');

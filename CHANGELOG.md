@@ -3,6 +3,11 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.7.1 · 2026-11-16
+
+- **Plano de hoje:** quando uma disciplina tem menos questões que a sua parte da meta, as outras disciplinas do plano completam as 50.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os 23 testes do app e a varredura de acessibilidade.
+
 ## 1.7.0 · 2026-11-16
 
 O app passa a funcionar como uma coisa só: plano, cadernos, provas, tempo e edital conversam.
