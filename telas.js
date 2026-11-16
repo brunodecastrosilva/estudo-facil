@@ -1,660 +1,468 @@
-/* Estudo Fácil: telas e janelas. */
+/* Estudo Fácil · telas: Hoje, Plano, Evolução, Mais e as telas de dentro de Mais (Concursos, Disciplinas, Revisões,
+   Simulados e Agenda). Cada tela tem html() e, se precisar, ligar(v); os toques saem por data-act (ACOES, em casca.js). */
 "use strict";
 
-/* ================= pedaços comuns ================= */
-const glifo = t => `<i class="st ${t.teoria ? "st-2" : t.ult ? "st-1" : "st-0"}" aria-hidden="true"></i>`;
-const nomeTop = t => `<span class="tn${t.teoria ? " hl" : t.ult ? " ul" : ""}">${esc(t.nome)}</span>`;
-function estadoTxt(t) { return t.teoria ? "Teoria concluída" : t.ult ? "Teoria em andamento" : "Ainda não estudado"; }
-function revTxt(t) {
-  if (!t.prox) return "";
-  const n = diffD(today(), t.prox);
-  if (n < 0) return `<span class="tag rev">Revisão atrasada ${plural(-n, "dia", "dias")}</span>`;
-  if (n === 0) return `<span class="tag rev">Revisar hoje</span>`;
-  return `<span class="tag">Revisão ${n === 1 ? "amanhã" : dCurta(t.prox)}</span>`;
+/* ---------- peças comuns ---------- */
+const cab = (t, sub) => `<header class="tela-cab"><h1 class="tela-t">${esc(t)}</h1>${sub ? `<p class="tela-sub">${sub}</p>` : ''}</header>`;
+const voltaMais = () => `<button type="button" class="volta" data-kf-ir="mais">${I.volta}<span>Mais</span></button>`;
+const barraHTML = (p, rotulo, cls = '') => `<span class="barra ${cls}" role="img" aria-label="${esc(rotulo)}"><i style="width:${clamp(p, 0, 100)}%"></i></span>`;
+const pontoCor = m => `<span class="ponto-cor" style="background:${m && /^#[0-9a-f]{6}$/i.test(m.cor) ? m.cor : '#888888'}" aria-hidden="true"></span>`;
+function anelHTML(v, de, { tam = 132, traco = 12, centro = '' } = {}) {
+  const r = (tam - traco) / 2, C = 2 * Math.PI * r, k = de ? clamp(v / de, 0, 1) : 0;
+  return `<span class="anel ${k >= 1 ? 'cheio' : ''}" style="width:${tam}px;height:${tam}px"><svg viewBox="0 0 ${tam} ${tam}" aria-hidden="true"><circle class="anel-trilho" cx="${tam / 2}" cy="${tam / 2}" r="${r}" stroke-width="${traco}"/><circle class="anel-arco" cx="${tam / 2}" cy="${tam / 2}" r="${r}" stroke-width="${traco}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - k)).toFixed(1)}" transform="rotate(-90 ${tam / 2} ${tam / 2})"/></svg><span class="anel-centro">${centro}</span></span>`;
 }
-function medidor(valor, total, rot, txtFn) {
-  const p = total > 0 ? Math.min(100, pct(valor, total)) : 0;
-  return `<div class="medidor"><div class="med-h"><span>${rot}</span><b>${txtFn ? txtFn(valor, total) : ""}</b></div>
-    <div class="barra${p >= 100 ? " cheia" : ""}" role="progressbar" aria-valuenow="${Math.round(p)}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(rot)}"><span style="width:${p}%"></span></div></div>`;
+const saudacao = () => { const h = new Date().getHours(), n = primeiroNome(cfg().nome); return (h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite') + (n ? ', ' + esc(n) : ''); };
+function contagem(c) {
+  if (!c || !c.dataProva) return null;
+  const n = entreDias(hojeISO(), c.dataProva);
+  return { n, texto: n > 1 ? `Faltam ${n} dias` : n === 1 ? 'Falta 1 dia' : n === 0 ? 'A prova é hoje' : 'Prova feita', estimada: !!c.previsto };
 }
-// estado vazio e cabeçalho de tela vêm do Kit Fácil (iguais nos três apps)
-const vazio = (titulo, texto, acao = "") => KitFacil.ui.vazio({ titulo, texto, acao });
-const cabecalho = (titulo, sub = "", extra = {}) => KitFacil.ui.cabecalho({ titulo, sub, ...extra });
-function prazoStatus(d, t) {
-  const fim = d.fim || d.ini;
-  if (fim < t) return { k: "s-passou", txt: "Encerrado" };
-  if (d.ini > t) { const n = diffD(t, d.ini); return { k: n <= 7 ? "s-logo" : "s-futuro", txt: n === 1 ? "Amanhã" : `Em ${n} dias` }; }
-  if (d.fim && d.fim !== d.ini) { const n = diffD(t, d.fim); return { k: "s-agora", txt: n === 0 ? "Termina hoje" : n === 1 ? "Termina amanhã" : `Até ${dCurta(d.fim)}, faltam ${n} dias` }; }
-  return { k: "s-agora", txt: "Hoje" };
-}
-function datasConcurso(c) {
-  const l = (c.datas || []).filter(d => d && d.ini).slice();
-  if (c.dataProva && !l.some(d => d.tipo === "prova" && d.ini === c.dataProva)) l.push({ id: "prova", tipo: "prova", titulo: "Prova", ini: c.dataProva });
-  return l.sort((a, b) => a.ini.localeCompare(b.ini) || (a.fim || a.ini).localeCompare(b.fim || b.ini));
-}
-/* datas de vários editais juntas, cada uma com o seu edital em d.c */
-function todasDatas(lista) {
-  return lista.flatMap(c => datasConcurso(c).map(d => ({ ...d, c }))).sort((a, b) => a.ini.localeCompare(b.ini) || (a.fim || a.ini).localeCompare(b.fim || b.ini));
-}
-const dataRot = d => d.fim && d.fim !== d.ini ? `${dCurta(d.ini)} a ${dCurta(d.fim)}` : dCurta(d.ini);
 
-/* ================= HOJE ================= */
-VIEWS.hoje = () => {
-  const X = ix(), t = today(), P = planoHoje(), E = resumoEdital();
-  const c = provaProx(), n = c ? diffD(t, c.dataProva) : null, o = X.days.get(t) || { s: 0, a: 0, e: 0 };
-  const folga = !ehDiaEstudo(t), semNada = !X.tops.length;
-  // contagem
-  const folha = c ? `<div class="folha" aria-hidden="true"><span class="folha-a">faltam</span><b>${n}</b><span class="folha-b">${n === 1 ? "dia" : "dias"}</span></div>` : "";
-  const outros = X.ativos.filter(x => x !== c && x.dataProva && x.dataProva >= t);
-  const provaTxt = c ? `<b>${esc(nomeEdital(c))}</b>: ${n > 0 ? `${dSemana(c.dataProva)}, ${dLonga(c.dataProva)}${c.previsto ? " (data estimada)" : ""}${c.horaProva ? `, das ${esc(c.horaProva)}` : ""}${c.local ? `. ${esc(c.local)}` : ""}.` : `a prova é hoje${c.horaProva ? `, das ${esc(c.horaProva)}` : ""}. Boa prova!`}`
-    : X.ativos.length ? `Cadastre a data da prova em <button class="btn link sm" data-go="edital/${X.ativos[0].id}/datas">${esc(nomeEdital(X.ativos[0]))}, Datas</button> para ver a contagem.`
-    : DB.concursos.length ? "Nenhum edital marcado como Estudando. O plano usa todas as suas disciplinas." : "Sem edital: o plano usa todas as suas disciplinas.";
-  const cont = semNada ? "" : `<section class="contagem" aria-label="${c ? "Contagem para a prova" : "Progresso"}">
-    ${folha}
-    <div class="cont-txt">
-      <h1 class="cont-h">${c ? (n === 0 ? "Hoje é a prova" : `${plural(n, "dia", "dias")} para a prova`) : X.ativos.length === 1 ? esc(nomeEdital(X.ativos[0])) : "Seu estudo"}</h1>
-      <p class="cont-p">${provaTxt}${outros.length ? ` Depois: ${outros.map(x => `${esc(nomeEdital(x))} em ${plural(diffD(t, x.dataProva), "dia", "dias")}`).join(", ")}.` : ""}</p>
-      <div class="trilha" role="progressbar" aria-valuenow="${Math.round(E.pc)}" aria-valuemin="0" aria-valuemax="100" aria-label="Assuntos com a teoria concluída"><span style="width:${E.pc}%"></span><span class="tr-b" style="width:${pct(E.est - E.teo, E.n)}%"></span></div>
-      <p class="cont-s"><b>${E.teo} de ${E.n}</b> assuntos com a teoria concluída${E.est > E.teo ? `, ${E.est - E.teo} em andamento` : ""}.</p>
-    </div>
-  </section>`;
-  // próximo passo
-  let agora;
-  const a = DB.ativa;
-  if (semNada && !a) {
-    agora = `<section class="agora boas"><p class="ag-k">${I.check}Primeiro passo</p><h2 class="ag-h">Cadastre o que você vai estudar</h2>
-      <p class="ag-m">Adicione o edital do seu concurso, pronto, do PDF ou digitado, ou cadastre suas disciplinas e assuntos. O plano do dia aparece aqui.</p>
-      <div class="btns"><button class="btn pri lg" data-act="conc-novo">${I.plus}Adicionar edital</button><button class="btn ghost" data-go="disciplinas">Cadastrar disciplinas</button></div>
-      <p class="ag-m">Sua rotina: ${esc(resumoRotina())}. <button class="btn link sm" data-act="aj-rotina">Ajustar a rotina</button></p></section>`;
-  } else if (a) {
-    const it = atual(a);
-    agora = `<section class="agora em-curso"><p class="ag-k">${I.timer}Sessão em andamento</p><h2 class="ag-h">${esc(topNome(it.t))}</h2><p class="ag-m">${esc(matNome(it.m))}, ${TIPO_TXT[it.tipo].toLowerCase()}. <span data-tick="estudo-real">${dur(estudoTotal(a, Date.now()))}</span> de estudo.</p>
-      <div class="btns"><button class="btn pri lg" data-act="foco">${I.timer}Voltar ao cronômetro</button></div></section>`;
-  } else if (P.prox) {
-    const x = P.prox, top = x.top, st = statT(top.id);
-    const k = x.tipo === "revisao" ? (x.atraso ? `Revisão atrasada há ${plural(x.atraso, "dia", "dias")}` : "Revisão de hoje") : top.ult ? `Continuar: você começou em ${brs(top.ult)}` : "Assunto novo do plano";
-    agora = `<section class="agora"><p class="ag-k">${x.tipo === "revisao" ? '<i class="pt rev"></i>' : '<i class="pt novo"></i>'}${k}</p>
-      <h2 class="ag-h">${esc(top.nome)}</h2><p class="ag-m">${esc(matNome(top.m))}${st.a + st.e ? `. Você acertou ${pctTxt(pct(st.a, st.a + st.e))} das ${st.a + st.e} questões deste assunto.` : "."}</p>
-      <div class="btns"><button class="btn pri lg" data-act="estudar" data-t="${top.id}" data-tipo="${x.tipo}">${I.play}Estudar agora</button><button class="btn ghost" data-go="estudar">Escolher outro</button></div></section>`;
-  } else {
-    const prox = proximoTopico();
-    agora = `<section class="agora feito"><p class="ag-k">${I.check}${P.itens.length ? "Plano de hoje concluído" : folga ? "Hoje é folga no seu planejamento" : "Nada planejado para hoje"}</p>
-      ${prox ? `<h2 class="ag-h">${P.itens.length ? "Quer adiantar?" : "Se quiser estudar"}</h2><p class="ag-m">O próximo assunto é <b>${esc(prox.nome)}</b>, de ${esc(matNome(prox.m))}.</p>
-      <div class="btns"><button class="btn pri lg" data-act="estudar" data-t="${prox.id}" data-tipo="teoria">${I.play}Estudar este</button><button class="btn ghost" data-go="estudar">Escolher outro</button></div>`
-      : `<h2 class="ag-h">Toda a teoria está concluída.</h2><p class="ag-m">Agora é revisar e resolver questões. Escolha um assunto em Estudar.</p><div class="btns"><button class="btn pri lg" data-go="estudar">${I.play}Estudar</button></div>`}</section>`;
+/* ---------- Hoje ---------- */
+function tiraSemana() {
+  const h = hojeISO(), S = sequencia(), dom = maisDias(h, -deISO(h).getDay()), feitos = idx().dias, rotina = new Set(cfg().dias);
+  return `<ol class="semana" aria-label="Esta semana">${[0, 1, 2, 3, 4, 5, 6].map(i => {
+    const d = maisDias(dom, i), ok = feitos.has(d), prot = S.protegidos.has(d), hoje = d === h, fut = d > h, folga = !rotina.has(i);
+    const est = ok ? 'feito' : prot ? 'protegido' : hoje ? 'hoje' : fut ? 'futuro' : folga ? 'folga' : 'falta';
+    const fala = ok ? 'meta batida' : prot ? 'salvo por uma folga' : hoje ? 'hoje, em andamento' : fut ? '' : folga ? 'dia de descanso' : 'sem estudo';
+    return `<li class="dia ${est}${hoje ? ' atual' : ''}"><span class="dia-l" aria-hidden="true">${SEMANA[i][0].toUpperCase()}</span><span class="dia-m" aria-hidden="true">${ok ? I.check : prot ? I.escudo : ''}</span><span class="kf-so-leitor">${SEMANA_L[i]}${fala ? ': ' + fala : ''}</span></li>`;
+  }).join('')}</ol>`;
+}
+const linhaPlano = (it, i) => {
+  const n = nomeItem(it), rot = it.tipo === 'revisao' ? `Revisão${it.atraso > 0 ? ` · ${plural(it.atraso, 'dia', 'dias')} de atraso` : ''}` : `${TIPOS[it.tipo]} · ${it.min} min`;
+  return `<li class="pl-item ${it.feito ? 'feito' : ''}"><span class="pl-marca" aria-hidden="true">${it.feito ? I.check : it.tipo === 'revisao' ? I.revisar : I.livro}</span>
+    <span class="pl-tx"><b>${it.feito ? `<span class="grifo">${esc(n.t)}</span>` : esc(n.t)}</b><small>${esc(n.m)} · ${rot}${it.feito ? ' · feito' : ''}</small></span>
+    ${it.feito ? '' : `<button type="button" class="btn-ic comecar" data-act="estudar-item" data-i="${i}" aria-label="Estudar ${esc(n.t)}">${I.play}</button>`}</li>`;
+};
+const viewHoje = {
+  html() {
+    const c = concursoFoco(), P = planoDoDia(), S = sequencia(), M = missoes(), s = jogoEstado(), ct = contagem(c), fase = faseAtual(c);
+    const min = Math.floor(P.minutos), falta = Math.max(0, Math.ceil(P.meta - P.minutos)), px = P.proximo || sugestaoExtra(), nx = px && nomeItem(px);
+    const estado = S.hojeFeito ? (S.n > 1 ? `Meta batida. São <b>${S.n} dias</b> seguidos.` : 'Meta batida. A sequência começou.')
+      : S.n > 0 ? `Faltam <b>${fmtMin(falta)}</b> para manter os ${plural(S.n, 'dia', 'dias')} de sequência.`
+      : min > 0 ? `Faltam <b>${fmtMin(falta)}</b> para bater a meta de hoje.` : `Estude <b>${fmtMin(P.meta)}</b> hoje e comece uma sequência.`;
+    const proxima = jogoLigado() ? medalhasDoApp().find(m => !s.ganhas.includes(m.id)) : null;
+    const vazio = !DB.materias.some(m => topicosDe(m.id).length);
+    return `${cab('Hoje', `${saudacao()}.${ct && ct.n >= 0 ? ` ${ct.texto} para a prova${c ? ' da ' + esc(c.sigla) : ''}${ct.estimada ? ' (data estimada)' : ''}.` : ''}`)}
+      ${c && c.previsto && c.dataEdital && hojeISO() > c.dataEdital ? KitFacil.ui.faixa({ tipo: 'alerta', html: `<b>O edital da ${esc(c.sigla)} já saiu?</b> O prazo previsto passou. Atualize a banca, as datas e as disciplinas.`, acao: `<button type="button" class="kf-btn kf-sec" data-act="abrir-concurso" data-id="${esc(c.id)}">Atualizar o concurso</button>` }) : ''}
+      ${vazio ? KitFacil.ui.vazio({ titulo: 'Nenhum concurso ainda', texto: 'Adicione um concurso da biblioteca ou cadastre as suas disciplinas. O plano de cada dia aparece aqui.', acao: `<button type="button" class="kf-btn kf-pri" data-kf-ir="concursos">Adicionar concurso</button>` }) : `
+      <section class="folha hoje-folha" aria-label="Meta e sequência">
+        <div class="hf-seq"><span class="hf-chama">${chamaHTML(S.hojeFeito)}</span><span class="hf-seq-tx"><b><span class="hf-n">${S.n}</span> ${S.n === 1 ? 'dia seguido' : 'dias seguidos'}</b><small>${S.folgas ? `${plural(S.folgas, 'folga guardada', 'folgas guardadas')}` : 'Sem folga guardada'} · recorde ${S.recorde}</small></span>
+          <button type="button" class="btn-ic" data-act="sobre-sequencia" aria-label="Como funciona a sequência">${I.questoes}</button></div>
+        ${tiraSemana()}
+        <div class="hf-meta">${anelHTML(P.minutos, P.meta, { centro: `<b>${min}</b><small>de ${P.meta} min</small>` })}
+          <div class="hf-meta-tx"><p class="hf-estado" role="status">${estado}</p>
+            ${nx ? `<p class="hf-prox"><span class="rotulo-mini">${P.proximo ? 'Próximo' : 'Para adiantar'}</span>${esc(nx.t)}<small>${esc(nx.m)}</small></p>` : ''}</div></div>
+        <button type="button" class="kf-btn kf-comecar bloco" id="hoje-estudar" data-act="estudar-proximo">${I.play}${DB.ativa ? 'Voltar ao foco' : min > 0 ? 'Continuar estudando' : 'Estudar agora'}</button>
+      </section>
+
+      <section class="card" aria-labelledby="mis-t"><div class="sec-cab"><h2 class="sec-t" id="mis-t">Missões de hoje</h2><span class="apoio">${M.feitas} de ${M.lista.length}</span></div>
+        <ul class="missoes">${M.lista.map(m => `<li class="missao ${m.ok ? 'ok' : ''}"><span class="mi-ic" aria-hidden="true">${m.ok ? I.check : I[m.ic]}</span><span class="mi-tx"><b>${esc(m.nome)}</b>${barraHTML(m.v / m.de * 100, `${Math.floor(m.v)} de ${m.de}`)}</span><span class="mi-n" aria-hidden="true">${Math.floor(m.v)}/${m.de}</span></li>`).join('')}</ul>
+        ${M.perfeito ? `<p class="mis-perfeito"><span class="grifo">Dia perfeito.</span> As missões de hoje estão cumpridas.</p>` : ''}</section>
+
+      <section aria-labelledby="pl-t"><div class="sec-cab"><h2 class="sec-t" id="pl-t">Plano de hoje</h2><button type="button" class="kf-btn kf-link" data-kf-ir="plano">Ver o plano</button></div>
+        <ul class="card lista plano-hoje" data-kf-morf="plano">${P.itens.length ? P.itens.map(linhaPlano).join('') : '<li class="pl-vazio">Nada marcado para hoje. Escolha um assunto em Estudar.</li>'}</ul>
+        ${P.revisoesAMais ? `<button type="button" class="kf-btn kf-link" data-kf-ir="revisoes">Ver mais ${plural(P.revisoesAMais, 'revisão vencida', 'revisões vencidas')}</button>` : ''}</section>
+
+      ${c ? `<button type="button" class="card conc-card" data-kf-ir="plano"><span class="cc-topo"><b>${esc(c.sigla)}</b>${fase ? `<span class="etiqueta">${esc(fase.nome)}</span>` : ''}</span><span class="cc-cargo">${esc(c.cargo || '')}</span>
+        <span class="cc-pront"><span>Prontidão para a prova</span><b>${prontidao(c)}%</b></span>${barraHTML(prontidao(c), `Prontidão: ${prontidao(c)}%`, 'grifada')}
+        <span class="kf-so-leitor">. Ver o plano</span></button>` : ''}
+
+      ${jogoLigado() ? `<button type="button" class="card nivel-card" data-act="ver-medalhas"><span class="kf-so-leitor">Nível ${s.nivel}: </span>${seloNivelHTML(s)}${nivelHTML(s)}
+        ${proxima ? `<span class="nivel-prox"><span class="med-mini">${medalhaSVG(proxima, { apagada: true })}</span><span><small>Próxima medalha</small><b>${esc(proxima.nome)}</b></span></span>` : ''}<span class="kf-so-leitor">. ${s.ganhas.length} de ${s.total} medalhas. Ver a coleção</span></button>` : ''}`}`;
+  },
+};
+
+/* ---------- Plano: o edital como caderno ---------- */
+let planoConc = null;
+const viewPlano = {
+  html() {
+    const A = concursosAtivos(), c = A.find(x => x.id === planoConc) || concursoFoco();
+    if (!c) return `${cab('Plano', 'O edital vira caderno: cada assunto estudado fica grifado.')}${KitFacil.ui.vazio({ titulo: 'Nenhum concurso em estudo', texto: 'Adicione um concurso para ver o edital, as fases e o que falta estudar.', acao: `<button type="button" class="kf-btn kf-pri" data-kf-ir="concursos">Adicionar concurso</button>` })}`;
+    const ed = editalDaBiblioteca(c), ct = contagem(c), fase = faseAtual(c), F = fatias(c, { fase: false }), pr = prontidao(c);
+    const discs = c.disc.filter(d => materia(d.m)).slice().sort((a, b) => (a.fora ? 1 : 0) - (b.fora ? 1 : 0) || (F.get(b.m) || 0) - (F.get(a.m) || 0));
+    const nT = soma(discs.filter(d => !d.fora), d => d.topicos.length), nV = soma(discs.filter(d => !d.fora), d => progressoDisc(d).vistos);
+    return `${cab('Plano', 'O edital vira caderno: cada assunto estudado fica grifado.')}
+      ${A.length > 1 ? `<div class="kf-campo"><label class="kf-rotulo" for="pl-conc">Concurso</label><select id="pl-conc" class="kf-entrada">${A.map(x => `<option value="${esc(x.id)}" ${x.id === c.id ? 'selected' : ''}>${esc(x.sigla)}</option>`).join('')}</select></div>` : ''}
+      <section class="folha plano-capa" aria-label="${esc(c.sigla)}">
+        <span class="rotulo-mini">${esc(c.orgao || c.sigla)}</span><h2 class="capa-t">${esc(c.cargo || c.sigla)}</h2>
+        <div class="capa-pront"><span class="capa-n"><span class="grifo">${pr}%</span></span><span class="capa-tx"><b>de prontidão</b><small>${nV} de ${plural(nT, 'assunto estudado', 'assuntos estudados')}</small></span></div>
+        ${barraHTML(pr, `Prontidão: ${pr}%`, 'grifada alta')}
+        <dl class="resumo">
+          <div><dt>Prova</dt><dd>${c.dataProva ? `${fmtDataAno(c.dataProva)}${c.previsto ? ' (estimada)' : ''}` : 'sem data'}</dd></div>
+          ${ct && ct.n >= 0 ? `<div><dt>Contagem</dt><dd>${ct.texto.replace('Faltam ', '').replace('Falta ', '')}</dd></div>` : ''}
+          <div><dt>Banca</dt><dd>${esc(c.banca || 'a definir')}</dd></div>
+          ${fase ? `<div><dt>Fase do plano</dt><dd>${esc(fase.nome)}</dd></div>` : ''}
+        </dl>
+      </section>
+      ${c.previsto ? KitFacil.ui.faixa({ tipo: 'alerta', html: `<b>Edital ainda não publicado.</b> ${ed && ed.resumoPrevisto ? esc(ed.resumoPrevisto.replace('Edital ainda não publicado. ', '')) : 'As disciplinas e os pesos são estimativas.'}`, acao: `<button type="button" class="kf-btn kf-sec" data-act="abrir-concurso" data-id="${esc(c.id)}">Atualizar pelo edital</button>` }) : ''}
+
+      ${ed && ed.fases ? `<section aria-labelledby="fa-t"><div class="sec-cab"><h2 class="sec-t" id="fa-t">Fases até a prova</h2></div>
+        <div class="card fases">${ed.fases.map((f, i) => { const at = fase && fase.id === f.id, ja = fase && fase.i > i;
+          return `<details class="fase ${at ? 'atual' : ja ? 'passou' : ''}" data-kf-secao="grupo" ${at ? 'open' : ''}><summary><span class="fase-n" aria-hidden="true">${ja ? I.check : i + 1}</span><span class="fase-tx"><b>${esc(f.nome)}</b><small>${esc(f.ate)}${at ? ' · você está aqui' : ''}</small></span></summary>
+            <div class="fase-corpo"><p>${esc(f.foco)}</p><ul>${f.metas.map(m => `<li>${esc(m)}</li>`).join('')}</ul></div></details>`; }).join('')}</div></section>` : ''}
+
+      <section aria-labelledby="di-t"><div class="sec-cab"><h2 class="sec-t" id="di-t">Disciplinas</h2><span class="apoio">${discs.filter(d => !d.fora).length} no plano</span></div>
+        <div class="caderno">${discs.map(d => { const m = materia(d.m), p = progressoDisc(d), w = Math.round((F.get(d.m) || 0) * 100);
+          return `<details class="disc ${d.fora ? 'fora' : ''}" data-kf-secao="grupo" data-disc="${esc(d.m)}"><summary>${pontoCor(m)}<span class="disc-tx"><b>${esc(m.nome)}</b><small>${d.fora ? 'fora do plano' : `${w}% da prova`} · ${p.vistos} de ${p.n} estudados</small>${barraHTML(p.pct, `${p.pct}% de domínio`, 'grifada fina')}</span></summary>
+            <div class="disc-corpo">${m.dica ? `<p class="disc-dica">${I.marca}<span>${esc(m.dica)}</span></p>` : ''}
+              <ul class="assuntos">${d.topicos.map(topico).filter(Boolean).map(t => { const dm = dominio(t); return `<li><button type="button" class="assunto d${dm}" data-act="assunto" data-id="${esc(t.id)}">${grifoHTML(dm, false)}<span class="as-nome"><span class="${dm >= 2 ? 'grifo g' + dm : ''}">${esc(t.nome)}</span></span><span class="kf-so-leitor">. ${DOMINIOS[dm]}</span>${I.seta}</button></li>`; }).join('')}</ul></div></details>`; }).join('')}</div></section>
+
+      ${ed && (ed.semana || ed.fontes || ed.fatos) ? `<section aria-labelledby="ap-t"><div class="sec-cab"><h2 class="sec-t" id="ap-t">Apoio</h2></div><div class="card apoio-secoes">
+        ${ed.semana ? `<details data-kf-secao="grupo"><summary><b>Semana modelo</b></summary><ul class="lista-simples">${ed.semana.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>` : ''}
+        ${ed.fatos ? `<details data-kf-secao="grupo"><summary><b>Situação do concurso</b></summary><dl class="resumo">${ed.fatos.map(([a, b]) => `<div><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl><p class="apoio">Conferido em ${fmtDataAno(ed.conferido)}. Confirme sempre no site oficial.</p></details>` : ''}
+        ${ed.fontes ? `<details data-kf-secao="grupo"><summary><b>Fontes oficiais</b></summary><ul class="fontes">${ed.fontes.map(([t, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(t)}${I.fora}<span class="kf-so-leitor"> (abre em outra aba)</span></a></li>`).join('')}</ul></details>` : ''}
+      </div></section>` : ''}`;
+  },
+  ligar(v) { $('#pl-conc', v)?.addEventListener('change', e => { planoConc = e.target.value; render(); }); },
+};
+
+/* ---------- Evolução: desempenho e medalhas ---------- */
+let evoAba = 'desempenho';
+const semanas = n => { const h = hojeISO(), seg = maisDias(h, -((deISO(h).getDay() + 6) % 7)); return Array.from({ length: n }, (_, i) => maisDias(seg, -7 * (n - 1 - i))); };
+function barrasSVG(vals, rotulos, fmt, titulo) {
+  const W = 320, H = 150, n = vals.length, max = Math.max(1, ...vals), bw = W / n * .56, passo = W / n;
+  return `<svg class="grafico" viewBox="0 0 ${W} ${H + 22}" role="img" aria-label="${esc(titulo + ': ' + vals.map((v, i) => `${rotulos[i]}, ${fmt(v)}`).join('; '))}">
+    <line x1="0" y1="${H}" x2="${W}" y2="${H}" class="g-eixo"/>
+    ${vals.map((v, i) => { const h = Math.max(v ? 3 : 0, v / max * (H - 26)), x = i * passo + (passo - bw) / 2; return `<rect class="g-barra ${i === n - 1 ? 'atual' : ''}" x="${x.toFixed(1)}" y="${(H - h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="5"/>${v ? `<text class="g-valor" x="${(x + bw / 2).toFixed(1)}" y="${(H - h - 6).toFixed(1)}">${fmt(v)}</text>` : ''}<text class="g-rot" x="${(x + bw / 2).toFixed(1)}" y="${H + 16}">${rotulos[i]}</text>`; }).join('')}</svg>`;
+}
+function linhaSVG(vals, rotulos, titulo, sufixo = '%') {
+  const W = 320, H = 120, teto = Math.min(100, Math.max(10, ...vals.filter(v => v != null)) * 1.15);
+  const pts = vals.map((v, i) => v == null ? null : [vals.length > 1 ? 14 + i * (W - 28) / (vals.length - 1) : W / 2, H - 14 - (clamp(v, 0, teto) / teto) * (H - 38)]);
+  const vivos = pts.filter(Boolean), d = vivos.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+  return `<svg class="grafico" viewBox="0 0 ${W} ${H + 22}" role="img" aria-label="${esc(titulo + ': ' + vals.map((v, i) => v == null ? null : `${rotulos[i]}, ${v}${sufixo}`).filter(Boolean).join('; '))}">
+    <line x1="0" y1="${H - 14}" x2="${W}" y2="${H - 14}" class="g-eixo"/>${vivos.length > 1 ? `<path class="g-linha" d="${d}"/>` : ''}
+    ${pts.map((p, i) => p ? `<circle class="g-ponto ${i === pts.length - 1 ? 'atual' : ''}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.500"/>${i === pts.length - 1 || i === pts.findIndex(Boolean) ? `<text class="g-valor" x="${p[0].toFixed(1)}" y="${(p[1] - 10).toFixed(1)}">${vals[i]}${sufixo}</text>` : ''}` : '').join('')}
+    ${rotulos.map((r, i) => (i === 0 || i === rotulos.length - 1) ? `<text class="g-rot" x="${(vals.length > 1 ? 14 + i * (W - 28) / (vals.length - 1) : W / 2).toFixed(1)}" y="${H + 16}" text-anchor="${i === 0 ? 'start' : 'end'}">${r}</text>` : '').join('')}</svg>`;
+}
+function calorHTML() {
+  const h = hojeISO(), ini = maisDias(maisDias(h, -((deISO(h).getDay() + 6) % 7)), -7 * 11), meta = cfg().metaMin, cols = [];
+  for (let w = 0; w < 12; w++) { const col = []; for (let d = 0; d < 7; d++) { const dia = maisDias(ini, w * 7 + d), min = minutosDoDia(dia); col.push({ dia, min, n: dia > h ? -1 : !min ? 0 : min >= meta ? 3 : min >= meta / 2 ? 2 : 1 }); } cols.push(col); }
+  const dias = cols.flat().filter(c => c.n >= 0), com = dias.filter(c => c.n > 0).length;
+  return `<div class="calor" role="img" aria-label="Últimas 12 semanas: estudo em ${com} de ${dias.length} dias; meta batida em ${dias.filter(c => c.n === 3).length}.">${cols.map(col => `<span class="calor-col">${col.map(c => `<i class="c${c.n}" title="${fmtDataCurta(c.dia)}: ${c.n < 0 ? '' : fmtMin(c.min)}"></i>`).join('')}</span>`).join('')}</div>
+    <p class="calor-leg" aria-hidden="true"><span>menos</span><i class="c0"></i><i class="c1"></i><i class="c2"></i><i class="c3"></i><span>meta batida</span></p>`;
+}
+const viewEvolucao = {
+  html() {
+    const s = jogoEstado(), abas = KitFacil.ui.abas({ itens: [['desempenho', 'Desempenho'], ['medalhas', 'Medalhas', `${s.ganhas.length}/${s.total}`]], atual: evoAba, rotulo: 'Partes da evolução', dado: 'evo' });
+    const topo = `${cab('Evolução', 'Quanto você já avançou, e por onde seguir.')}${jogoLigado() ? abas : ''}`;
+    if (evoAba === 'medalhas' && jogoLigado()) {
+      const ganhas = new Set(s.ganhas), ord = [...medalhasDoApp()].sort((a, b) => ganhas.has(b.id) - ganhas.has(a.id));
+      return `${topo}<div class="card nivel-card grande">${seloNivelHTML(s, true)}${nivelHTML(s)}</div>
+        <div class="sec-cab"><h2 class="sec-t">Coleção</h2><span class="apoio">${s.ganhas.length} de ${s.total}</span></div>
+        <ul class="medalhas">${ord.map(m => { const tem = ganhas.has(m.id), p = m.prog && !tem ? m.prog(s) : null;
+          return `<li><button type="button" class="medalha ${tem ? 'tem' : ''}" data-act="medalha" data-id="${m.id}">${medalhaSVG(m, { apagada: !tem })}<span class="med-nome">${esc(m.nome)}</span>${p ? `<span class="med-prog">${p[0]}/${p[1]}</span>` : ''}<span class="kf-so-leitor">. ${tem ? 'Na coleção' : 'Falta ganhar. ' + esc(m.como)}</span></button></li>`; }).join('')}</ul>`;
+    }
+    const c = concursoFoco(), T = totais(), S = sequencia(), W = semanas(8), fimSem = w => deISO(maisDias(w, 7)).getTime();
+    const hSem = W.map(w => { let m = 0; for (let i = 0; i < 7; i++) m += minutosDoDia(maisDias(w, i)); return Math.round(m / 6) / 10; });
+    const aSem = W.map(w => { const a = acertosDe(x => x.ini < fimSem(w), deISO(w).getTime()); return a.tot >= 5 ? a.pct : null; });
+    const rot = W.map(fmtDataCurta), geral = acertosDe();
+    const pr = c ? prontidao(c) : 0, pr30 = c ? prontidao(c, agora() - 30 * DIA) : 0, pSem = c ? W.map(w => prontidao(c, Math.min(agora(), fimSem(w)))) : [];
+    const porDisc = DB.materias.map(m => ({ m, ...acertosDe(x => x.m === m.id) })).filter(x => x.tot >= 5).sort((a, b) => a.pct - b.pct);
+    const ult = [...DB.sessoes].sort((a, b) => b.ini - a.ini).slice(0, 8);
+    if (!T.sessoes) return `${topo}${jogoLigado() ? `<div class="card nivel-card grande">${seloNivelHTML(s, true)}${nivelHTML(s)}</div>` : ''}${KitFacil.ui.vazio({ titulo: 'Sua evolução aparece aqui', texto: 'Depois da primeira sessão, você vê as horas por semana, os acertos e quanto do edital já está grifado.', acao: `<button type="button" class="kf-btn kf-comecar" data-act="estudar-proximo">${I.play}Estudar agora</button>` })}`;
+    return `${topo}
+      ${jogoLigado() ? `<div class="card nivel-card grande">${seloNivelHTML(s, true)}${nivelHTML(s)}</div>` : ''}
+      ${c ? `<section class="card" aria-labelledby="ev-pr"><h2 class="sec-t" id="ev-pr">Prontidão para a prova</h2>
+        <p class="numero"><span class="grifo">${pr}%</span>${pr > pr30 ? `<small class="sobe">${I.sobe}${pr - pr30} ${pr - pr30 === 1 ? 'ponto' : 'pontos'} em 30 dias</small>` : ''}</p>
+        <p class="apoio">Parte do edital da ${esc(c.sigla)} que você já domina, contando o peso de cada disciplina.</p>
+        ${linhaSVG(pSem, rot, 'Prontidão por semana')}</section>` : ''}
+      <section class="card" aria-labelledby="ev-co"><h2 class="sec-t" id="ev-co">Constância</h2>${calorHTML()}
+        <dl class="resumo"><div><dt>Sequência atual</dt><dd>${plural(S.n, 'dia', 'dias')}</dd></div><div><dt>Maior sequência</dt><dd>${plural(S.recorde, 'dia', 'dias')}</dd></div><div><dt>Dias com a meta batida</dt><dd>${T.dias}</dd></div></dl></section>
+      <section class="card" aria-labelledby="ev-ho"><h2 class="sec-t" id="ev-ho">Horas por semana</h2>${barrasSVG(hSem, rot, v => v.toLocaleString('pt-BR') + ' h', 'Horas de estudo por semana')}</section>
+      <section class="card" aria-labelledby="ev-ac"><h2 class="sec-t" id="ev-ac">Acertos</h2>
+        ${geral.tot ? `<p class="numero">${geral.pct}%<small>${geral.ac.toLocaleString('pt-BR')} de ${plural(geral.tot, 'questão', 'questões')}</small></p>${aSem.filter(v => v != null).length > 1 ? linhaSVG(aSem, rot, 'Acertos por semana') : ''}
+          ${porDisc.length ? `<h3 class="sub-t">Por disciplina, da que mais precisa de atenção</h3><ul class="lista-disc">${porDisc.map(x => `<li>${pontoCor(x.m)}<span class="ld-tx"><b>${esc(x.m.nome)}</b>${barraHTML(x.pct, `${x.pct}% de acertos`, 'fina')}</span><span class="ld-n">${x.pct}%</span></li>`).join('')}</ul>` : ''}`
+        : '<p class="apoio">Marque acertos e erros nas sessões para ver a sua taxa de acertos subir.</p>'}</section>
+      <section class="card" aria-labelledby="ev-to"><h2 class="sec-t" id="ev-to">Totais</h2><dl class="resumo">
+        <div><dt>Tempo de estudo</dt><dd>${fmtHoras(T.min)}</dd></div><div><dt>Sessões</dt><dd>${T.sessoes.toLocaleString('pt-BR')}</dd></div><div><dt>Questões resolvidas</dt><dd>${T.questoes.toLocaleString('pt-BR')}</dd></div>
+        <div><dt>Assuntos com a teoria concluída</dt><dd>${T.assuntos}</dd></div><div><dt>Revisões feitas</dt><dd>${T.revisoes}</dd></div>${jogoLigado() ? `<div><dt>Pontos</dt><dd>${s.xp.toLocaleString('pt-BR')}</dd></div>` : ''}</dl></section>
+      <section aria-labelledby="ev-ul"><div class="sec-cab"><h2 class="sec-t" id="ev-ul">Últimas sessões</h2></div>
+        <ul class="card lista">${ult.map(x => { const n = nomeItem(x); return `<li><button type="button" class="lin" data-act="sessao" data-id="${esc(x.id)}"><span class="lin-tx"><b>${esc(n.t)}</b><small>${fmtData(x.dia)} · ${TIPOS[x.tipo] || 'Estudo'} · ${fmtMin(Math.max(1, x.seg / 60))}${x.ac + x.er ? ` · ${x.ac}/${x.ac + x.er}` : ''}</small></span>${I.seta}</button></li>`; }).join('')}</ul></section>`;
+  },
+  ligar(v) { $$('[data-evo]', v).forEach(b => b.addEventListener('click', () => { evoAba = b.dataset.evo; render(); })); },
+};
+function sessaoFicha(id) {
+  const x = DB.sessoes.find(s => s.id === id); if (!x) return; const n = nomeItem(x);
+  abrirJanela({ titulo: n.t, contexto: n.m,
+    corpo: `<dl class="resumo"><div><dt>Dia</dt><dd>${fmtData(x.dia)}</dd></div><div><dt>Tipo</dt><dd>${TIPOS[x.tipo] || 'Estudo'}${x.manual ? ' (lançado à mão)' : ''}</dd></div><div><dt>Tempo</dt><dd>${fmtMin(Math.max(1, x.seg / 60))}</dd></div><div><dt>Questões</dt><dd>${x.ac + x.er ? `${x.ac} de ${x.ac + x.er} certas` : 'nenhuma'}</dd></div></dl>`,
+    pe: `<button type="button" class="kf-btn kf-perigo" id="sf-del">${I.lixo}Excluir sessão</button>`,
+    aoMontar: d => { $('#sf-del', d).onclick = () => confirmar('Excluir a sessão?', 'O tempo e as questões desta sessão saem das suas contas. Medalhas já ganhas continuam.', 'Excluir sessão', () => { DB.sessoes = DB.sessoes.filter(s => s.id !== id); salvar(); fecharJanela(true); avisar('Sessão excluída.'); }); } });
+}
+
+/* ---------- Mais ---------- */
+const viewMais = {
+  html() {
+    const rv = revisoesDeHoje().length, T = DB.topicos.length;
+    return `${cab('Mais')}${KitFacil.nav.mais({ linhas: [
+      { id: 'concursos', titulo: 'Concursos', texto: DB.concursos.length ? `${plural(concursosAtivos().length, 'em estudo', 'em estudo')} de ${DB.concursos.length}` : 'Adicione o seu concurso', icone: I.concurso },
+      { id: 'disciplinas', titulo: 'Disciplinas', texto: `${plural(DB.materias.length, 'disciplina', 'disciplinas')} e ${plural(T, 'assunto', 'assuntos')}`, icone: I.disciplinas },
+      { id: 'revisoes', titulo: 'Revisões', texto: rv ? `${plural(rv, 'revisão para hoje', 'revisões para hoje')}` : 'Nenhuma revisão para hoje', icone: I.revisar },
+      { id: 'simulados', titulo: 'Simulados', texto: DB.simulados.length ? plural(DB.simulados.length, 'simulado registrado', 'simulados registrados') : 'Registre o resultado e veja a nota', icone: I.simulado },
+      { id: 'agenda', titulo: 'Agenda', texto: 'As datas do concurso e os seus compromissos', icone: I.agenda },
+      { titulo: 'Ver o guia', texto: 'O app faz cada passo na tela e explica', icone: I.livro, attrs: 'id="ma-guia" data-act="guia"' },
+    ] })}`;
+  },
+};
+
+/* ---------- Concursos ---------- */
+const SITUACOES = { ativo: 'Estudando', espera: 'Em espera', encerrado: 'Encerrado' };
+const viewConcursos = {
+  html() {
+    return `${voltaMais()}${cab('Concursos', 'Os editais que você acompanha. O plano junta os que estão em estudo.')}
+      ${DB.concursos.length ? `<ul class="card lista">${DB.concursos.map(c => { const ct = contagem(c); return `<li><button type="button" class="lin" data-act="abrir-concurso" data-id="${esc(c.id)}"><span class="lin-ic">${I.concurso}</span><span class="lin-tx"><b>${esc(c.sigla)}</b><small>${esc(c.cargo || '')}</small><small>${SITUACOES[c.situacao] || ''}${ct ? ' · ' + (ct.n >= 0 ? ct.texto.toLowerCase() : 'prova feita') : ''}${c.previsto ? ' · edital previsto' : ''}</small></span>${I.seta}</button></li>`; }).join('')}</ul>`
+        : KitFacil.ui.vazio({ titulo: 'Nenhum concurso ainda', texto: 'Adicione um edital pronto da biblioteca ou digite o seu.' })}
+      ${KitFacil.ui.adicionar({ rotulo: 'Novo concurso', attrs: 'data-act="novo-concurso" id="conc-novo"' })}`;
+  },
+};
+let concId = null;
+const viewConcurso = {
+  html() {
+    const c = DB.concursos.find(x => x.id === concId); if (!c) return viewConcursos.html();
+    const F = fatias(c, { fase: false }), G = c.prova.grupos || [];
+    return `<button type="button" class="volta" data-kf-ir="concursos">${I.volta}<span>Concursos</span></button>${cab(c.sigla, esc(c.cargo || ''))}
+      ${c.previsto ? KitFacil.ui.faixa({ tipo: 'alerta', html: '<b>Edital previsto.</b> Quando o edital sair, ajuste a banca, as datas, as áreas e os itens de cada disciplina.', acao: `<button type="button" class="kf-btn kf-sec" data-act="edital-saiu">Marcar edital como publicado</button>` }) : ''}
+      <section class="card"><div class="sec-cab"><h2 class="sec-t">Dados</h2><button type="button" class="kf-btn kf-link" data-act="editar-concurso">Editar</button></div><dl class="resumo">
+        <div><dt>Situação</dt><dd>${SITUACOES[c.situacao]}</dd></div><div><dt>Órgão</dt><dd>${esc(c.orgao || c.sigla)}</dd></div><div><dt>Banca</dt><dd>${esc(c.banca || 'a definir')}</dd></div>
+        ${c.previsto ? `<div><dt>Edital previsto até</dt><dd>${c.dataEdital ? fmtData(c.dataEdital) : 'sem data'}</dd></div>` : ''}
+        <div><dt>Prova</dt><dd>${c.dataProva ? fmtDataAno(c.dataProva) + (c.previsto ? ' (estimada)' : '') : 'sem data'}</dd></div>
+        <div><dt>Nota mínima</dt><dd>${c.prova.minPct || 0}% da prova</dd></div></dl></section>
+      <section class="card"><div class="sec-cab"><h2 class="sec-t">Áreas da prova</h2><button type="button" class="kf-btn kf-link" data-act="editar-areas">Editar</button></div>
+        ${G.length ? `<dl class="resumo">${G.map(g => `<div><dt>${esc(g.nome)}</dt><dd>${plural(soma(c.disc.filter(d => d.grupo === g.id), d => +d.q || 0), 'item', 'itens')} · peso ${String(g.valor).replace('.', ',')}</dd></div>`).join('')}</dl>` : '<p class="apoio">Sem áreas: todas as disciplinas valem o mesmo por item.</p>'}</section>
+      <section><div class="sec-cab"><h2 class="sec-t">Disciplinas do edital</h2><span class="apoio">${c.disc.length}</span></div>
+        <ul class="card lista">${c.disc.map((d, i) => { const m = materia(d.m); return m ? `<li><button type="button" class="lin" data-act="disc-concurso" data-i="${i}">${pontoCor(m)}<span class="lin-tx"><b>${esc(m.nome)}</b><small>${d.fora ? 'Fora do plano' : `${plural(+d.q || 0, 'item', 'itens')} · ${Math.round((F.get(d.m) || 0) * 100)}% da prova`} · ${plural(d.topicos.length, 'assunto', 'assuntos')}</small></span>${I.seta}</button></li>` : ''; }).join('')}</ul>
+        ${KitFacil.ui.adicionar({ rotulo: 'Incluir disciplina', attrs: 'data-act="incluir-disc"' })}</section>
+      <button type="button" class="kf-btn kf-perigo bloco" data-act="excluir-concurso">${I.lixo}Excluir concurso</button>`;
+  },
+};
+function novoConcurso() {
+  const livres = (typeof BIBLIOTECA !== 'undefined' ? BIBLIOTECA : []).filter(e => !DB.concursos.some(c => c.id === e.id));
+  abrirJanela({ titulo: 'Novo concurso', sub: 'Escolha um edital pronto ou digite o seu.',
+    corpo: `<div class="opcoes">${livres.map(e => `<button type="button" class="lin opcao" data-bib="${esc(e.id)}"><span class="lin-ic">${I.concurso}</span><span class="lin-tx"><b>${esc(e.sigla)} · ${esc(e.cargo)}</b><small>${e.previsto ? 'Edital previsto, com plano de estudo pronto' : `Edital publicado · prova em ${fmtData(e.dataProva)}`}</small></span>${I.seta}</button>`).join('')}
+      <button type="button" class="lin opcao" data-bib=""><span class="lin-ic">${I.lapis}</span><span class="lin-tx"><b>Outro concurso</b><small>Digite os dados e cole o conteúdo programático</small></span>${I.seta}</button></div>`,
+    aoMontar: d => $$('[data-bib]', d).forEach(b => b.onclick = () => {
+      const e = livres.find(x => x.id === b.dataset.bib);
+      if (!e) return digitarConcurso();
+      if (e.perfis) return escolherPerfil(e);
+      const c = instalarEdital(DB, e); salvar(); fecharJanela(true); concId = c.id; irPara('concurso'); avisar(`${e.sigla} adicionado ao plano.`);
+    }) });
+}
+function escolherPerfil(e) {
+  abrirJanela({ titulo: 'Qual é o seu perfil?', sub: `${e.sigla}: os conhecimentos específicos mudam com o perfil.`, alto: true,
+    corpo: `<div class="opcoes">${e.perfis.map(p => `<button type="button" class="lin opcao" data-p="${esc(p.id)}"><span class="lin-tx"><b>${esc(p.nome)}</b><small>${plural(p.vagas, 'vaga', 'vagas')}</small></span>${I.seta}</button>`).join('')}</div>`,
+    aoMontar: d => $$('[data-p]', d).forEach(b => b.onclick = () => { const c = instalarEdital(DB, e, { perfil: b.dataset.p }); salvar(); fecharJanela(true); concId = c.id; irPara('concurso'); avisar(`${e.sigla} adicionado ao plano.`); }) });
+}
+// "Disciplina:" ou "# Disciplina" abre uma disciplina; as linhas seguintes são os assuntos dela
+function lerConteudo(txt) {
+  const out = []; let at = null;
+  for (let l of String(txt || '').split(/\r?\n/)) {
+    l = l.trim(); if (!l) continue;
+    const mh = /^#+\s*(.+)$/.exec(l) || /^(.+):$/.exec(l);
+    if (mh) { at = { nome: mh[1].replace(/[:.]$/, '').trim().slice(0, 80), topicos: [] }; out.push(at); continue; }
+    if (!at) { at = { nome: 'Conteúdo', topicos: [] }; out.push(at); }
+    const t = l.replace(/^(\d+(\.\d+)*[.)]?|[-•*–])\s*/, '').replace(/[.;]$/, '').trim().slice(0, 160);
+    if (t) at.topicos.push(t);
   }
-  // meta do dia, dentro do plano
-  const h = cfg().hDia, q = cfg().qDia, qd = o.a + o.e;
-  const meta = `<div class="pl-meta">
-    ${h ? medidor(o.s, h * 3600, metaDia(t) && (o.s || qd) ? "Meta de hoje batida" : folga ? "Hoje é folga" : "Meta de hoje", (v, tt) => `${dur(v)} de ${dur(tt)}`) : ""}
-    ${q ? `<p class="hint">${qd} de ${q} questões${qd ? `, ${pctTxt(pct(o.a, qd))} certas` : ""}.</p>` : ""}
-  </div>`;
-  // plano
-  const R = P.ritmo;
-  const linha = x => {
-    const top = x.top, m = matNome(top.m);
-    return `<li class="pl-it${x.feito ? " feito" : ""}">
-      <button class="pl-go" ${x.feito ? "disabled" : `data-act="estudar" data-t="${top.id}" data-tipo="${x.tipo}"`} aria-label="${x.feito ? "Feito" : "Estudar " + esc(top.nome)}">${x.feito ? I.check : I.play}</button>
-      <button class="pl-txt" data-act="topico" data-id="${top.id}"><span class="pl-k ${x.tipo === "revisao" ? "rev" : "novo"}">${x.tipo === "revisao" ? (x.atraso ? `Revisão, ${plural(x.atraso, "dia", "dias")} de atraso` : "Revisão") : top.ult && !x.feito ? "Continuar" : "Novo"}</span>
-        <span class="pl-n">${esc(top.nome)}</span><span class="pl-m">${esc(m)}</span></button></li>`;
-  };
-  const plano = `<section class="bloco plano" aria-label="Plano de hoje"><div class="b-hr"><h2 class="b-h">Plano de hoje</h2>${P.itens.length ? `<span class="tag">${P.feitos} de ${P.itens.length}</span>` : ""}</div>
-    ${meta}
-    ${P.itens.length ? `<ul class="pl-lista">${P.itens.map(linha).join("")}</ul>` : `<p class="hint">${folga ? "Dia de folga: nenhuma revisão vencida e nenhum assunto novo." : "Nenhuma revisão vencida e nenhum assunto pendente."}</p>`}
-    ${P.espera ? `<p class="hint pl-ritmo"><b>${plural(P.espera, "revisão vencida ficou", "revisões vencidas ficaram")} na fila</b> para não passar do seu tempo de hoje. Elas entram nos próximos dias, as mais atrasadas primeiro. <button class="btn link sm" data-act="revisoes">Ver todas</button></p>` : ""}
-    ${R.pend ? `<p class="hint pl-ritmo">${R.n === R.auto ? `Para terminar a teoria até ${dLonga(R.fim)}: ${plural(R.n, "assunto novo", "assuntos novos")} por dia de estudo.` : `${plural(R.n, "assunto novo", "assuntos novos")} por dia, como você definiu.`} <button class="btn link sm" data-act="aj-rotina">Ajustar</button></p>` : ""}
-    <p class="pl-mais"><button class="btn link sm" data-go="desempenho">Últimos 7 dias → Desempenho</button></p>
-  </section>`;
-  const dica = !syncOn() && !sync.tipOff && DB.sessoes.length >= 1 ? `<div class="aviso dica"><p><b>Estuda no celular e no computador?</b> Ative a sincronização e tenha o mesmo plano, cronômetro e histórico em todos os aparelhos.</p><div class="btns"><button class="btn pri sm" data-act="sync-start">Ativar</button><button class="btn ghost sm" data-act="sync-dica-off">Agora não</button></div></div>` : "";
-  return `<div class="hoje">
-    <p class="data-hoje">${cap(dSemana(t))}, ${dLonga(t)}</p>
-    ${cont}${dica}${agora}${semNada ? "" : plano}
-  </div>`;
-};
-
-/* ================= ESTUDAR ================= */
-VIEWS.estudar = () => {
-  const X = ix(), P = planoHoje(), q = fold(UI.busca);
-  const a = DB.ativa;
-  const sug = P.itens.filter(i => !i.feito).slice(0, 4);
-  const cab = a ? `<section class="agora em-curso"><p class="ag-k">${I.timer}Sessão em andamento</p><h2 class="ag-h">${esc(topNome(atual(a).t))}</h2><div class="btns"><button class="btn pri lg" data-act="foco">${I.timer}Abrir o cronômetro</button></div></section>` : "";
-  const lista = X.mats.map(m => {
-    const tops = X.topsByMat.get(m.id).filter(t => !q || fold(t.nome).includes(q) || fold(m.nome).includes(q));
-    if (!tops.length) return "";
-    const aberto = q || UI.edAberta.has("e:" + m.id);
-    return `<details class="mat" data-kf-secao ${aberto ? "open" : ""} data-k="e:${m.id}"><summary><span class="mat-n">${esc(m.nome)}</span><span class="mat-c">${tops.filter(t => t.teoria).length}/${tops.length}</span>${I.down}</summary>
-      <ul class="tops">${tops.map(t => `<li><button class="top-row" data-act="iniciar-sheet" data-id="${t.id}">${glifo(t)}${nomeTop(t)}<span class="top-r">${revTxt(t)}</span></button></li>`).join("")}</ul></details>`;
-  }).join("");
-  return `<div class="pg">
-    ${cabecalho("Estudar", "Escolha o assunto, ligue o cronômetro e marque as questões que resolver.")}
-    ${cab}
-    ${!a && sug.length ? `<section class="bloco"><h2 class="b-h">Do plano de hoje</h2><ul class="pl-lista">${sug.map(x => `<li class="pl-it"><button class="pl-go" data-act="estudar" data-t="${x.top.id}" data-tipo="${x.tipo}" aria-label="Estudar ${esc(x.top.nome)}">${I.play}</button><button class="pl-txt" data-act="iniciar-sheet" data-id="${x.top.id}"><span class="pl-k ${x.tipo === "revisao" ? "rev" : "novo"}">${x.tipo === "revisao" ? "Revisão" : "Novo"}</span><span class="pl-n">${esc(x.top.nome)}</span><span class="pl-m">${esc(matNome(x.top.m))}</span></button></li>`).join("")}</ul></section>` : ""}
-    ${!X.tops.length ? vazio("Nada para estudar ainda", "Adicione um edital ou cadastre suas disciplinas e assuntos.", `<div class="btns"><button class="btn pri" data-act="conc-novo">${I.plus}Adicionar edital</button><button class="btn ghost" data-go="disciplinas">Disciplinas</button></div>`) : `<section class="bloco">
-      <div class="b-hr"><h2 class="b-h">${X.ativos.length ? `Assuntos de ${esc(X.ativos.map(nomeEdital).join(" e "))}` : "Todos os assuntos"}</h2></div>
-      ${X.ativos.length ? `<p class="hint">Para estudar uma disciplina fora dos editais em estudo, abra Disciplinas.</p>` : ""}
-      <label class="busca">${I.busca}<input type="search" id="busca-top" placeholder="Buscar assunto ou disciplina" value="${esc(UI.busca)}" data-on="busca" autocomplete="off" aria-label="Buscar assunto"></label>
-      <div class="mats">${lista || vazio("Nada encontrado", "Tente outra palavra.")}</div>
-    </section>`}
-    <p class="centro"><button class="btn link" data-act="registrar">Registrar estudo feito sem o cronômetro</button></p>
-  </div>`;
-};
-VIEWS.estudar.after = () => {
-  const i = $("#busca-top");
-  if (i) i.addEventListener("input", () => { UI.busca = i.value; clearTimeout(UI.bT); UI.bT = setTimeout(() => { const pos = i.selectionStart; render({ force: true }); const j = $("#busca-top"); if (j) { j.focus(); try { j.setSelectionRange(pos, pos); } catch {} } }, 180); });
-};
-document.addEventListener("toggle", e => { const d = e.target; if (d.matches && d.matches("details[data-k]")) { if (d.open) UI.edAberta.add(d.dataset.k); else UI.edAberta.delete(d.dataset.k); } }, true);
-
-function iniciarSheet(topId) {
-  const t = ix().topById.get(topId); if (!t) return;
-  if (DB.ativa) return trocarSheet(topId);
-  const st = statT(t.id), tipo = tipoSugerido(t);
-  const modo = PREF.modo ?? 0;
-  openSheet({ title: t.nome, sub: matNome(t.m),
-    body: `<p class="hint">${estadoTxt(t)}${st.n ? `. ${dur(st.s)} estudadas` : ""}${st.a + st.e ? `, ${pctTxt(pct(st.a, st.a + st.e))} de acerto em ${st.a + st.e} questões` : ""}.${t.prox ? ` ${t.prox <= today() ? "A revisão está pendente." : `Próxima revisão em ${dLonga(t.prox)}.`}` : ""}</p>
-      <div class="field"><span class="lbl">O que vai fazer</span><div class="seg" role="radiogroup">
-        <label><input type="radio" name="is-tipo" value="teoria" ${tipo === "teoria" ? "checked" : ""}><span>Estudar a teoria</span></label>
-        <label><input type="radio" name="is-tipo" value="revisao" ${tipo === "revisao" ? "checked" : ""}><span>Revisar</span></label></div></div>
-      <div class="field"><span class="lbl">Tempo</span><div class="seg" role="radiogroup">
-        ${[[0, "Livre"], [25, "25 min"], [50, "50 min"], [90, "1h30"]].map(([v, l]) => `<label><input type="radio" name="is-meta" value="${v}" ${modo === v ? "checked" : ""}><span>${l}</span></label>`).join("")}</div>
-        <p class="hint">No modo livre o cronômetro conta para cima. Com tempo definido, ele avisa quando acabar.</p></div>`,
-    foot: `<button class="btn ghost" data-act="topico" data-id="${t.id}">Ver assunto</button><button class="btn pri" data-ok>${I.play}Iniciar</button>`,
-    onMount: s => { $("[data-ok]", s).onclick = () => {
-      const tp = ($('input[name="is-tipo"]:checked', s) || {}).value || "teoria", m = +(($('input[name="is-meta"]:checked', s) || {}).value || 0);
-      PREF.modo = m; savePref(); closeSheet(true); iniciarSessao(t.id, tp, m);
+  return out.filter(m => m.topicos.length);
+}
+function digitarConcurso() {
+  abrirJanela({ titulo: 'Outro concurso', sub: 'Depois dá para ajustar as áreas e os itens.', alto: true,
+    corpo: `<div class="kf-campo"><label class="kf-rotulo" for="dc-sigla">Nome do concurso</label><input id="dc-sigla" class="kf-entrada" type="text" maxlength="40" autocomplete="off" placeholder="Ex.: ANATEL 2027"></div>
+      <div class="kf-campo"><label class="kf-rotulo" for="dc-cargo">Cargo <span class="kf-opcional">(opcional)</span></label><input id="dc-cargo" class="kf-entrada" type="text" maxlength="80" autocomplete="off"></div>
+      <div class="kf-campo"><label class="kf-rotulo" for="dc-data">Data da prova <span class="kf-opcional">(opcional)</span></label><input id="dc-data" class="kf-entrada" type="date"></div>
+      <div class="kf-campo"><label class="kf-rotulo" for="dc-txt">Conteúdo programático</label><textarea id="dc-txt" class="kf-entrada" rows="8" placeholder="Direito Administrativo:&#10;Atos administrativos&#10;Licitações e contratos&#10;&#10;Língua Portuguesa:&#10;Interpretação de textos"></textarea><p class="kf-ajuda">Escreva o nome da disciplina com dois-pontos no fim. Abaixo, um assunto por linha.</p></div>`,
+    pe: `<button type="button" class="kf-btn kf-pri" id="dc-ok">Adicionar concurso</button>`,
+    aoMontar: d => { $('#dc-ok', d).onclick = () => {
+      const sigla = $('#dc-sigla', d).value.trim(), L = lerConteudo($('#dc-txt', d).value);
+      if (!sigla) { KitFacil.apontar($('#dc-sigla', d)); avisar('Escreva o nome do concurso.'); return; }
+      if (!L.length) { KitFacil.apontar($('#dc-txt', d)); avisar('Cole o conteúdo: disciplina com dois-pontos e os assuntos abaixo.'); return; }
+      const id = 'c-' + novoId(), ed = { id, base: id, sigla, orgao: sigla, cargo: $('#dc-cargo', d).value.trim(), dataProva: $('#dc-data', d).value || '', prova: { minPct: 50, grupos: [] },
+        materias: L.map((m, i) => ({ id: `${id}-${i + 1}`, nome: m.nome, q: m.topicos.length, topicos: m.topicos })) };
+      const c = instalarEdital(DB, ed); salvar(); fecharJanela(true); concId = c.id; irPara('concurso'); avisar(`${sigla} adicionado, com ${plural(L.length, 'disciplina', 'disciplinas')}.`);
     }; } });
 }
-
-/* ---------- modo foco (cronômetro em tela cheia) ---------- */
-const MOTIVOS = ["Água ou lanche", "Banheiro", "Celular", "Cansaço", "Interrupção"];
-function abrirFoco() { UI.focoAberto = true; renderFoco(); pedirWakeLock(); }
-function fecharFoco() { UI.focoAberto = false; renderFoco(); }
-function renderFoco() {
-  const f = $("#foco"), a = DB.ativa;
-  if (!a || !UI.focoAberto) { if (f.innerHTML) { f.innerHTML = ""; f.hidden = true; document.body.classList.remove("com-foco"); } if (!a) UI.focoAberto = false; return; }
-  const act = document.activeElement;
-  if (act && f.contains(act) && act.tagName === "TEXTAREA") return;
-  const now = Date.now(), it = atual(a), pausa = emPausa(a), est = estudoTotal(a, now);
-  const qa = it.a || 0, qe = it.e || 0, tq = sum(a.itens.map(x => (x.a || 0) + (x.e || 0)));
-  const pAt = pausa ? a.pausas[a.pausas.length - 1] : null;
-  f.hidden = false; document.body.classList.add("com-foco");
-  f.innerHTML = `<div class="foco-in${pausa ? " pausado" : ""}" role="region" aria-label="Sessão de estudo">
-    <div class="foco-bar"><button class="icon-btn" data-act="foco-min" aria-label="Minimizar o cronômetro">${I.down}</button><span>Desde ${horaDe(a.ini)}${a.itens.length > 1 ? `, ${a.itens.length} assuntos` : ""}</span><button class="icon-btn" data-act="foco-menu" aria-label="Mais opções">${I.mais3}</button></div>
-    <div class="foco-top"><p class="foco-m">${esc(matNome(it.m))}</p><h2 class="foco-t">${esc(topNome(it.t))}</h2><span class="tag inv">${TIPO_TXT[it.tipo]}</span></div>
-    <div class="foco-rel">
-      <span class="relogio" data-tick="estudo">${relogio(a.meta ? Math.max(0, a.meta - est) : est)}</span>
-      <p class="foco-sub">${pausa ? `Em pausa há <span data-tick="pausa-at">${relogio((now - pAt.ini) / 1000)}</span>` : a.meta ? `faltam de ${dur(a.meta)}` : "de estudo"}</p>
-      ${a.meta ? `<div class="foco-meta"><span data-tick="barra" style="width:${Math.min(100, pct(est, a.meta))}%"></span></div>` : ""}
-    </div>
-    ${pausa ? `<div class="foco-mot"><p>Motivo da pausa (opcional)</p><div class="chips">${MOTIVOS.map(m => `<button class="chip${pAt.mot === m ? " on" : ""}" data-act="motivo" data-m="${m}">${m}</button>`).join("")}</div></div>` : `
-    <div class="foco-q" aria-label="Questões resolvidas">
-      <div class="q-box ok"><button class="q-btn" data-act="q" data-k="a" data-d="1"><b data-q="a">${qa}</b><span>Acertei</span></button><button class="q-menos" data-act="q" data-k="a" data-d="-1" aria-label="Tirar um acerto">${I.minus}</button></div>
-      <div class="q-box er"><button class="q-btn" data-act="q" data-k="e" data-d="1"><b data-q="e">${qe}</b><span>Errei</span></button><button class="q-menos" data-act="q" data-k="e" data-d="-1" aria-label="Tirar um erro">${I.minus}</button></div>
-    </div>
-    <p class="foco-taxa" data-q="taxa">${qa + qe ? `${pctTxt(pct(qa, qa + qe))} de acerto neste assunto` : "Toque a cada questão que resolver"}${a.itens.length > 1 && tq ? `. ${tq} na sessão` : ""}</p>`}
-    <div class="foco-ctl">
-      <button class="btn foco-b" data-act="pausar">${pausa ? I.play + "Retomar" : I.pause + "Pausar"}</button>
-      <button class="btn foco-b" data-act="trocar">${I.swap}Trocar assunto</button>
-      <button class="btn foco-b fim" data-act="concluir">${I.stop}Concluir</button>
-    </div>
-    <details class="foco-notas" data-kf-secao ${a.obs ? "open" : ""}><summary>Anotações da sessão</summary><textarea id="foco-obs" rows="3" placeholder="Dúvidas, páginas, links, o que revisar…" data-on="foco-obs">${esc(a.obs || "")}</textarea></details>
-    <p class="foco-atalhos">No teclado: espaço pausa e retoma, A marca acerto, E marca erro.</p>
-  </div>`;
+function editarConcurso() {
+  const c = DB.concursos.find(x => x.id === concId); if (!c) return;
+  abrirJanela({ titulo: 'Editar concurso', contexto: c.sigla, alto: true,
+    corpo: `<div class="kf-campo"><span class="kf-rotulo">Situação</span>${segHTML('ec-sit', Object.entries(SITUACOES), c.situacao, 'Situação')}<p class="kf-ajuda">O plano do dia junta os concursos em estudo.</p></div>
+      <div class="kf-campo"><label class="kf-rotulo" for="ec-sigla">Nome</label><input id="ec-sigla" class="kf-entrada" type="text" maxlength="40" value="${esc(c.sigla)}" autocomplete="off"></div>
+      <div class="kf-campo"><label class="kf-rotulo" for="ec-cargo">Cargo</label><input id="ec-cargo" class="kf-entrada" type="text" maxlength="80" value="${esc(c.cargo || '')}" autocomplete="off"></div>
+      <div class="kf-campo"><label class="kf-rotulo" for="ec-banca">Banca</label><input id="ec-banca" class="kf-entrada" type="text" maxlength="40" value="${esc(c.banca || '')}" autocomplete="off"></div>
+      ${c.previsto ? `<div class="kf-campo"><label class="kf-rotulo" for="ec-edital">Edital previsto até</label><input id="ec-edital" class="kf-entrada" type="date" value="${esc(c.dataEdital || '')}"></div>` : ''}
+      <div class="kf-campo"><label class="kf-rotulo" for="ec-prova">Data da prova</label><input id="ec-prova" class="kf-entrada" type="date" value="${esc(c.dataProva || '')}"></div>
+      <div class="kf-campo"><label class="kf-rotulo" for="ec-min">Nota mínima, em % da prova</label><input id="ec-min" class="kf-entrada num" type="number" inputmode="numeric" min="0" max="100" value="${c.prova.minPct || 0}"></div>`,
+    pe: `<button type="button" class="kf-btn kf-pri" id="ec-ok">Salvar</button>`,
+    aoMontar: d => { ligarSeg($('#ec-sit', d)); $('#ec-ok', d).onclick = () => {
+      const sigla = $('#ec-sigla', d).value.trim(); if (!sigla) { KitFacil.apontar($('#ec-sigla', d)); avisar('Escreva o nome do concurso.'); return; }
+      Object.assign(c, { sigla, cargo: $('#ec-cargo', d).value.trim(), banca: $('#ec-banca', d).value.trim(), dataProva: $('#ec-prova', d).value || '', situacao: valorSeg($('#ec-sit', d)) || c.situacao });
+      if ($('#ec-edital', d)) c.dataEdital = $('#ec-edital', d).value || '';
+      c.prova.minPct = clamp(lerNum($('#ec-min', d)), 0, 100);
+      const dp = c.datas.find(x => x.tipo === 'prova'); if (dp && c.dataProva) dp.ini = c.dataProva;
+      salvar(); fecharJanela(true); avisar('Concurso salvo.');
+    }; } });
 }
-function atualizarFocoContadores() {
-  const a = DB.ativa; if (!a) return; const it = atual(a), qa = it.a || 0, qe = it.e || 0;
-  const ea = $('[data-q="a"]'), ee = $('[data-q="e"]'), tx = $('[data-q="taxa"]');
-  if (ea) ea.textContent = qa; if (ee) ee.textContent = qe;
-  const tq = sum(a.itens.map(x => (x.a || 0) + (x.e || 0)));
-  if (tx) tx.textContent = (qa + qe ? `${pctTxt(pct(qa, qa + qe))} de acerto neste assunto` : "Toque a cada questão que resolver") + (a.itens.length > 1 && tq ? `. ${tq} na sessão` : "");
-}
-document.addEventListener("keydown", e => {
-  if (!UI.focoAberto || !DB.ativa || KitFacil.dialogo.aberto() || e.ctrlKey || e.metaKey || e.altKey) return;
-  if (document.activeElement && document.activeElement.matches("input,textarea,select")) return;
-  const k = e.key.toLowerCase();
-  if (k === " ") { e.preventDefault(); alternarPausa(); }
-  else if ((k === "a" || k === "e") && !emPausa(DB.ativa)) { e.preventDefault(); contarQuestao(k, 1); }
-  else if (k === "escape") fecharFoco();
-});
-setInterval(() => { const a = DB.ativa, el = $('[data-tick="pausa-at"]'); if (a && el && emPausa(a)) el.textContent = relogio((Date.now() - a.pausas[a.pausas.length - 1].ini) / 1000); }, 1000);
-function trocarSheet(preTop) {
-  const X = ix(), a = DB.ativa; if (!a) return;
-  const cur = atual(a);
-  openSheet({ title: "Trocar de assunto", tall: true, sub: "O tempo continua contando",
-    body: `<label class="busca">${I.busca}<input type="search" id="tr-busca" placeholder="Buscar assunto" autocomplete="off" aria-label="Buscar assunto"></label>
-      <div class="field"><div class="seg" role="radiogroup"><label><input type="radio" name="tr-tipo" value="teoria" checked><span>Teoria</span></label><label><input type="radio" name="tr-tipo" value="revisao"><span>Revisão</span></label></div></div>
-      <ul class="tops tr-lista">${X.mats.map(m => `<li class="tr-g">${esc(m.nome)}</li>` + X.topsByMat.get(m.id).map(t => `<li data-f="${esc(fold(t.nome + " " + m.nome))}"><button class="top-row${t.id === preTop ? " sel" : ""}" data-pick="${t.id}" ${t.id === cur.t ? "disabled" : ""}>${glifo(t)}${nomeTop(t)}<span class="top-r">${t.id === cur.t ? '<span class="tag">Agora</span>' : revTxt(t)}</span></button></li>`).join("")).join("")}</ul>`,
-    onMount: s => {
-      const inp = $("#tr-busca", s);
-      inp.addEventListener("input", () => { const q = fold(inp.value); $$("li[data-f]", s).forEach(li => { li.hidden = q && !li.dataset.f.includes(q); }); $$(".tr-g", s).forEach(g => { let n = g.nextElementSibling, vis = false; while (n && !n.classList.contains("tr-g")) { if (!n.hidden) vis = true; n = n.nextElementSibling; } g.hidden = !vis; }); });
-      const setTipo = id => { const t = X.topById.get(id); const r = $(`input[name="tr-tipo"][value="${tipoSugerido(t)}"]`, s); if (r) r.checked = true; };
-      s.addEventListener("click", e => {
-        const b = e.target.closest("[data-pick]"); if (!b) return;
-        const tp = ($('input[name="tr-tipo"]:checked', s) || {}).value || "teoria";
-        closeSheet(true); trocarTopico(b.dataset.pick, tp); toast(`Agora: ${topNome(b.dataset.pick)}`);
-      });
-      if (preTop) { setTipo(preTop); const el = $(".sel", s); el && el.scrollIntoView({ block: "center" }); }
+function editarAreas() {
+  const c = DB.concursos.find(x => x.id === concId); if (!c) return; const G = c.prova.grupos.map(g => ({ ...g }));
+  const linhas = () => G.map((g, i) => `<div class="par"><div class="kf-campo"><label class="kf-rotulo" for="ar-n${i}">Área ${i + 1}</label><input id="ar-n${i}" class="kf-entrada" type="text" maxlength="40" value="${esc(g.nome)}" autocomplete="off"></div><div class="kf-campo estreito"><label class="kf-rotulo" for="ar-v${i}">Peso</label><input id="ar-v${i}" class="kf-entrada num" type="text" inputmode="decimal" value="${String(g.valor).replace('.', ',')}"></div></div>`).join('');
+  abrirJanela({ titulo: 'Áreas da prova', sub: 'O peso é quanto vale cada item da área.', contexto: c.sigla,
+    corpo: `<div id="ar-lista" class="pilha">${linhas()}</div>${KitFacil.ui.adicionar({ rotulo: 'Nova área', attrs: 'id="ar-add"' })}`,
+    pe: `<button type="button" class="kf-btn kf-pri" id="ar-ok">Salvar</button>`,
+    aoMontar: d => {
+      const ler = () => G.forEach((g, i) => { g.nome = $('#ar-n' + i, d).value.trim() || g.nome; g.valor = Math.max(0.1, parseFloat($('#ar-v' + i, d).value.replace(',', '.')) || 1); });
+      $('#ar-add', d).onclick = () => { ler(); G.push({ id: 'g' + novoId(), nome: 'Nova área', valor: 1, q: 0 }); KitFacil.movimento.redesenhar(d, () => { $('#ar-lista', d).innerHTML = linhas(); }); };
+      $('#ar-ok', d).onclick = () => { ler(); c.prova.grupos = G; salvar(); fecharJanela(true); avisar('Áreas salvas.'); };
     } });
 }
-function concluirSheet() {
-  const a = DB.ativa; if (!a) return;
-  const now = Date.now(), est = estudoTotal(a, now), tq = sum(a.itens.map(x => (x.a || 0) + (x.e || 0))), ta = sum(a.itens.map(x => x.a || 0));
-  const porTop = new Map(); for (const it of a.itens) { const o = porTop.get(it.t) || { s: 0, a: 0, e: 0, tipos: new Set() }; o.s += estudoItem(a, it, now); o.a += it.a || 0; o.e += it.e || 0; o.tipos.add(it.tipo); porTop.set(it.t, o); }
-  openSheet({ title: "Concluir sessão", sub: `${dur(est)} de estudo${tq ? `, ${tq} questões (${pctTxt(pct(ta, tq))} certas)` : ""}`,
-    body: `<ul class="cc-lista">${[...porTop].map(([id, o]) => { const t = ix().topById.get(id) || { nome: topNome(id), teoria: false }; const teo = o.tipos.has("teoria");
-      return `<li><p class="cc-n">${esc(t.nome)}</p><p class="hint">${dur(o.s)}${o.a + o.e ? `, ${o.a} de ${o.a + o.e} questões certas` : ""}. ${[...o.tipos].map(x => TIPO_TXT[x]).join(" e ")}.</p>
-        ${teo ? (t.teoria ? `<p class="hint">A teoria deste assunto já estava concluída.</p>` : `<label class="check"><input type="checkbox" data-cc="${id}"><span>Terminei a teoria deste assunto</span></label>`) : ""}</li>`; }).join("")}</ul>
-      <label class="field"><span class="lbl">Anotações</span><textarea id="cc-obs" rows="3" placeholder="Opcional">${esc(a.obs || "")}</textarea></label>
-      <p class="hint">As revisões dos assuntos estudados entram no plano pelo ciclo ${cfg().ciclo.join(", ")} dias.</p>`,
-    foot: `<button class="btn ghost" data-no>Continuar estudando</button><button class="btn pri" data-ok>${I.check}Salvar sessão</button>`,
-    onMount: s => {
-      $("[data-no]", s).onclick = () => closeSheet();
-      $("[data-ok]", s).onclick = () => {
-        const feitas = new Set($$("[data-cc]", s).filter(x => x.checked).map(x => x.dataset.cc));
-        const obs = $("#cc-obs", s).value;
-        closeSheet(true); UI.focoAberto = false;
-        const ses = salvarSessao(feitas, obs);
-        if (ses) toast(`Sessão salva: ${dur(ses.s)} de estudo${ses.a + ses.e ? ` e ${ses.a + ses.e} questões` : ""}.`);
-        else toast("Sessão curta demais para salvar.");
-        go("hoje");
-      };
+function discConcurso(i) {
+  const c = DB.concursos.find(x => x.id === concId), d = c && c.disc[i], m = d && materia(d.m); if (!m) return; const G = c.prova.grupos || [];
+  abrirJanela({ titulo: m.nome, contexto: c.sigla,
+    corpo: `<div class="kf-campo"><label class="kf-rotulo" for="dq-q">Itens na prova</label><input id="dq-q" class="kf-entrada num" type="number" inputmode="numeric" min="0" max="500" value="${+d.q || 0}"></div>
+      ${G.length ? `<div class="kf-campo"><label class="kf-rotulo" for="dq-g">Área da prova</label><select id="dq-g" class="kf-entrada">${G.map(g => `<option value="${esc(g.id)}" ${g.id === d.grupo ? 'selected' : ''}>${esc(g.nome)}</option>`).join('')}</select></div>` : ''}
+      <label class="linha-chave"><span><b>Estudar esta disciplina</b><small>Desligada, ela sai do plano e da prontidão. Nada é apagado.</small></span>${KitFacil.ui.chave({ attrs: 'id="dq-on"', on: !d.fora })}</label>`,
+    pe: `<button type="button" class="kf-btn kf-perigo" id="dq-rm">Remover do concurso</button><button type="button" class="kf-btn kf-pri" id="dq-ok">Salvar</button>`,
+    aoMontar: dl => {
+      $('#dq-ok', dl).onclick = () => { d.q = lerNum($('#dq-q', dl)); if ($('#dq-g', dl)) d.grupo = $('#dq-g', dl).value; d.fora = !$('#dq-on', dl).checked; salvar(); fecharJanela(true); avisar('Disciplina salva.'); };
+      $('#dq-rm', dl).onclick = () => confirmar('Remover a disciplina do concurso?', `${m.nome} sai deste edital. A disciplina e o que você estudou continuam em Disciplinas.`, 'Remover disciplina', () => { c.disc.splice(i, 1); salvar(); fecharJanela(true); avisar('Disciplina removida do concurso.'); }, 'Dá para incluir de novo depois.');
     } });
 }
-Object.assign(ACT, {
-  "nav-estudar": () => { if (DB.ativa) abrirFoco(); else go("estudar"); },
-  "foco": () => abrirFoco(),
-  "foco-min": () => { fecharFoco(); },
-  "foco-menu": () => openSheet({ title: "Sessão de estudo", body: `<div class="menu">
-      <button class="menu-it" data-act="registrar-pausa-txt">${I.timer}<span>Iniciada às ${horaDe(DB.ativa.ini)}. Pausas somam <b>${dur(pausaTotal(DB.ativa, Date.now()))}</b>.</span></button>
-      ${DB.ativa.meta ? `<button class="menu-it" data-act="continuar-livre">${I.timer}<span>Tirar o tempo definido e contar livre</span></button>` : ""}
-      <button class="menu-it danger" data-act="descartar">${I.lixo}<span>Descartar a sessão sem salvar</span></button></div>` }),
-  "registrar-pausa-txt": () => closeSheet(),
-  "continuar-livre": () => { closeSheet(true); const a = DB.ativa; if (!a) return; a.meta = 0; commit(); },
-  "descartar": () => confirmSheet("Descartar a sessão?", "O tempo e as questões desta sessão não serão salvos.", "Descartar", () => { DB.ativa = null; UI.focoAberto = false; liberarWakeLock(); commit(); toast("Sessão descartada."); }),
-  "pausar": () => alternarPausa(),
-  "motivo": el => { const a = DB.ativa; if (!a || !emPausa(a)) return; const p = a.pausas[a.pausas.length - 1]; p.mot = p.mot === el.dataset.m ? "" : el.dataset.m; commit(); },
-  "q": el => { contarQuestao(el.dataset.k, +el.dataset.d); if (+el.dataset.d > 0) { try { navigator.vibrate && navigator.vibrate(12); } catch {} } },
-  "trocar": () => trocarSheet(),
-  "concluir": () => { closeSheet(true); concluirSheet(); },
-  "estudar": el => { closeSheet(true); if (DB.ativa) { const t = el.dataset.t; if (t && atual(DB.ativa).t !== t) trocarSheet(t); else abrirFoco(); return; } iniciarSessao(el.dataset.t, el.dataset.tipo, PREF.modo || 0); },
-  "iniciar-sheet": el => iniciarSheet(el.dataset.id),
-  "topico": el => topicoSheet(el.dataset.id)
-});
-Object.assign(ON, {
-  "foco-obs": el => { const a = DB.ativa; if (!a) return; a.obs = el.value; commit({ quiet: true }); },
-  "busca": () => {}
-});
-document.addEventListener("input", e => { if (e.target.id === "foco-obs" && DB.ativa) { DB.ativa.obs = e.target.value; clearTimeout(UI.obsT); UI.obsT = setTimeout(() => commit({ quiet: true }), 1200); } });
-
-/* ---------- ficha do assunto ---------- */
-function topicoSheet(id) {
-  const t = ix().topById.get(id); if (!t) return;
-  const st = statT(id), q = st.a + st.e, tday = today();
-  const hist = ix().sess.flatMap(s => (s.itens || []).filter(i => i.t === id).map(i => ({ s, i }))).slice(0, 12);
-  openSheet({ title: t.nome, sub: matNome(t.m), tall: hist.length > 3,
-    body: `${!t.ult && !st.n && !t.teoria ? `<p class="lead">Você ainda não estudou este assunto. Quando estudar, o app agenda as revisões dele.</p>` : `<div class="ficha">
-      <div class="fi"><span>Situação</span><b>${estadoTxt(t)}</b></div>
-      <div class="fi"><span>Tempo estudado</span><b>${st.s ? dur(st.s) : "Nenhum"}</b></div>
-      <div class="fi"><span>Questões</span><b>${q ? `${st.a} de ${q} certas (${pctTxt(pct(st.a, q))})` : "Nenhuma"}</b></div>
-      <div class="fi"><span>Último estudo</span><b>${t.ult ? `${dLonga(t.ult)} (${quando(diffD(tday, t.ult))})` : "Nunca"}</b></div>
-      <div class="fi"><span>Revisões feitas</span><b>${t.rev || 0}${t.ur ? `, a última em ${dLonga(t.ur)}` : ""}</b></div>
-      <div class="fi"><span>Próxima revisão</span><b>${t.prox ? `${dLonga(t.prox)} (${quando(diffD(tday, t.prox))})` : "Começa quando você estudar"}</b></div>
-    </div>`}
-    <label class="check"><input type="checkbox" data-on="teoria" data-id="${id}" ${t.teoria ? "checked" : ""}><span>Teoria concluída</span></label>
-    ${t.prox ? `<div class="btns">${t.prox <= tday ? `<button class="btn ghost sm" data-act="rev-feita" data-id="${id}">${I.check}Revisão feita</button><button class="btn ghost sm" data-act="rev-adiar" data-id="${id}">Adiar para o próximo dia</button>` : `<button class="btn ghost sm" data-act="rev-feita" data-id="${id}">${I.check}Revisei hoje</button>`}</div>` : ""}
-    <label class="field"><span class="lbl">Anotações do assunto</span><textarea id="tp-nota" rows="3" placeholder="Resumo, artigos de lei, onde errou nas questões…">${esc(t.nota || "")}</textarea></label>
-    ${hist.length ? `<div class="field"><span class="lbl">Histórico</span><ul class="hist-mini">${hist.map(({ s, i }) => `<li><span>${brs(s.d)}</span><span>${TIPO_TXT[i.tipo]}</span><span>${dur(i.s)}</span><span>${i.a + i.e ? `${i.a}/${i.a + i.e}` : ""}</span></li>`).join("")}</ul></div>` : ""}`,
-    foot: `<button class="btn pri" data-act="estudar" data-t="${id}" data-tipo="${tipoSugerido(t)}">${I.play}${DB.ativa ? "Estudar este agora" : "Estudar"}</button>`,
-    onClose: () => {},
-    onMount: s => {
-      const n = $("#tp-nota", s);
-      n.addEventListener("change", () => { t.nota = n.value; commit({ quiet: true }); });
-      n.addEventListener("blur", () => { if (t.nota !== n.value) { t.nota = n.value; commit({ quiet: true }); } });
-    } });
+function incluirDisc() {
+  const c = DB.concursos.find(x => x.id === concId); if (!c) return; const livres = DB.materias.filter(m => !c.disc.some(d => d.m === m.id));
+  if (!livres.length) { avisar('Todas as disciplinas já estão neste concurso. Crie outra em Disciplinas.'); return; }
+  abrirJanela({ titulo: 'Incluir disciplina', contexto: c.sigla, sub: 'Entram todos os assuntos da disciplina.',
+    corpo: `<div class="opcoes">${livres.map(m => `<button type="button" class="lin opcao" data-m="${esc(m.id)}">${pontoCor(m)}<span class="lin-tx"><b>${esc(m.nome)}</b><small>${plural(topicosDe(m.id).length, 'assunto', 'assuntos')}</small></span>${I.mais}</button>`).join('')}</div>`,
+    aoMontar: d => $$('[data-m]', d).forEach(b => b.onclick = () => { const T = topicosDe(b.dataset.m); c.disc.push({ m: b.dataset.m, grupo: (c.prova.grupos[0] || {}).id || '', q: T.length, f1: 1, topicos: T.map(t => t.id) }); salvar(); fecharJanela(true); avisar('Disciplina incluída.'); }) });
 }
-function revisoesSheet() {
-  const P = planoHoje(), L = P.revPend, t = today();
-  openSheet({ title: "Revisões vencidas", sub: plural(L.length, "assunto para revisar", "assuntos para revisar"), tall: true,
-    body: L.length ? `<p class="hint">Das mais atrasadas para as mais recentes. Marque como feita se revisou sem o cronômetro, ou adie para o próximo dia de estudo.</p>
-      <ul class="pl-lista">${L.map(x => `<li class="pl-it"><button class="pl-go" data-act="estudar" data-t="${x.top.id}" data-tipo="revisao" aria-label="Revisar ${esc(x.top.nome)}">${I.play}</button>
-        <button class="pl-txt" data-act="topico" data-id="${x.top.id}"><span class="pl-k rev">${x.atraso ? `${plural(x.atraso, "dia", "dias")} de atraso` : "Para hoje"}</span><span class="pl-n">${esc(x.top.nome)}</span><span class="pl-m">${esc(matNome(x.top.m))}</span></button>
-        <span class="rv-acts"><button class="icon-btn" data-act="rev-feita" data-id="${x.top.id}" aria-label="Revisão feita" title="Revisão feita">${I.check}</button><button class="icon-btn" data-act="rev-adiar" data-id="${x.top.id}" aria-label="Adiar" title="Adiar para o próximo dia">${I.chev}</button></span></li>`).join("")}</ul>`
-      : `<p class="lead">Nenhuma revisão vencida. Tudo em dia.</p>` });
-}
-Object.assign(ACT, {
-  "revisoes": () => revisoesSheet(),
-  "rev-feita": el => { const lista = !!el.closest(".kf-dlg") && $(".kf-dlg h2") && $(".kf-dlg h2").textContent === "Revisões vencidas"; closeSheet(true); revisaoFeita(el.dataset.id); if (lista) revisoesSheet(); },
-  "rev-adiar": el => { const lista = !!el.closest(".kf-dlg") && $(".kf-dlg h2") && $(".kf-dlg h2").textContent === "Revisões vencidas"; closeSheet(true); adiarRevisao(el.dataset.id); if (lista) revisoesSheet(); }
-});
-Object.assign(ON, {
-  "teoria": el => { marcarTeoria(el.dataset.id, el.checked); toast(el.checked ? "Teoria marcada como concluída." : "Teoria desmarcada."); }
-});
 
-/* ================= AGENDA ================= */
-VIEWS.agenda = () => {
-  const C = UI.cal, t = today(), d0 = toD(C.mes), ano = d0.getFullYear(), mes = d0.getMonth();
-  const prim = ymd(new Date(ano, mes, 1, 12)), ult = ymd(new Date(ano, mes + 1, 0, 12));
-  const ini = addD(prim, -toD(prim).getDay()), fim = addD(ult, 6 - toD(ult).getDay());
-  const M = mapaDias(ini, fim);
-  let cel = WD.map(w => `<div class="cal-wd" aria-hidden="true">${w.slice(0, 1)}<span>${w.slice(1)}</span></div>`).join("");
-  for (let d = ini; d <= fim; d = addD(d, 1)) {
-    const o = M.get(d), fora = d < prim || d > ult, dt = toD(d);
-    const marcas = [];
-    if (o) { if (o.prova) marcas.push("prova"); else if (o.ed.length) marcas.push(o.ed.some(x => x.acao) ? "acao" : "ed"); if (o.rv) marcas.push("rev"); if (o.ev.length) marcas.push("ev"); }
-    const lab = `${dt.getDate()} de ${MESES[dt.getMonth()]}${o && o.s ? `, ${dur(o.s)} de estudo` : ""}${o && o.prova ? ", prova" : ""}${o && o.ed.length ? `, ${plural(o.ed.length, "data do edital", "datas do edital")}` : ""}${o && o.rv ? `, ${plural(o.rv, "revisão", "revisões")}` : ""}${o && o.ev.length ? `, ${plural(o.ev.length, "evento", "eventos")}` : ""}`;
-    cel += `<button class="cal-d${fora ? " fora" : ""}${d === t ? " hoje" : ""}${d === C.sel ? " sel" : ""}${o && o.s ? (metaDia(d) ? " meta" : " estudo") : ""}${ehDiaEstudo(d) ? "" : " folga"}" data-act="cal-dia" data-d="${d}" aria-label="${esc(lab)}" aria-pressed="${d === C.sel}">
-      <span class="cal-n">${dt.getDate()}</span><span class="cal-mk">${marcas.map(k => `<i class="mk ${k}"></i>`).join("")}</span></button>`;
-  }
-  return `<div class="pg agenda">
-    ${cabecalho("Agenda", "Datas do edital, revisões programadas, seus eventos e os dias em que estudou.", { criar: { rotulo: "Novo evento", attrs: 'data-act="evento"' } })}
-    <div class="ag-grid">
-      <section class="bloco cal">
-        <div class="cal-bar"><button class="icon-btn" data-act="cal-mes" data-d="-1" aria-label="Mês anterior">${I.chevL}</button><h2 class="cal-t" aria-live="polite">${cap(MESES[mes])} de ${ano}</h2><button class="icon-btn" data-act="cal-mes" data-d="1" aria-label="Próximo mês">${I.chev}</button></div>
-        <div class="cal-grid">${cel}</div>
-        <p class="legenda cal-leg"><span><i class="mk prova"></i>Prova</span><span><i class="mk acao"></i>Seu prazo</span><span><i class="mk ed"></i>Edital</span><span><i class="mk rev"></i>Revisões</span><span><i class="mk ev"></i>Eventos</span><span><i class="cal-sw meta"></i>Meta batida</span></p>
-        ${C.mes !== t.slice(0, 8) + "01" || C.sel !== t ? `<p class="centro"><button class="btn link sm" data-act="cal-hoje">Voltar para hoje</button></p>` : ""}
-      </section>
-      <section class="bloco dia-painel" id="cal-dia">${painelDia(C.sel)}</section>
-    </div>
-    ${cargaRevisoes()}
-    <p class="centro"><button class="btn ghost sm" data-act="ics">${I.baixar}Levar datas e eventos para a agenda do celular</button></p>
-  </div>`;
+/* ---------- Disciplinas ---------- */
+const viewDisciplinas = {
+  html() {
+    const L = [...DB.materias].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    return `${voltaMais()}${cab('Disciplinas', 'Valem para todos os concursos: o que você estuda num assunto conta em todos.')}
+      ${L.length ? `<ul class="card lista">${L.map(m => { const T = topicosDe(m.id); return `<li><button type="button" class="lin" data-act="abrir-disc" data-id="${esc(m.id)}">${pontoCor(m)}<span class="lin-tx"><b>${esc(m.nome)}</b><small>${plural(T.length, 'assunto', 'assuntos')} · ${T.filter(t => t.teoria).length} com a teoria concluída</small></span>${I.seta}</button></li>`; }).join('')}</ul>`
+        : KitFacil.ui.vazio({ titulo: 'Nenhuma disciplina ainda', texto: 'Crie uma disciplina e os assuntos dela, ou adicione um concurso da biblioteca.' })}
+      ${KitFacil.ui.adicionar({ rotulo: 'Nova disciplina', attrs: 'data-act="nova-disc"' })}`;
+  },
 };
-function mapaDias(ini, fim) {
-  const M = new Map(), t = today(), X = ix();
-  const g = d => { let o = M.get(d); if (!o) { o = { ed: [], rv: 0, rvL: [], ev: [], s: 0, prova: false }; M.set(d, o); } return o; };
-  for (const x of todasDatas(editaisVivos())) {
-    for (const d of x.fim && x.fim !== x.ini ? [x.ini, x.fim] : [x.ini]) if (d >= ini && d <= fim) { const o = g(d); o.ed.push({ ...x, marca: x.fim && x.fim !== x.ini ? (d === x.ini ? "ini" : "fim") : "" }); if (x.tipo === "prova") o.prova = true; }
-  }
-  for (const tp of X.tops) { if (!tp.prox) continue; const d = tp.prox < t ? t : tp.prox; if (d >= ini && d <= fim) { const o = g(d); o.rv++; o.rvL.push(tp); } }
-  for (const v of DB.eventos) if (v.d >= ini && v.d <= fim) g(v.d).ev.push(v);
-  for (const [d, o] of X.days) if (d >= ini && d <= fim) g(d).s = o.s;
-  for (const o of M.values()) o.ev.sort((a, b) => (a.hora || "99").localeCompare(b.hora || "99"));
-  return M;
+let discId = null;
+const viewDisciplina = {
+  html() {
+    const m = materia(discId); if (!m) return viewDisciplinas.html(); const T = topicosDe(m.id);
+    return `<button type="button" class="volta" data-kf-ir="disciplinas">${I.volta}<span>Disciplinas</span></button>${cab(m.nome, `${plural(T.length, 'assunto', 'assuntos')}. Toque num assunto para renomear, mover ou excluir.`)}
+      <ul class="card lista">${T.map((t, i) => `<li><button type="button" class="lin" data-act="editar-assunto" data-id="${esc(t.id)}"><span class="lin-n" aria-hidden="true">${i + 1}</span><span class="lin-tx"><b>${esc(t.nome)}</b><small>${DOMINIOS[dominio(t)]}</small></span>${I.lapis}</button></li>`).join('') || '<li class="pl-vazio">Nenhum assunto ainda.</li>'}</ul>
+      ${KitFacil.ui.adicionar({ rotulo: 'Novo assunto', attrs: 'data-act="novo-assunto"' })}
+      <div class="acoes-pe"><button type="button" class="kf-btn kf-sec" data-act="renomear-disc">${I.lapis}Renomear disciplina</button><button type="button" class="kf-btn kf-perigo" data-act="excluir-disc">${I.lixo}Excluir disciplina</button></div>`;
+  },
+};
+function nomeJanela({ titulo, rotulo, valor = '', ok, contexto = '', max = 160, aoSalvar }) {
+  abrirJanela({ titulo, contexto, corpo: `<div class="kf-campo"><label class="kf-rotulo" for="nj">${rotulo}</label><input id="nj" class="kf-entrada" type="text" maxlength="${max}" value="${esc(valor)}" autocomplete="off" enterkeyhint="done"></div>`,
+    pe: `<button type="button" class="kf-btn kf-pri" id="nj-ok">${ok}</button>`,
+    aoMontar: d => { const go = () => { const v = $('#nj', d).value.trim(); if (!v) { KitFacil.apontar($('#nj', d)); avisar('Escreva o nome.'); return; } aoSalvar(v); }; $('#nj-ok', d).onclick = go; $('#nj', d).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } }); } });
 }
-function painelDia(d) {
-  const t = today(), o = mapaDias(d, d).get(d) || { ed: [], rv: 0, rvL: [], ev: [], s: 0 }, dt = toD(d), n = diffD(t, d);
-  const varios = editaisVivos().length > 1, quem = x => varios ? ` <small>${esc(nomeEdital(x.c))}</small>` : "";
-  const andamento = todasDatas(editaisVivos()).filter(x => x.fim && x.ini < d && x.fim > d);
-  const secs = [];
-  if (o.ed.length || andamento.length) secs.push(`<h3 class="dia-s">Edital</h3><ul class="dia-l">${o.ed.map(x => `<li class="${x.tipo === "prova" ? "prova" : x.acao ? "acao" : ""}"><b>${x.marca === "ini" ? "Começa: " : x.marca === "fim" ? "Último dia: " : ""}${esc(x.titulo)}</b>${quem(x)}</li>`).join("")}${andamento.map(x => `<li class="and"><span>Em andamento até ${dCurta(x.fim)}: ${esc(x.titulo)}${quem(x)}</span></li>`).join("")}</ul>`);
-  if (o.rvL.length) {
-    const L = o.rvL.slice().sort((a, b) => a.prox.localeCompare(b.prox));
-    secs.push(`<h3 class="dia-s">${d === t ? "Revisões para hoje, com as atrasadas" : "Revisões programadas"}</h3><ul class="dia-l">${L.slice(0, 8).map(x => `<li><button class="dia-top" data-act="topico" data-id="${x.id}"><span>${esc(x.nome)}</span><small>${esc(matNome(x.m))}${x.prox < t ? `, atrasada desde ${brs(x.prox)}` : ""}</small></button></li>`).join("")}${L.length > 8 ? `<li>${d === t ? `<button class="btn link sm" data-act="revisoes">Ver as outras ${L.length - 8}</button>` : `<span class="hint">e mais ${L.length - 8}</span>`}</li>` : ""}</ul>`);
-  }
-  if (o.ev.length) secs.push(`<h3 class="dia-s">Seus eventos</h3><ul class="dia-l">${o.ev.map(v => `<li><button class="dia-top" data-act="evento" data-id="${v.id}"><span>${v.hora ? `<b>${esc(v.hora)}</b> ` : ""}${esc(v.titulo)}</span><small>${esc(v.tipo || "Evento")}${v.obs ? ": " + esc(v.obs) : ""}</small></button></li>`).join("")}</ul>`);
-  if (o.s) { const sx = ix().sess.filter(s => s.d === d); secs.push(`<h3 class="dia-s">Estudo feito</h3><p><b>${dur(o.s)}</b> em ${plural(sx.length, "sessão", "sessões")}${metaDia(d) ? ", meta batida" : ""}.</p><ul class="dia-l">${sx.map(s => `<li><button class="dia-top" data-act="sessao" data-id="${s.id}"><span>${horaDe(s.ini)}: ${esc(s.itens.map(i => i.tn).join(", "))}</span><small>${dur(s.s)}${s.a + s.e ? `, ${s.a}/${s.a + s.e} questões` : ""}</small></button></li>`).join("")}</ul>`); }
-  return `<div class="b-hr"><div><p class="dia-rel">${cap(quando(n))}</p><h2 class="b-h">${cap(dSemana(d))}, ${dLonga(d)}</h2></div></div>
-    ${ehDiaEstudo(d) ? "" : `<p class="hint">Dia de folga no seu planejamento.</p>`}
-    ${secs.length ? secs.join("") : `<p class="hint">${d >= t ? "Nada marcado. Toque em <b>Novo evento</b> para marcar uma aula ou um simulado neste dia." : "Sem registros neste dia."}</p>`}`;
-}
-function cargaRevisoes() {
-  const t = today(), X = ix(), dias = [];
-  for (let i = 0; i < 14; i++) { const d = addD(t, i); dias.push({ d, n: X.tops.filter(x => x.prox && (i === 0 ? x.prox <= t : x.prox === d)).length }); }
-  const max = Math.max(1, ...dias.map(x => x.n));
-  if (!dias.some(x => x.n)) return "";
-  return `<section class="bloco"><h2 class="b-h">Revisões nos próximos 14 dias</h2><p class="hint">Hoje inclui as atrasadas. Dias com muitas revisões pedem menos assuntos novos.</p>
-    <div class="carga" role="img" aria-label="${esc(dias.map(x => `${brs(x.d)}: ${x.n}`).join("; "))}">${dias.map((x, i) => `<div class="cg${i === 0 ? " hoje" : ""}" title="${WD[toD(x.d).getDay()]} ${brs(x.d)}: ${plural(x.n, "revisão", "revisões")}"><span class="cg-v">${x.n || ""}</span><span class="cg-b"><i style="height:${x.n ? Math.max(6, x.n / max * 100) : 0}%"></i></span><span class="cg-d">${i === 0 ? "Hoje" : toD(x.d).getDate()}</span></div>`).join("")}</div></section>`;
-}
-function eventoSheet(id, data) {
-  const v = id ? DB.eventos.find(x => x.id === id) : null, x = v || { titulo: "", d: data || UI.cal.sel || today(), hora: "", tipo: "Simulado", obs: "" };
-  openSheet({ title: v ? "Editar evento" : "Novo evento",
-    body: `<label class="field"><span class="lbl">Título</span><input type="text" id="ev-t" value="${esc(x.titulo)}" placeholder="Ex.: Simulado FGV, aula de Licitações"></label>
-      <div class="grid2"><label class="field"><span class="lbl">Data</span><input type="date" id="ev-d" value="${x.d}"></label><label class="field"><span class="lbl">Horário (opcional)</span><input type="time" id="ev-h" value="${x.hora || ""}"></label></div>
-      <div class="field"><span class="lbl">Tipo</span><div class="seg">${["Simulado", "Aula", "Lembrete", "Outro"].map(tp => `<label><input type="radio" name="ev-tp" value="${tp}" ${x.tipo === tp ? "checked" : ""}><span>${tp}</span></label>`).join("")}</div></div>
-      <label class="field"><span class="lbl">Observações</span><textarea id="ev-o" rows="2" placeholder="Link, local, o que levar…">${esc(x.obs || "")}</textarea></label>`,
-    foot: `${v ? `<button class="btn ghost danger" data-del>${I.lixo}Excluir</button>` : ""}<button class="btn pri" data-ok>Salvar</button>`,
-    onMount: s => {
-      $("[data-ok]", s).onclick = () => {
-        const o = { titulo: $("#ev-t", s).value.trim(), d: $("#ev-d", s).value, hora: $("#ev-h", s).value, tipo: ($('input[name="ev-tp"]:checked', s) || {}).value || "Outro", obs: $("#ev-o", s).value.trim() };
-        if (!o.titulo) return toast("Dê um título ao evento."); if (!o.d) return toast("Escolha a data.");
-        if (v) Object.assign(v, o); else DB.eventos.push({ id: uid(), ...o });
-        UI.cal.sel = o.d; UI.cal.mes = o.d.slice(0, 8) + "01";
-        commit(); closeSheet(); toast("Evento salvo.");
-      };
-      const d = $("[data-del]", s); if (d) d.onclick = () => { DB.eventos = DB.eventos.filter(e => e.id !== id); commit(); closeSheet(); toast("Evento excluído."); };
+function novaDisciplina() { nomeJanela({ titulo: 'Nova disciplina', rotulo: 'Nome da disciplina', ok: 'Criar disciplina', max: 80, aoSalvar: v => { const m = { id: 'm-' + novoId(), nome: v, cor: CORES[DB.materias.length % CORES.length], dica: '' }; DB.materias.push(m); salvar(); fecharJanela(true); discId = m.id; irPara('disciplina'); avisar('Disciplina criada. Agora, os assuntos.'); } }); }
+function novoAssunto() { const m = materia(discId); if (!m) return; nomeJanela({ titulo: 'Novo assunto', contexto: m.nome, rotulo: 'Nome do assunto', ok: 'Adicionar assunto', aoSalvar: v => { const t = { id: 't-' + novoId(), m: m.id, nome: v, ordem: Math.max(-1, ...topicosDe(m.id).map(x => x.ordem || 0)) + 1, teoria: 0 }; DB.topicos.push(t); DB.concursos.forEach(c => c.disc.forEach(d => { if (d.m === m.id) d.topicos.push(t.id); })); novoItem = `[data-id="${t.id}"]`; salvar(); fecharJanela(true); } }); }
+function editarAssunto(id) {
+  const t = topico(id); if (!t) return; const L = topicosDe(t.m), i = L.indexOf(t);
+  abrirJanela({ titulo: 'Assunto', contexto: (materia(t.m) || {}).nome || '',
+    corpo: `<div class="kf-campo"><label class="kf-rotulo" for="ea-n">Nome do assunto</label><input id="ea-n" class="kf-entrada" type="text" maxlength="160" value="${esc(t.nome)}" autocomplete="off"></div>
+      <div class="kf-campo"><span class="kf-rotulo">Ordem na disciplina</span><div class="par-btn"><button type="button" class="kf-btn kf-sec" id="ea-sobe" ${i <= 0 ? 'disabled' : ''}>${I.sobe}Mover para cima</button><button type="button" class="kf-btn kf-sec" id="ea-desce" ${i >= L.length - 1 ? 'disabled' : ''}>${I.desce}Mover para baixo</button></div></div>`,
+    pe: `<button type="button" class="kf-btn kf-perigo" id="ea-rm">Excluir assunto</button><button type="button" class="kf-btn kf-pri" id="ea-ok">Salvar</button>`,
+    aoMontar: d => {
+      const mover = dir => { const j = i + dir, o = L[j]; if (!o) return; L.forEach((x, k) => { x.ordem = k; }); t.ordem = j; o.ordem = i; novoItem = `[data-id="${t.id}"]`; salvar(); fecharJanela(true); };
+      $('#ea-sobe', d).onclick = () => mover(-1); $('#ea-desce', d).onclick = () => mover(1);
+      $('#ea-ok', d).onclick = () => { const v = $('#ea-n', d).value.trim(); if (!v) { KitFacil.apontar($('#ea-n', d)); avisar('Escreva o nome do assunto.'); return; } t.nome = v; salvar(); fecharJanela(true); avisar('Assunto salvo.'); };
+      $('#ea-rm', d).onclick = () => confirmar('Excluir o assunto?', `"${t.nome}" sai de todos os concursos. As sessões já feitas continuam contando o tempo.`, 'Excluir assunto', () => { DB.topicos = DB.topicos.filter(x => x.id !== t.id); DB.revisoes = DB.revisoes.filter(r => r.t !== t.id); DB.concursos.forEach(c => c.disc.forEach(x => { x.topicos = x.topicos.filter(y => y !== t.id); })); salvar(); fecharJanela(true); avisar('Assunto excluído.'); });
     } });
 }
-Object.assign(ACT, {
-  "cal-dia": el => { UI.cal.sel = el.dataset.d; if (el.classList.contains("fora")) UI.cal.mes = el.dataset.d.slice(0, 8) + "01"; render(); const p = $("#cal-dia"); if (p && p.getBoundingClientRect().top > innerHeight - 160) p.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" }); },
-  "cal-mes": el => { const d = toD(UI.cal.mes); UI.cal.mes = ymd(new Date(d.getFullYear(), d.getMonth() + +el.dataset.d, 1, 12)); UI.cal.sel = UI.cal.mes.slice(0, 7) === today().slice(0, 7) ? today() : UI.cal.mes; render(); },
-  "cal-hoje": () => { UI.cal.mes = today().slice(0, 8) + "01"; UI.cal.sel = today(); render(); },
-  "evento": el => eventoSheet(el.dataset.id, el.dataset.d)
-});
-
-/* ================= DESEMPENHO ================= */
-function periodo() {
-  const n = UI.dsNav, t = today();
-  if (UI.dsPer === "semana") { const ini = addD(n, -6); return { ini, fim: n, rot: n === t ? "Últimos 7 dias" : `${dCurta(ini)} a ${dCurta(n)}` }; }
-  if (UI.dsPer === "mes") { const d = toD(n), ini = ymd(new Date(d.getFullYear(), d.getMonth(), 1, 12)), fim = ymd(new Date(d.getFullYear(), d.getMonth() + 1, 0, 12)); return { ini, fim, rot: `${cap(MESES[d.getMonth()])} de ${d.getFullYear()}` }; }
-  const ini = ix().first || t; return { ini, fim: t, rot: ix().first ? `Desde ${dLonga(ini)}` : "Tudo" };
-}
-VIEWS.desempenho = () => {
-  const X = ix(), t = today(), P = periodo();
-  const ss = X.sess.filter(s => s.d >= P.ini && s.d <= P.fim);
-  const tot = { s: sum(ss.map(s => s.s)), a: sum(ss.map(s => s.a)), e: sum(ss.map(s => s.e)) }, q = tot.a + tot.e;
-  const diasCom = new Set(ss.map(s => s.d)).size;
-  const fimR = P.fim > t ? t : P.fim, diasPlan = P.ini <= fimR ? diasEstudoEntre(P.ini, fimR) : 0;
-  let metasB = 0; for (let d = P.ini; d <= fimR; d = addD(d, 1)) if (ehDiaEstudo(d) && metaDia(d)) metasB++;
-  const nav = UI.dsPer !== "tudo" ? `<div class="per-nav"><button class="icon-btn" data-act="ds-nav" data-d="-1" aria-label="Período anterior">${I.chevL}</button><span>${P.rot}</span><button class="icon-btn" data-act="ds-nav" data-d="1" aria-label="Próximo período" ${P.fim >= t ? "disabled" : ""}>${I.chev}</button></div>` : `<div class="per-nav"><span>${P.rot}</span></div>`;
-  return `<div class="pg">
-    ${cabecalho("Desempenho", "Horas estudadas, questões e acertos no período.")}
-    <div class="per"><div class="seg" role="group" aria-label="Período">${[["semana", "7 dias"], ["mes", "Mês"], ["tudo", "Tudo"]].map(([k, l]) => `<button data-act="ds-per" data-p="${k}" aria-pressed="${UI.dsPer === k}">${l}</button>`).join("")}</div>${nav}</div>
-    <section class="stats">
-      <div class="stat"><span>Tempo de estudo</span><b>${dur(tot.s)}</b><small>${diasCom ? `média de ${dur(tot.s / diasCom)} por dia estudado` : "nenhum estudo no período"}</small></div>
-      <div class="stat"><span>Questões</span><b>${q}</b><small>${q ? `${pctTxt(pct(tot.a, q))} de acerto` : "nenhuma registrada"}</small></div>
-      <div class="stat"><span>Dias com estudo</span><b>${diasCom}</b><small>${diasPlan ? `meta batida em ${metasB} de ${plural(diasPlan, "dia planejado", "dias planejados")}` : "sem dias planejados"}</small></div>
-    </section>
-    ${graficoHoras(P, X)}
-    ${tempoPeso(ss, X)}
-    ${pontosFracos(X)}
-    <section class="bloco"><div class="b-hr"><h2 class="b-h">Sessões</h2><button class="btn ghost sm" data-act="registrar">${I.plus}Registrar estudo</button></div>
-      ${ss.length ? listaSessoes(ss) : `<p class="hint">Nenhuma sessão neste período.</p>`}</section>
-  </div>`;
-};
-function graficoHoras(P, X) {
-  const t = today(), h = cfg().hDia;
-  let cols = [];
-  if (UI.dsPer === "tudo") {
-    if (!X.first) return "";
-    let ini = addD(X.first, -((toD(X.first).getDay() + 6) % 7));
-    for (let d = ini; d <= t; d = addD(d, 7)) { let s = 0; for (let k = 0; k < 7; k++) s += (X.days.get(addD(d, k)) || { s: 0 }).s; cols.push({ d, s, rot: dCurta(d), tip: `Semana de ${dCurta(d)}: ${dur(s)}` }); }
-    cols = cols.slice(-16);
-  } else for (let d = P.ini; d <= P.fim; d = addD(d, 1)) { const s = (X.days.get(d) || { s: 0 }).s; cols.push({ d, s, rot: UI.dsPer === "semana" ? WD[toD(d).getDay()] : String(toD(d).getDate()), tip: `${WD[toD(d).getDay()]} ${brs(d)}: ${s ? dur(s) : "sem estudo"}`, fut: d > t, meta: metaDia(d) && s > 0 }); }
-  const ref = UI.dsPer === "tudo" ? h * cfg().dias.length * 3600 : h * 3600;
-  const max = Math.max(ref, ...cols.map(c => c.s), 1);
-  const passo = max > 6 * 3600 * 5 ? 10 * 3600 : max > 6 * 3600 ? 2 * 3600 : 3600;
-  const topo = Math.ceil(max / passo) * passo;
-  const ticks = []; for (let v = 0; v <= topo; v += passo) ticks.push(v);
-  const denso = cols.length > 16;
-  return `<section class="bloco"><h2 class="b-h">${UI.dsPer === "tudo" ? "Horas por semana" : "Horas por dia"}</h2>
-    <p class="hint">${ref ? `A linha escura marca a meta de ${dur(ref)} ${UI.dsPer === "tudo" ? "por semana" : "por dia de estudo"}. ` : ""}Toque numa barra para ver o valor.</p>
-    <div class="graf" style="--n:${cols.length}">
-      <div class="g-eixo">${ticks.slice().reverse().map(v => `<span style="bottom:${v / topo * 100}%">${v ? Math.round(v / 3600) + "h" : "0"}</span>`).join("")}</div>
-      <div class="g-area">
-        ${ticks.map(v => `<i class="g-lin" style="bottom:${v / topo * 100}%"></i>`).join("")}
-        ${ref ? `<i class="g-meta" style="bottom:${ref / topo * 100}%"></i>` : ""}
-        <div class="g-cols">${cols.map(c => `<button class="g-col${c.fut ? " fut" : ""}" data-tip="${esc(c.tip)}" aria-label="${esc(c.tip)}"><i class="${c.meta ? "ok" : ""}" style="height:${c.s / topo * 100}%"></i></button>`).join("")}</div>
-      </div>
-      <div class="g-rot${denso ? " denso" : ""}">${cols.map((c, i) => `<span>${denso && i % 5 && i !== cols.length - 1 ? "" : esc(c.rot)}</span>`).join("")}</div>
-    </div></section>`;
-}
-function tempoPeso(ss, X) {
-  if (!X.shareTot || !ss.length) return "";
-  const tm = new Map(); let tt = 0;
-  for (const s of ss) for (const it of s.itens) { if (!X.share.has(it.m)) continue; tm.set(it.m, (tm.get(it.m) || 0) + it.s); tt += it.s; }
-  if (!tt) return "";
-  // com um só edital em estudo e áreas definidas, compara por área da prova; senão, por disciplina
-  const E = X.ativos.length === 1 ? estrutura(X.ativos[0]) : null;
-  const porGrupo = !!E && E.grupos.length > 1 && E.grupos.every(g => g.id);
-  const linhas = (porGrupo ? E.grupos.map(g => ({ nome: g.nome, ids: g.links.map(l => l.m) })) : X.mats.filter(m => X.share.has(m.id)).map(m => ({ nome: m.nome, ids: [m.id] })))
-    .map(l => { const s = sum(l.ids.map(id => tm.get(id) || 0)); return { nome: l.nome, s, tp: pct(s, tt), pp: pct(sum(l.ids.map(id => X.share.get(id) || 0)), X.shareTot) }; });
-  const max = Math.max(...linhas.map(l => Math.max(l.tp, l.pp)), 1);
-  const barra = (cls, v, tip) => `<span class="tp-b"><span class="tp-tr"><i class="${cls}" style="width:${v / max * 100}%"${tip ? ` title="${tip}"` : ""}></i></span><em>${pctTxt(v)}</em></span>`;
-  const fora = linhas.filter(l => l.pp >= 10 && l.tp < l.pp / 2);
-  return `<section class="bloco"><h2 class="b-h">Seu tempo e o peso na prova</h2>
-    <p class="hint">A parte do seu tempo no período dedicada a cada ${porGrupo ? "área" : "disciplina"}, comparada com a parte da nota que ela vale${X.ativos.length > 1 ? " (média dos editais em estudo)" : ""}.${fora.length ? ` <b>${esc(fora.map(l => l.nome).join(", "))}</b> ${fora.length === 1 ? "está" : "estão"} com menos da metade do tempo que o peso pede.` : ""}</p>
-    <p class="legenda"><span><i class="sw tempo"></i>Seu tempo</span><span><i class="sw peso"></i>Peso na nota</span></p>
-    <ul class="tp">${linhas.map(l => `<li><span class="tp-n">${esc(l.nome)}<small>${l.s ? dur(l.s) : "sem estudo"}</small></span>${barra("tempo", l.tp, dur(l.s))}${barra("peso", l.pp)}</li>`).join("")}</ul></section>`;
-}
-function pontosFracos(X) {
-  const L = X.tops.map(t => ({ t, s: statT(t.id) })).filter(x => x.s.a + x.s.e >= 5 && pct(x.s.a, x.s.a + x.s.e) < 60).sort((a, b) => pct(a.s.a, a.s.a + a.s.e) - pct(b.s.a, b.s.a + b.s.e)).slice(0, 8);
-  if (!L.length) return "";
-  return `<section class="bloco"><h2 class="b-h">Assuntos para reforçar</h2><p class="hint">Acerto abaixo de 60% em pelo menos 5 questões.</p>
-    <ul class="pl-lista">${L.map(({ t, s }) => `<li class="pl-it"><button class="pl-go" data-act="estudar" data-t="${t.id}" data-tipo="revisao" aria-label="Revisar ${esc(t.nome)}">${I.play}</button><button class="pl-txt" data-act="topico" data-id="${t.id}"><span class="pl-k bad">${pctTxt(pct(s.a, s.a + s.e))} em ${s.a + s.e} questões</span><span class="pl-n">${esc(t.nome)}</span><span class="pl-m">${esc(matNome(t.m))}</span></button></li>`).join("")}</ul></section>`;
-}
-function listaSessoes(ss) {
-  const lim = UI.hLim; let h = "", dia = "";
-  for (const s of ss.slice(0, lim)) {
-    if (s.d !== dia) { if (dia) h += "</ul>"; dia = s.d; const o = ix().days.get(dia); h += `<h3 class="dia-s">${cap(dSemana(dia))}, ${dLonga(dia)} <span>${dur(o.s)}</span></h3><ul class="ses-l">`; }
-    h += `<li><button class="ses" data-act="sessao" data-id="${s.id}"><span class="ses-h">${horaDe(s.ini)}${s.manual ? "" : "–" + horaDe(s.fim)}</span><span class="ses-t">${s.itens.map(i => `${esc(i.tn)}${i.tipo === "revisao" ? " <em>(revisão)</em>" : ""}`).join(", ")}</span><span class="ses-v"><b>${dur(s.s)}</b>${s.a + s.e ? `<small>${s.a}/${s.a + s.e}</small>` : ""}</span></button></li>`;
-  }
-  if (dia) h += "</ul>";
-  if (ss.length > lim) h += `<p class="centro"><button class="btn link" data-act="ds-mais">Mostrar mais ${ss.length - lim}</button></p>`;
-  return h;
-}
-function sessaoSheet(id) {
-  const s = DB.sessoes.find(x => x.id === id); if (!s) return;
-  openSheet({ title: `${cap(dSemana(s.d))}, ${dLonga(s.d)}`, sub: `${horaDe(s.ini)}${s.manual ? "" : " às " + horaDe(s.fim)}, ${dur(s.s)} de estudo${s.p ? `, ${dur(s.p)} de pausa` : ""}`,
-    body: `<ul class="cc-lista">${s.itens.map((it, i) => `<li><p class="cc-n">${esc(it.tn)}</p><p class="hint">${esc(it.mn)}. ${TIPO_TXT[it.tipo]}.</p>
-      <div class="grid3"><label class="field"><span class="lbl">Tempo (h:min)</span><input type="text" inputmode="numeric" data-it="${i}" data-k="s" value="${hms(it.s).slice(0, 5)}"></label><label class="field"><span class="lbl">Acertos</span><input type="number" min="0" data-it="${i}" data-k="a" value="${it.a}"></label><label class="field"><span class="lbl">Erros</span><input type="number" min="0" data-it="${i}" data-k="e" value="${it.e}"></label></div></li>`).join("")}</ul>
-      ${s.pausas && s.pausas.length ? `<p class="hint">Pausas: ${s.pausas.map(p => `${horaDe(p.ini)} (${dur((p.fim - p.ini) / 1000)}${p.mot ? ", " + esc(p.mot) : ""})`).join("; ")}.</p>` : ""}
-      <label class="field"><span class="lbl">Anotações</span><textarea id="se-o" rows="3">${esc(s.obs || "")}</textarea></label>
-      <p class="hint">Mudar o tempo ou as questões não altera as datas de revisão já agendadas.</p>`,
-    foot: `<button class="btn ghost danger" data-del>${I.lixo}Excluir</button><button class="btn pri" data-ok>Salvar</button>`,
-    onMount: sh => {
-      $("[data-ok]", sh).onclick = () => {
-        for (const el of $$("[data-it]", sh)) { const it = s.itens[+el.dataset.it], k = el.dataset.k;
-          if (k === "s") { const p = el.value.trim().split(":").map(Number); it.s = p.length > 1 ? (p[0] || 0) * 3600 + (p[1] || 0) * 60 : (p[0] || 0) * 60; }
-          else it[k] = Math.max(0, parseInt(el.value) || 0); }
-        s.s = sum(s.itens.map(i => i.s)); s.a = sum(s.itens.map(i => i.a)); s.e = sum(s.itens.map(i => i.e)); s.obs = $("#se-o", sh).value.trim();
-        commit(); closeSheet(); toast("Sessão atualizada.");
-      };
-      $("[data-del]", sh).onclick = () => { closeSheet(true); confirmSheet("Excluir a sessão?", "Ela sai do histórico e das estatísticas. As datas de revisão já agendadas continuam.", "Excluir", () => { DB.sessoes = DB.sessoes.filter(x => x.id !== id); commit(); toast("Sessão excluída."); }); };
-    } });
-}
-function registrarSheet() {
-  const X = ix();
-  if (!X.tops.length) return toast("Cadastre disciplinas e assuntos primeiro.");
-  openSheet({ title: "Registrar estudo", sub: "Para o que você estudou sem o cronômetro",
-    body: `<label class="field"><span class="lbl">Assunto</span><select id="rg-t">${X.mats.map(m => `<optgroup label="${esc(m.nome)}">${X.topsByMat.get(m.id).map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join("")}</optgroup>`).join("")}</select></label>
-      <div class="grid2"><label class="field"><span class="lbl">Data</span><input type="date" id="rg-d" value="${today()}" max="${today()}"></label><label class="field"><span class="lbl">Início</span><input type="time" id="rg-h" value="${pad(new Date().getHours())}:00"></label></div>
-      <div class="grid3"><label class="field"><span class="lbl">Tempo (h:min)</span><input type="text" inputmode="numeric" id="rg-s" value="01:00" placeholder="01:30"></label><label class="field"><span class="lbl">Acertos</span><input type="number" min="0" id="rg-a" value="0"></label><label class="field"><span class="lbl">Erros</span><input type="number" min="0" id="rg-e" value="0"></label></div>
-      <div class="field"><div class="seg"><label><input type="radio" name="rg-tp" value="teoria" checked><span>Teoria</span></label><label><input type="radio" name="rg-tp" value="revisao"><span>Revisão</span></label></div></div>
-      <label class="check"><input type="checkbox" id="rg-c"><span>Terminei a teoria deste assunto</span></label>`,
-    foot: `<button class="btn pri" data-ok>Registrar</button>`,
-    onMount: sh => {
-      const p = planoHoje().prox; if (p) $("#rg-t", sh).value = p.top.id;
-      $("[data-ok]", sh).onclick = () => {
-        const tid = $("#rg-t", sh).value, d = $("#rg-d", sh).value || today(), hh = $("#rg-h", sh).value || "08:00";
-        const pr = $("#rg-s", sh).value.trim().split(":").map(Number), sec = pr.length > 1 ? (pr[0] || 0) * 3600 + (pr[1] || 0) * 60 : (pr[0] || 0) * 60;
-        const a = Math.max(0, parseInt($("#rg-a", sh).value) || 0), e = Math.max(0, parseInt($("#rg-e", sh).value) || 0);
-        if (!sec && !a && !e) return toast("Informe o tempo ou as questões.");
-        const tp = ($('input[name="rg-tp"]:checked', sh) || {}).value || "teoria", top = X.topById.get(tid);
-        const [H, Mi] = hh.split(":").map(Number), ini = toD(d).setHours(H || 0, Mi || 0, 0, 0);
-        const s = { id: uid(), d, ini, fim: ini + sec * 1000, s: sec, p: 0, a, e, manual: true, obs: "", pausas: [],
-          itens: [{ t: tid, m: top.m, tn: top.nome, mn: matNome(top.m), tipo: tp, s: sec, a, e, ini, fim: ini + sec * 1000 }] };
-        DB.sessoes.push(s);
-        aplicarNosTopicos(s, $("#rg-c", sh).checked ? new Set([tid]) : new Set());
-        commit(); closeSheet(); toast("Estudo registrado.");
-      };
-    } });
-}
-Object.assign(ACT, {
-  "ds-per": el => { UI.dsPer = el.dataset.p; UI.dsNav = today(); UI.hLim = 30; render(); },
-  "ds-nav": el => { const d = +el.dataset.d; if (UI.dsPer === "semana") UI.dsNav = addD(UI.dsNav, 7 * d); else { const x = toD(UI.dsNav); UI.dsNav = ymd(new Date(x.getFullYear(), x.getMonth() + d, 1, 12)); } if (UI.dsNav > today()) UI.dsNav = today(); render(); },
-  "ds-mais": () => { UI.hLim += 30; render(); },
-  "sessao": el => sessaoSheet(el.dataset.id),
-  "registrar": () => registrarSheet()
-});
-/* dica das barras do gráfico (toque ou foco) */
-document.addEventListener("click", e => {
-  const b = e.target.closest(".g-col"); $$(".g-tip").forEach(x => x.remove());
-  if (!b) return;
-  const tip = document.createElement("span"); tip.className = "g-tip"; tip.textContent = b.dataset.tip; b.appendChild(tip);
-});
-
-/* ================= AJUSTES ================= */
-const PRESETS = [["1,7,30", "1, 7 e 30 dias (padrão)"], ["1,3,7,15,30", "1, 3, 7, 15 e 30 dias"], ["1,7,15,30,60", "1, 7, 15, 30 e 60 dias"], ["1,2,4,7,14", "Reta final: 1, 2, 4, 7 e 14 dias"]];
-/* Ajustes: as guias comuns do Kit Fácil, na ordem da família, e as guias próprias "Rotina e metas" e "Revisões" */
-const ICONES_AJ = {
-  rotina: '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="m9 15 2 2 4-4"/>',
-  revisoes: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/><path d="M12 8v4l2.5 2"/>',
-};
-const resumoRotina = () => { const C = cfg(); return `${plural(C.dias.length, "dia", "dias")} por semana · ${dec(C.hDia)} h por dia`; };
-const resumoRevisoes = () => `Ciclo de ${cfg().ciclo.join(", ")} dias`;
-const resumoAlarme = () => PREF.alarme === false ? "Sem som no fim do tempo" : "Som e vibração no fim do tempo";
-VIEWS.ajustes = () => {
-  const C = cfg(), R = ritmo(), ciclo = C.ciclo.join(",");
-  return `<div class="pg aj">${KitFacil.ajustes.html({
-    resumos: { notificacoes: resumoAlarme() },
-    extras: {
-      notificacoes: `<div class="kf-bloco"><h3>Fim do tempo de estudo</h3>
-        <label class="kf-check"><input type="checkbox" data-on="aj-alarme" ${PREF.alarme === false ? "" : "checked"}><span>Tocar um som e vibrar quando o tempo da sessão acabar</span></label>
-        <p class="kf-ajuda">Vale só neste aparelho. O aviso na tela aparece de qualquer jeito.</p></div>`,
-      privacidade: `<div class="kf-bloco"><h3>Apagar todos os dados</h3>
-        <p class="kf-ajuda">Apaga editais, disciplinas, sessões, revisões, anotações e ajustes${syncOn() ? " deste aparelho e da nuvem (os outros aparelhos conectados também ficam vazios)" : ""}. O app volta à tela inicial, como na primeira vez.</p>
-        <button type="button" class="kf-btn kf-perigo-sec" data-act="apagar-tudo">Apagar todos os dados</button></div>`,
-    },
-    produto: [
-      { id: "rotina", titulo: "Rotina e metas", icone: ICONES_AJ.rotina, resumo: resumoRotina(), html: `<div class="kf-bloco"><h3>Dias e metas</h3>
-        <div class="field"><span class="lbl" id="aj-dias-l">Dias em que você estuda</span><div class="dias" role="group" aria-labelledby="aj-dias-l">${[1, 2, 3, 4, 5, 6, 0].map(d => `<label class="dia"><input type="checkbox" value="${d}" ${C.dias.includes(d) ? "checked" : ""} data-on="aj-dia"><span>${WD[d]}</span></label>`).join("")}</div></div>
-        <div class="grid2">
-          <div class="field"><span class="lbl">Horas por dia de estudo</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="hDia" data-d="-0.5" aria-label="Menos meia hora">${I.minus}</button><output>${dec(C.hDia)} h</output><button class="icon-btn boxed" data-act="aj-step" data-k="hDia" data-d="0.5" aria-label="Mais meia hora">${I.plus}</button></div></div>
-          <div class="field"><span class="lbl">Questões por dia</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="qDia" data-d="-5" aria-label="Menos 5 questões">${I.minus}</button><output>${C.qDia || "Sem meta"}</output><button class="icon-btn boxed" data-act="aj-step" data-k="qDia" data-d="5" aria-label="Mais 5 questões">${I.plus}</button></div></div>
-        </div>
-        <div class="grid2">
-          <label class="field"><span class="lbl">Terminar a teoria até</span><input type="date" value="${R.fim}" data-on="aj-teoria"><span class="hint">${C.teoriaAte ? `<button class="btn link sm" data-act="aj-teoria-auto">Voltar ao automático</button>` : "Automático: duas semanas antes da prova."}</span></label>
-          <div class="field"><span class="lbl">Assuntos novos por dia</span><div class="stepper"><button class="icon-btn boxed" data-act="aj-step" data-k="novosDia" data-d="-1" aria-label="Menos um assunto">${I.minus}</button><output>${C.novosDia || `Auto (${R.auto})`}</output><button class="icon-btn boxed" data-act="aj-step" data-k="novosDia" data-d="1" aria-label="Mais um assunto">${I.plus}</button></div></div>
-        </div>
-        <p class="hint">Faltam ${plural(R.pend, "assunto", "assuntos")} com a teoria pendente e ${plural(R.dias, "dia", "dias")} de estudo até ${dLonga(R.fim)}. ${R.n < R.auto ? `<b>Com ${R.n} por dia a teoria não termina a tempo.</b>` : ""}</p></div>` },
-      { id: "revisoes", titulo: "Revisões", icone: ICONES_AJ.revisoes, resumo: resumoRevisoes(), html: `<div class="kf-bloco"><h3>Intervalos das revisões</h3>
-        <p class="hint">Depois de estudar a teoria, o assunto volta para revisão nestes intervalos. Estudar a teoria de novo reinicia o ciclo.</p>
-        <label class="field"><span class="lbl">Ciclo de revisões</span><select data-on="aj-ciclo">${PRESETS.map(([k, l]) => `<option value="${k}" ${ciclo === k ? "selected" : ""}>${l}</option>`).join("")}${PRESETS.some(p => p[0] === ciclo) ? "" : `<option value="${ciclo}" selected>${C.ciclo.join(", ")} dias</option>`}</select></label>
-        <label class="check"><input type="checkbox" data-on="aj-folga" ${C.moverFolga ? "checked" : ""}><span>Revisão que cair num dia de folga passa para o próximo dia de estudo</span></label></div>` },
-    ],
-  })}</div>`;
-};
-VIEWS.ajustes.after = () => KitFacil.ajustes.ligar($("#main"));
-/* cópia de segurança no formato comum da família; as cópias antigas ({ formato: "estudo-facil" }) continuam valendo */
-async function restaurarCopiaEstudo(f) {
-  const j = await KitFacil.copia.ler(f, { antigos: true });
-  const ant = j && j.antigo && j.antigo.formato === "estudo-facil" && j.antigo.dados ? j.antigo : null;
-  const d = j && j.dados ? j.dados : ant ? ant.dados : null;
-  if (!d || typeof d !== "object") return toast("Esse arquivo não é uma cópia do Estudo Fácil.");
-  const quando = String((j && j.em) || (ant && ant.em) || "").slice(0, 10);
-  confirmSheet("Restaurar a cópia?", `A cópia${quando ? ` de ${br(quando)}` : ""} tem ${plural((d.sessoes || []).length, "sessão", "sessões")}. Os dados atuais deste aparelho${syncOn() ? " e dos aparelhos sincronizados" : ""} serão substituídos.`, "Restaurar", () => {
-    // o que mudou em relação ao aparelho ganha a hora de agora e passa a valer também na nuvem
-    const novo = arrumarBanco({ ...d, v: d.v || 1 });
-    for (const c of COLLS) DB[c] = novo[c]; DB.cfg = novo.cfg; DB.ativa = novo.ativa;
-    UI.focoAberto = !!DB.ativa;
-    commit(); toast("Cópia restaurada.");
+function excluirDisciplina() {
+  const m = materia(discId); if (!m) return;
+  confirmar('Excluir a disciplina?', `${m.nome} e os ${plural(topicosDe(m.id).length, 'assunto', 'assuntos')} dela saem de todos os concursos. As sessões já feitas continuam contando o tempo.`, 'Excluir disciplina', () => {
+    const ids = new Set(topicosDe(m.id).map(t => t.id));
+    DB.materias = DB.materias.filter(x => x.id !== m.id); DB.topicos = DB.topicos.filter(t => t.m !== m.id); DB.revisoes = DB.revisoes.filter(r => !ids.has(r.t)); DB.concursos.forEach(c => { c.disc = c.disc.filter(d => d.m !== m.id); });
+    salvar({ quieto: true }); irPara('disciplinas'); avisar('Disciplina excluída.');
   });
 }
-Object.assign(ON, {
-  "aj-dia": () => { const d = $$('[data-on="aj-dia"]').filter(x => x.checked).map(x => +x.value); if (!d.length) { toast("Escolha pelo menos um dia."); render(); return; } cfg().dias = d.sort(); commit(); },
-  "aj-teoria": el => { if (!el.value) return; cfg().teoriaAte = el.value; commit(); },
-  "aj-ciclo": el => { cfg().ciclo = el.value.split(",").map(Number); commit(); toast("Ciclo salvo. Vale para as próximas revisões."); },
-  "aj-folga": el => { cfg().moverFolga = el.checked; commit(); },
-  "aj-alarme": el => { PREF.alarme = el.checked; savePref(); KitFacil.ajustes.resumo("notificacoes", resumoAlarme()); toast(el.checked ? "Som e vibração ligados." : "Sem som no fim do tempo."); }
-});
-Object.assign(ACT, {
-  "aj-step": el => {
-    const k = el.dataset.k, d = +el.dataset.d, C = cfg();
-    if (k === "hDia") C.hDia = clamp((C.hDia || 0) + d, 0, 14);
-    else if (k === "qDia") C.qDia = clamp((C.qDia || 0) + d, 0, 500);
-    else if (k === "novosDia") { const base = C.novosDia || ritmo().auto; C.novosDia = clamp(base + d, 0, 12); if (C.novosDia === ritmo().auto && d < 0) C.novosDia = C.novosDia; }
-    commit();
+
+/* ---------- Revisões ---------- */
+const viewRevisoes = {
+  html() {
+    const h = hojeISO(), P = revisoesPendentes(), g = [['Para hoje', P.filter(r => r.due <= h)], ['Próximos 7 dias', P.filter(r => r.due > h && r.due <= maisDias(h, 7))], ['Depois', P.filter(r => r.due > maisDias(h, 7))]];
+    const lin = r => { const t = topico(r.t), m = materia(t.m), at = entreDias(r.due, h); return `<li class="pl-item"><span class="pl-marca" aria-hidden="true">${I.revisar}</span><span class="pl-tx"><b>${esc(t.nome)}</b><small>${esc(m ? m.nome : '')} · ${r.n}ª revisão · ${at > 0 ? plural(at, 'dia', 'dias') + ' de atraso' : at === 0 ? 'hoje' : fmtData(r.due)}</small></span><button type="button" class="btn-ic comecar" data-act="revisar" data-id="${esc(r.id)}" aria-label="Revisar ${esc(t.nome)}">${I.play}</button></li>`; };
+    return `${voltaMais()}${cab('Revisões', `Cada assunto volta em ${cfg().revisoes.join(', ').replace(/, (\d+)$/, ' e $1')} dias depois da teoria.`)}
+      ${P.length ? g.filter(x => x[1].length).map(([n, L]) => `<section><div class="sec-cab"><h2 class="sec-t">${n}</h2><span class="apoio">${L.length}</span></div><ul class="card lista">${L.slice(0, 40).map(lin).join('')}</ul></section>`).join('')
+        : KitFacil.ui.vazio({ titulo: 'Nenhuma revisão marcada', texto: 'Quando você conclui a teoria de um assunto, as revisões dele aparecem aqui, na data certa.' })}`;
   },
-  "aj-teoria-auto": () => { cfg().teoriaAte = ""; commit(); },
-  "aj-rotina": () => KitFacil.ajustes.ir("rotina"),
-  "apagar-tudo": () => confirmSheet("Apagar todos os dados?", `Sessões, revisões, anotações e ajustes deste aparelho${syncOn() ? " e da nuvem" : ""} serão apagados, com editais e disciplinas, e o app volta à tela inicial, como na primeira vez.`, "Apagar tudo", () => {
-    const novo = bancoNovo();
-    for (const c of COLLS) DB[c] = novo[c]; DB.cfg = novo.cfg; DB.ativa = null; UI.focoAberto = false;
-    commit(); history.replaceState({ d: 0 }, "", "#/hoje"); render(); toast("Dados apagados.");
-  })
-});
+};
 
-/* ================= tema ================= */
-// Kit Fácil: automático, claro ou escuro, guardado em estudofacil.pref (a mesma chave de antes)
-function aplicarTema() { KitFacil.tema.iniciar({ chave: KEY + "pref", cores: { claro: "#EDEFF5", escuro: "#10142A" } }); }
+/* ---------- Simulados ---------- */
+function notaSimulado(s) {
+  const c = DB.concursos.find(x => x.id === s.c), G = (c && c.prova.grupos.length ? c.prova.grupos : [{ id: '_', nome: 'Prova', valor: 1 }]);
+  let pts = 0, max = 0, ac = 0, tot = 0; for (const g of G) { const r = (s.r || {})[g.id] || { ac: 0, tot: 0 }; pts += r.ac * g.valor; max += r.tot * g.valor; ac += r.ac; tot += r.tot; }
+  const p = max ? Math.round(pts / max * 100) : 0;
+  return { pts, max, ac, tot, pct: p, min: c ? c.prova.minPct || 0 : 0, passou: !c || p >= (c.prova.minPct || 0) };
+}
+const viewSimulados = {
+  html() {
+    const L = [...DB.simulados].sort((a, b) => a.data < b.data ? 1 : -1);
+    return `${voltaMais()}${cab('Simulados', 'Registre o resultado de cada simulado e veja a nota pela regra da prova.')}
+      ${L.length ? `<ul class="card lista">${L.map(s => { const n = notaSimulado(s), c = DB.concursos.find(x => x.id === s.c); return `<li><button type="button" class="lin" data-act="abrir-simulado" data-id="${esc(s.id)}"><span class="lin-tx"><b>${esc(s.nome || 'Simulado')}</b><small>${fmtData(s.data)}${c ? ' · ' + esc(c.sigla) : ''} · ${n.ac} de ${n.tot} certas</small></span><span class="lin-valor ${n.passou ? 'ok' : 'baixo'}">${n.pct}%<span class="kf-so-leitor">${n.passou ? ', acima da nota mínima' : ', abaixo da nota mínima'}</span></span>${I.seta}</button></li>`; }).join('')}</ul>`
+        : KitFacil.ui.vazio({ titulo: 'Nenhum simulado ainda', texto: 'Faça um simulado no seu material e registre os acertos aqui. A nota sai pela regra da prova.' })}
+      ${KitFacil.ui.adicionar({ rotulo: 'Novo simulado', attrs: 'data-act="novo-simulado"' })}`;
+  },
+};
+function simuladoJanela(id) {
+  const S = id && DB.simulados.find(x => x.id === id), cs = DB.concursos; let cId = S ? S.c : (concursoFoco() || cs[0] || {}).id || '';
+  const grupos = () => { const c = cs.find(x => x.id === cId); return c && c.prova.grupos.length ? c.prova.grupos : [{ id: '_', nome: 'Prova', valor: 1 }]; };
+  const campos = () => grupos().map((g, i) => { const r = (S && S.c === cId && S.r[g.id]) || { ac: '', tot: g.q || '' }; return `<fieldset class="kf-campo sim-g"><legend class="kf-rotulo">${esc(g.nome)}</legend><div class="par"><div class="kf-campo"><label class="apoio" for="si-a${i}">Acertos</label><input id="si-a${i}" class="kf-entrada num" type="number" inputmode="numeric" min="0" value="${r.ac}"></div><div class="kf-campo"><label class="apoio" for="si-t${i}">Total de itens</label><input id="si-t${i}" class="kf-entrada num" type="number" inputmode="numeric" min="0" value="${r.tot}"></div></div></fieldset>`; }).join('');
+  abrirJanela({ titulo: S ? 'Simulado' : 'Novo simulado', alto: true,
+    corpo: `<div class="kf-campo"><label class="kf-rotulo" for="si-n">Nome</label><input id="si-n" class="kf-entrada" type="text" maxlength="60" value="${esc(S ? S.nome : '')}" placeholder="Ex.: Simulado 1" autocomplete="off"></div>
+      ${cs.length ? `<div class="kf-campo"><label class="kf-rotulo" for="si-c">Concurso</label><select id="si-c" class="kf-entrada">${cs.map(c => `<option value="${esc(c.id)}" ${c.id === cId ? 'selected' : ''}>${esc(c.sigla)}</option>`).join('')}</select></div>` : ''}
+      <div class="kf-campo"><label class="kf-rotulo" for="si-d">Dia</label><input id="si-d" class="kf-entrada" type="date" value="${S ? S.data : hojeISO()}"></div>
+      <div id="si-g" class="pilha">${campos()}</div>`,
+    pe: `${S ? `<button type="button" class="kf-btn kf-perigo" id="si-rm">Excluir simulado</button>` : ''}<button type="button" class="kf-btn kf-pri" id="si-ok">Salvar simulado</button>`,
+    aoMontar: d => {
+      $('#si-c', d)?.addEventListener('change', e => { cId = e.target.value; $('#si-g', d).innerHTML = campos(); });
+      $('#si-rm', d)?.addEventListener('click', () => confirmar('Excluir o simulado?', 'O resultado sai da lista.', 'Excluir simulado', () => { DB.simulados = DB.simulados.filter(x => x.id !== id); salvar(); fecharJanela(true); avisar('Simulado excluído.'); }));
+      $('#si-ok', d).onclick = () => {
+        const r = {}; let tot = 0, ruim = null;
+        grupos().forEach((g, i) => { const ac = lerNum($('#si-a' + i, d)), t = lerNum($('#si-t' + i, d)); if (ac > t) ruim = $('#si-a' + i, d); r[g.id] = { ac, tot: t }; tot += t; });
+        if (ruim) { KitFacil.apontar(ruim); avisar('Os acertos não podem passar do total de itens.'); return; }
+        if (!tot) { KitFacil.apontar($('#si-t0', d)); avisar('Informe o total de itens do simulado.'); return; }
+        const reg = { id: S ? S.id : novoId(), c: cId, nome: $('#si-n', d).value.trim() || 'Simulado', data: $('#si-d', d).value || hojeISO(), r };
+        if (S) Object.assign(S, reg); else { DB.simulados.push(reg); novoItem = `[data-id="${reg.id}"]`; }
+        salvar(); fecharJanela(true); const n = notaSimulado(reg); avisar(`Simulado salvo: ${n.pct}% da prova.`); setTimeout(() => jogoConferir(), 700);
+      };
+    } });
+}
 
+/* ---------- Agenda ---------- */
+const viewAgenda = {
+  html() {
+    const h = hojeISO(), L = [];
+    for (const c of DB.concursos.filter(x => x.situacao !== 'encerrado')) for (const d of c.datas || []) L.push({ data: d.ini, fim: d.fim, titulo: d.titulo, de: c.sigla, acao: d.acao });
+    for (const e of DB.eventos) L.push({ data: e.data, hora: e.hora, titulo: e.titulo, de: 'Seu compromisso', id: e.id });
+    L.sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : 0);
+    const fut = L.filter(x => (x.fim || x.data) >= h), pas = L.filter(x => (x.fim || x.data) < h).reverse();
+    const lin = x => { const n = entreDias(h, x.data); const corpo = `<span class="ag-data" aria-hidden="true"><b>${deISO(x.data).getDate()}</b><small>${MESES[deISO(x.data).getMonth()]}</small></span><span class="lin-tx"><b>${esc(x.titulo)}</b><small>${esc(x.de)}${x.hora ? ' · ' + esc(x.hora) : ''}${x.fim ? ' · até ' + fmtData(x.fim) : ''}${n > 0 ? ` · em ${plural(n, 'dia', 'dias')}` : n === 0 ? ' · hoje' : ''}</small><span class="kf-so-leitor">${fmtData(x.data)}</span></span>`;
+      return `<li>${x.id ? `<button type="button" class="lin" data-act="editar-evento" data-id="${esc(x.id)}">${corpo}${I.lapis}</button>` : `<div class="lin parada">${corpo}</div>`}</li>`; };
+    return `${voltaMais()}${cab('Agenda', 'As datas dos seus concursos e os compromissos que você marcar.')}
+      ${fut.length ? `<section><div class="sec-cab"><h2 class="sec-t">Próximas datas</h2></div><ul class="card lista">${fut.map(lin).join('')}</ul></section>` : KitFacil.ui.vazio({ titulo: 'Nenhuma data pela frente', texto: 'Marque aulas, simulados e prazos. As datas do edital entram sozinhas.' })}
+      ${KitFacil.ui.adicionar({ rotulo: 'Novo compromisso', attrs: 'data-act="novo-evento"' })}
+      ${pas.length ? `<details class="card passadas" data-kf-secao><summary><b>Datas que já passaram</b> <small data-kf-secao-resumo>${pas.length}</small></summary><ul class="lista">${pas.slice(0, 30).map(lin).join('')}</ul></details>` : ''}`;
+  },
+};
+function eventoJanela(id) {
+  const E = id && DB.eventos.find(x => x.id === id);
+  abrirJanela({ titulo: E ? 'Compromisso' : 'Novo compromisso',
+    corpo: `<div class="kf-campo"><label class="kf-rotulo" for="ev-t">O que é</label><input id="ev-t" class="kf-entrada" type="text" maxlength="80" value="${esc(E ? E.titulo : '')}" placeholder="Ex.: Aula de LGPD" autocomplete="off"></div>
+      <div class="par"><div class="kf-campo"><label class="kf-rotulo" for="ev-d">Dia</label><input id="ev-d" class="kf-entrada" type="date" value="${E ? E.data : hojeISO()}"></div><div class="kf-campo"><label class="kf-rotulo" for="ev-h">Hora <span class="kf-opcional">(opcional)</span></label><input id="ev-h" class="kf-entrada" type="time" value="${E ? esc(E.hora || '') : ''}"></div></div>`,
+    pe: `${E ? `<button type="button" class="kf-btn kf-perigo" id="ev-rm">Excluir compromisso</button>` : ''}<button type="button" class="kf-btn kf-pri" id="ev-ok">Salvar</button>`,
+    aoMontar: d => {
+      $('#ev-rm', d)?.addEventListener('click', () => confirmar('Excluir o compromisso?', `"${E.titulo}" sai da agenda.`, 'Excluir compromisso', () => { DB.eventos = DB.eventos.filter(x => x.id !== id); salvar(); fecharJanela(true); avisar('Compromisso excluído.'); }));
+      $('#ev-ok', d).onclick = () => {
+        const t = $('#ev-t', d).value.trim(), dia = $('#ev-d', d).value; if (!t) { KitFacil.apontar($('#ev-t', d)); avisar('Escreva o que é o compromisso.'); return; } if (!dia) { KitFacil.apontar($('#ev-d', d)); avisar('Escolha o dia.'); return; }
+        const reg = { id: E ? E.id : novoId(), titulo: t, data: dia, hora: $('#ev-h', d).value || '' };
+        if (E) Object.assign(E, reg); else { DB.eventos.push(reg); novoItem = `[data-id="${reg.id}"]`; }
+        salvar(); fecharJanela(true); avisar('Compromisso salvo.');
+      };
+    } });
+}

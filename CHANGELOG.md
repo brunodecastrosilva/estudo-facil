@@ -3,6 +3,26 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.0.0 · 2026-11-15
+
+O Estudo Fácil foi refeito do zero, na vez dele de seguir o Conta Fácil (Código, Art. 93, § 2º). Nada da versão 0.x foi
+mantido além da marca, do azul caneta e do marca-texto.
+
+- **Cinco lugares:** Hoje, Plano, Estudar (no centro da barra), Evolução e Mais (Concursos, Disciplinas, Revisões, Simulados, Agenda, o guia e os Ajustes).
+- **Plano de fábrica para a ANPD** (Especialista em Regulação de Proteção de Dados): 12 disciplinas, 119 assuntos, pesos estimados, três fases até a prova, semana modelo e fontes oficiais. O edital ainda não saiu (situação conferida em 15/11/2026): banca, itens, pesos e data da prova são estimativas e estão marcados assim no app. O edital da ABDI 2026 continua na biblioteca.
+- **Sequência de dias:** cada dia com a meta batida (uma hora, de fábrica) aumenta a sequência. A cada 7 dias o app guarda uma folga (até 2), gasta sozinha se você faltar um dia. Dia de descanso da rotina não quebra a sequência.
+- **Missões do dia:** tempo, questões e revisões (ou variar de disciplina). As três cumpridas fazem o dia perfeito.
+- **Pontos, 10 níveis e 27 medalhas em 3D,** que giram com o dedo e com as setas do teclado. Dá para desligar nos Ajustes.
+- **O edital vira caderno:** cada assunto tem um domínio de 0 a 4 (Novo, Começado, Estudado, Revisado, Dominado) e fica grifado conforme você estuda. A prontidão para a prova é a parte do edital já dominada, contando o peso de cada disciplina.
+- **Modo foco em tela cheia:** cronômetro, acertos e erros, pausar e concluir. O foco pode ser recolhido sem parar o tempo. No fim, a festa mostra os pontos, o nível e as medalhas novas.
+- **Revisões** em 1, 7 e 30 dias depois da teoria (ou os dias que você escolher). Revisão difícil volta em 2 dias.
+- **Evolução:** prontidão por semana, constância (12 semanas), horas por semana, acertos por disciplina e totais.
+- **Lançar estudo feito** sem o cronômetro, inclusive em dia que já passou.
+- **Abertura** de quatro telas na primeira vez e **guia único**, de 19 passos, que faz cada ação numa demonstração que não grava nada.
+- **Saíram:** a leitura de editais em PDF (reconhecia mal o conteúdo; agora se cola o conteúdo programático), a comparação entre editais e a janela a cada abertura.
+- **Dados:** o formato mudou (versão 3) e os dados da 0.x não são trazidos (Código, Art. 32-A). A cópia antiga fica guardada no aparelho, na chave `estudofacil.db_antigo`. Na sincronização, o arquivo antigo da nuvem é substituído pelo novo.
+- **Testes pulados nesta versão:** nenhum. Rodaram a verificação do padrão, os testes do Kit, os 16 do app, o guia inteiro e a varredura de acessibilidade (WCAG 2.2 AA), no claro e no escuro.
+
 ## 0.7.1 · 2026-11-15
 
 - **Kit Fácil 0.9.0 (Código 0.9, Proposta 4 do Conta Fácil):** para quem usa este app, muda:

@@ -1,32 +1,32 @@
 # Estudo Fácil
 
-Controle de estudos para concursos, direto no celular e no computador. Você cadastra os editais e as disciplinas, e o app monta o plano de cada dia.
+Plano de estudos para concursos, no celular e no computador: o app diz o que estudar hoje, marca o tempo, lembra das
+revisões e mostra a sua evolução, com sequência de dias, missões e medalhas.
 
-**Fase de testes** · versão 0.7.1 · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.0.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
-[Código do Projeto Fácil](comum/CODIGO.md).
+[Código do Projeto Fácil](comum/CODIGO.md). Na versão 1.0.0 o app foi refeito do zero, seguindo o Conta Fácil, que é a
+referência do projeto (Art. 93).
 
 ## O que o app faz
 
-- Apresentação curta ao abrir (desligável em Ajustes) e guia em 2 níveis: Simplificado (só destaque) e Completo (o app faz cada ação na tela, numa demonstração que não salva nada)
-- Cadastre editais de três jeitos: prontos da biblioteca (hoje, o Processo Seletivo ABDI 2026 e o edital previsto da ANPD 2027), lidos do PDF ou digitados com o conteúdo programático colado
-- Mantenha suas disciplinas e assuntos num só lugar. Eles valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram
-- Informe, em cada edital, as questões e o valor de cada disciplina, as áreas da prova e a nota mínima
-- Acompanhe vários concursos ao mesmo tempo. O plano do dia junta os editais marcados como Estudando e dá mais tempo ao que vale mais na prova
-- Veja na tela Hoje só o que importa: o que estudar agora e o plano do dia, com a meta de tempo, as revisões vencidas e os assuntos novos no ritmo certo para terminar a teoria antes da prova
-- Estude com o cronômetro em tela cheia, marque acertos e erros e troque de assunto sem parar o tempo
-- Receba as revisões no ciclo de 1, 7 e 30 dias (ou outro que você escolher)
-- Confira o cronograma de cada concurso, com as datas que dependem de você, e leve as datas para a agenda do celular
-- Registre simulados e veja a nota calculada pela regra da prova
-- Compare dois editais e veja quantos assuntos eles têm em comum
-- **Use em vários aparelhos (opcional):** os mesmos dados no celular, no tablet e no computador, criptografados num gist secreto da sua conta GitHub
-- **Avalie o app e relate problemas** pelo balão no alto da tela (ou em Ajustes → Avaliação e feedback)
-- **Nuvem no alto da tela:** mostra se os dados estão sincronizados, sincronizando, pendentes, com erro ou sem internet
-- **Barra de baixo com no máximo 5 posições:** as seções principais e "Mais", com o resto e os Ajustes (no computador, tudo no menu lateral)
-- **Mande um presente para o criador!** O app é gratuito; o presente no alto da tela, entre a nuvem e o balão, abre o Pix (QR code e copia e cola), se você quiser apoiar
-- **Novidades:** depois de cada atualização, o app mostra uma vez o que mudou
-- Tema claro, escuro ou automático; funciona sem internet depois da primeira visita
+- **Hoje:** a sequência de dias, a meta do dia, as três missões e o plano de hoje, com o próximo assunto a um toque
+- **Plano de fábrica para a ANPD** (Especialista em Regulação de Proteção de Dados): 12 disciplinas, 119 assuntos, pesos, três fases até a prova, semana modelo e fontes oficiais. O edital ainda não saiu: o que é estimativa está marcado como estimativa
+- **Plano do dia:** revisões vencidas primeiro; depois, blocos das disciplinas mais atrasadas em relação ao peso na prova
+- **Modo foco:** cronômetro em tela cheia, com acertos e erros; dá para recolher sem parar o tempo
+- **O edital vira caderno:** cada assunto estudado fica grifado; a prontidão para a prova sobe com o que você domina
+- **Revisões** em 1, 7 e 30 dias depois da teoria (ou os dias que você escolher)
+- **Sequência e folgas:** dias seguidos com a meta batida; a folga guardada salva um dia de falta
+- **Pontos, níveis e medalhas em 3D** (WebGL), que giram com o dedo; dá para desligar nos Ajustes
+- **Evolução:** prontidão, constância, horas por semana, acertos por disciplina e totais
+- **Concursos:** vários ao mesmo tempo, da biblioteca (ANPD e ABDI 2026) ou digitados com o conteúdo programático colado
+- **Disciplinas e assuntos globais:** o que você estuda num assunto conta em todos os concursos que o cobram
+- **Simulados** com a nota pela regra da prova, e **Agenda** com as datas do edital e os seus compromissos
+- **Abertura** na primeira vez e **guia** que faz cada passo na tela, numa demonstração que não grava nada
+- **Use em vários aparelhos (opcional):** dados sincronizados, criptografados, num gist secreto da sua conta GitHub
+- **Avaliação e relato de problemas** pelo balão no alto da tela; **presente para o criador** (Pix, opcional)
+- Tema claro, escuro ou automático; instalável; funciona sem internet depois da primeira visita
 
 ## Como usar
 
@@ -36,100 +36,99 @@ Abra o endereço em qualquer navegador, no celular, no tablet ou no computador. 
 - **Android:** no Chrome, menu **⋮ → Instalar app**
 - **Computador:** ícone de instalar na barra de endereço do Chrome ou do Edge
 
-Sem a sincronização, os dados ficam só no aparelho; toque na **nuvem** no alto da tela (ou vá em **Ajustes → Sincronização e armazenamento**).
-
 ## Onde ficam os dados
 
 | Dado | Onde fica |
 |---|---|
-| Editais, disciplinas, sessões, revisões, simulados e ajustes | neste aparelho (armazenamento do navegador, chaves `estudofacil.*`) |
+| Concursos, disciplinas, sessões, revisões, dias com a meta batida, medalhas, simulados, agenda e ajustes | neste aparelho (armazenamento do navegador, chaves `estudofacil.*`) |
 | Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
-| Editais em PDF | lidos no próprio aparelho; o arquivo não é enviado |
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
 
-A guia **Ajustes → Privacidade e segurança** explica isso para quem usa o app.
+Quem usava a versão 0.x começa de novo: o formato mudou e os dados não são trazidos (Código, Art. 32-A). A cópia antiga
+fica guardada no aparelho, na chave `estudofacil.db_antigo`, até uma restauração de fábrica.
 
 ## Para desenvolver
 
 O app não tem etapa de build nem dependências: o que está no repositório é o que vai para o ar.
-O Node (22 ou mais novo) só é usado para o servidor local, os testes e a verificação do padrão.
+O Node (22 ou mais novo) só é usado para o servidor local, os testes e a verificação.
 
 ```bash
 npm start                         # abre em http://localhost:8080/estudo-facil/
-npm install                       # primeira vez: instala o Playwright, usado nos testes
-npx playwright install chromium   # primeira vez: baixa o navegador dos testes
-npm test                          # testes do Kit Fácil e do app, sem internet
-npm run verificar                 # Código do Projeto Fácil, segredos e versão
+npm install                       # primeira vez: instala o Playwright e o axe, usados nos testes
+npx playwright install chromium   # primeira vez (sem ele, os testes usam o Google Chrome instalado)
+npm test                          # testes do Kit Fácil e do app, sem internet (inclui o guia inteiro, uns 4 minutos)
+node --test tests/app.test.mjs    # só os testes do app
+npm run verificar                 # Código do Projeto Fácil, segredos, versão, service worker, CSP e SRI
 ```
 
-Os testes simulam o GitHub (sincronização) e o Firebase (avaliações); nada toca nos dados reais.
+Nos testes, `?hoje=AAAA-MM-DD` fixa o dia (só vale em `localhost`). Os testes simulam o GitHub; nada toca nos dados reais.
 O modo sem internet (service worker) só funciona em `https`, ou seja, no endereço publicado.
-Ao mudar a versão, atualize também o `?v=` dos scripts no `index.html`.
-
-## Interface
-
-Segue o Código do Projeto Fácil (veja [`comum/CODIGO.md`](comum/CODIGO.md)):
-
-- **Alto da tela, à direita:** nuvem da sincronização, presente para o criador e balão de avaliação, nessa ordem, e nada
-  mais. No celular estreito (menos de 400 px), a marca mostra só o ícone
-- **Navegação:** Hoje, Editais, Estudar, Agenda e Mais (Disciplinas, Desempenho e Ajustes) na barra de baixo (celular e
-  tablet); no computador, menu lateral com tudo e Ajustes no pé. Desempenho também abre pelo link "Últimos 7 dias →
-  Desempenho", no fim do plano da tela Hoje
-- **Abertura:** não há tela de primeiro uso. Quem chega vê a tela Hoje com o primeiro passo (adicionar o edital ou
-  cadastrar disciplinas) e a rotina padrão, que se ajusta em "Ajustar a rotina"; a janela de boas-vindas do Kit abre
-  ao abrir o app (desligável)
-- **Ajustes:** as oito guias comuns e as guias próprias **Rotina e metas** e **Revisões**. Em Notificações, o som e a
-  vibração do fim do tempo podem ser desligados; em Privacidade e segurança, "Apagar todos os dados" (inclusive na nuvem)
+Ao mudar a versão, atualize também o `?v=` dos arquivos no `index.html`.
 
 ## Estrutura
 
 | Arquivo | Conteúdo |
 |---|---|
-| `index.html` | estrutura e visual do app |
-| `app.js` | dados, sincronização, plano do dia e cronômetro |
-| `telas.js` | Hoje, Estudar, Agenda, Desempenho e Ajustes |
-| `cadastros.js` | Editais, Disciplinas, biblioteca e leitura de editais |
-| `editais.js` | os editais da biblioteca: ABDI 2026 e o previsto da ANPD (disciplinas, assuntos, cronograma, prova e plano) |
-| `leitor-pdf.js` | leitura de editais em PDF, carregada só quando você usa |
-| `comum/` | **Kit Fácil**: sistema de design comum, barra superior, Ajustes, avaliação, sincronização e o padrão do projeto. Igual nos três apps: não edite só aqui |
+| `index.html` | moldura da página: barra de cima, navegação e a política de segurança (CSP) |
+| `estilo.css` | identidade visual "caderno e marca-texto" e todas as telas |
+| `editais.js` | a biblioteca: o plano da ANPD (previsto) e o edital da ABDI 2026 |
+| `app.js` | motor: dados, plano do dia, sequência, pontos, domínio, revisões e sincronização |
+| `jogo.js` | níveis, medalhas (desenhadas e em 3D) e a festa de fim de sessão |
+| `estudar.js` | escolher o que estudar, modo foco, fechar a sessão, lançar estudo feito e a ficha do assunto |
+| `telas.js` | Hoje, Plano, Evolução, Mais, Concursos, Disciplinas, Revisões, Simulados e Agenda |
+| `casca.js` | navegação, Ajustes, abertura, guia e arranque |
+| `comum/` | **Kit Fácil**: sincronização, avaliação, apoio, cópia de segurança, Ajustes, janelas e avisos. Igual nos quatro apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
-| `tests/` | testes do app |
+| `tests/` | testes do app, do guia e de acessibilidade |
 
 ## Modelo de dados
 
-Tudo fica num só objeto (`estudofacil.db`, versão 2 do formato), com estas listas:
+Tudo fica num objeto só (`estudofacil.db`, formato 3). Cada lista tem registros com `id`; a sincronização junta registro a registro.
 
 | Lista | O que guarda |
 |---|---|
-| `materias` e `topicos` | disciplinas e assuntos. São **globais**: o que você estuda num assunto vale em todos os editais que o cobram |
-| `concursos` | editais: situação (Estudando, Em espera ou Encerrado), dados do concurso, datas, prova (nota mínima, regra de não zerar, áreas) e os vínculos `disc`, um por disciplina, com a área, as questões, os pontos por questão e os assuntos cobrados |
-| `sessoes` | sessões de estudo do cronômetro (assunto, tempo, acertos e erros) |
-| `eventos` | eventos da Agenda (aulas, simulados e outros) |
-| `simulados` | resultados de simulados |
-| `cfg` e `ativa` | preferências e a sessão em andamento |
+| `concursos` | editais: situação (Estudando, Em espera ou Encerrado), previsto ou publicado, datas, prova (nota mínima e áreas com peso) e os vínculos `disc` (disciplina, área, itens, se está fora do plano e os assuntos cobrados) |
+| `materias` e `topicos` | disciplinas e assuntos, **globais**; o assunto guarda quando a teoria foi concluída |
+| `sessoes` | sessões de estudo: assunto, tipo (teoria, questões, revisão, lei seca), tempo, acertos, erros e o dia |
+| `revisoes` | revisões marcadas e feitas de cada assunto |
+| `dias` | dias em que a meta foi batida (a sequência sai daqui) |
+| `marcos` | medalhas já ganhas, dias perfeitos e marcas do app (guia visto) |
+| `simulados` e `eventos` | resultados de simulados e compromissos da agenda |
+| `cfg` e `ativa` | ajustes (nome, meta, dias de estudo, bloco, revisões, som, vibração, medalhas) e a sessão em andamento |
 
 Regras:
-- o plano do dia junta os assuntos dos editais com a situação Estudando; sem nenhum edital em estudo, usa todas as disciplinas;
-- o peso de cada disciplina é a média da fatia da nota que ela vale em cada edital em estudo;
-- os assuntos novos avançam as disciplinas por igual; no empate, vai primeiro a disciplina com a maior fatia da nota;
-- ao importar um edital, disciplinas com o mesmo nome se juntam, e assuntos se juntam pelo nome sem a numeração do edital;
-- os dados da versão 1 do formato migram sozinhos para a versão 2;
-- edital da biblioteca marcado como `previsto` mostra a faixa "Edital ainda não publicado"; os pesos e a data são estimativas.
 
-Pendência conhecida: o leitor de PDF reconhece mal o conteúdo programático de alguns editais (como o da ABDI). Nesses casos, use a biblioteca ou cole o conteúdo.
+- **peso** de uma disciplina: itens × peso da área, sobre o total da prova; com vários concursos em estudo, a média. Enquanto o edital é previsto, o fator `f1` puxa para a frente o que quase certamente cai;
+- **plano do dia:** até 5 revisões vencidas e, depois, `meta ÷ bloco` blocos das disciplinas mais atrasadas em relação ao peso (estudo dos últimos 14 dias, até ontem);
+- **domínio** do assunto: 0 Novo · 1 Começado · 2 Estudado (teoria concluída) · 3 Revisado (1 revisão, ou 10 questões com 70%) · 4 Dominado (todas as revisões, ou 2 revisões e 20 questões com 80%);
+- **prontidão:** média do domínio dos assuntos, com o peso de cada disciplina;
+- **sequência:** dias seguidos em `dias`; dia fora da rotina é neutro; a cada 7 dias seguidos entra uma folga (até 2), gasta sozinha num dia de falta;
+- **pontos:** 1 por minuto, 1 por questão e mais 1 por acerto, 15 por revisão, 25 por assunto com teoria, 30 por dia com a meta batida e 50 por medalha. Tudo sai dos dados, então acompanha a sincronização.
+
+## Exceções ao padrão
+
+| Exceção | Por quê |
+|---|---|
+| Código dividido em vários `.js`, carregados com `?v=<versão>` | Regras do Estudo Fácil, Art. 5º (exceção já aprovada) |
+
+**Peças próprias do app** (não substituem peça do Kit; Código, Art. 72, § 4º): a medalha em 3D (`jogo.js`), o modo foco e a festa
+de fim de sessão, que são telas cheias de marca (Art. 68, § 4º). O que pode virar padrão está em
+[PROPOSTA-PARA-O-INTEGRADOR.md](PROPOSTA-PARA-O-INTEGRADOR.md).
 
 ## Serviços externos e configuração
 
 | Serviço | Para quê | Custo | O que configurar |
 |---|---|---|---|
 | GitHub (gist) | sincronização entre aparelhos | gratuito | nada no projeto; cada pessoa usa a própria conta |
-| Firebase (projeto `conta-facil-2c1f9`, compartilhado pelo projeto) | receber as avaliações | plano gratuito | publicar a regra de [`comum/regras-firestore-feedback.txt`](comum/regras-firestore-feedback.txt) |
-| Google Fonts, cdnjs | fontes e leitor de PDF (pdf.js) | gratuito | nada |
+| Firebase (projeto `conta-facil-2c1f9`, compartilhado pelo projeto) | receber as avaliações | plano gratuito | regra de [`comum/regras-firestore-feedback.txt`](comum/regras-firestore-feedback.txt) publicada |
+| Google Fonts, cdnjs | fontes (Atkinson Hyperlegible e Fraunces) e o QR code do apoio | gratuito | nada |
 
 ## Publicação
 
-GitHub Pages a partir da branch `main`, pasta raiz. Antes de publicar: `npm run verificar` e `npm test`, e confira o app
-no celular e no computador. O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
+GitHub Pages a partir da branch `main`, pasta raiz. Antes de publicar: `npm run verificar` e os testes da parte que mudou
+(o guia inteiro só roda quando a mudança mexe no guia). Confira o app no celular e no computador, no claro e no escuro.
+Se o app abrir com erro no ar, desfaça o envio na hora (`git revert`) e só depois investigue.
+O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Uso do código
 

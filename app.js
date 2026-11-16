@@ -1,890 +1,496 @@
-/* Estudo Fácil: núcleo do app.
-   Dados guardados neste aparelho (localStorage) e, se ligada, sincronização criptografada por um gist secreto
-   na conta GitHub do usuário (motor comum do Kit Fácil, em comum/kit-facil.js).
-   Telas em telas.js; leitura de editais em PDF em leitor-pdf.js. */
+/* Estudo Fácil · motor do app: dados, plano do dia, sequência, pontos, domínio do edital, revisões e sincronização.
+   As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
+   abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = "0.7.1";
+const VERSAO = '1.0.0';
+const KEY = 'estudofacil.';
 
-/* ================= utilidades ================= */
-const $ = (s, r = document) => r.querySelector(s);
-const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const pad = n => String(n).padStart(2, "0");
-const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-const toD = s => { const [y, m, d] = String(s).split("-").map(Number); return new Date(y, m - 1, d, 12); };
-const addD = (s, n) => { const d = toD(s); d.setDate(d.getDate() + n); return ymd(d); };
-const diffD = (a, b) => Math.round((toD(b) - toD(a)) / 864e5);
-const today = () => ymd(new Date());
-const WD = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const WDL = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
-const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
-const MES3 = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-const br = s => s ? `${s.slice(8, 10)}/${s.slice(5, 7)}/${s.slice(0, 4)}` : "";
-const brs = s => s ? `${s.slice(8, 10)}/${s.slice(5, 7)}` : "";
-const dLonga = s => { const d = toD(s); return `${d.getDate()} de ${MESES[d.getMonth()]}`; };
-const dCurta = s => { const d = toD(s); return `${d.getDate()} ${MES3[d.getMonth()]}`; };
-const dSemana = s => WDL[toD(s).getDay()];
-const hms = sec => { sec = Math.max(0, Math.round(sec || 0)); return `${pad(Math.floor(sec / 3600))}:${pad(Math.floor(sec % 3600 / 60))}:${pad(sec % 60)}`; };
-const relogio = sec => { sec = Math.max(0, Math.floor(sec || 0)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
-const dur = sec => {
-  sec = Math.max(0, Math.round(sec || 0));
-  let h = Math.floor(sec / 3600), m = Math.round(sec % 3600 / 60);
-  if (m === 60) { h++; m = 0; }
-  if (!h) return `${m} min`;
-  return m ? `${h}h${pad(m)}` : `${h}h`;
-};
-const horaDe = ms => { const d = new Date(ms); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const pct = (a, b) => b > 0 ? a / b * 100 : 0;
-const pctTxt = v => Math.round(v) + "%";
-const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
-const dec = (n, c = 1) => Number(n || 0).toLocaleString("pt-BR", { maximumFractionDigits: c });
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-const clone = o => JSON.parse(JSON.stringify(o ?? null));
-const sum = a => a.reduce((x, y) => x + (y || 0), 0);
-const fold = s => String(s || "").normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-const quando = n => n === 0 ? "hoje" : n === 1 ? "amanhã" : n === -1 ? "ontem" : n > 0 ? `em ${n} dias` : `há ${-n} dias`;
+/* ---------- utilidades ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const novoId = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-5);
+const plural = (n, s, p) => n + ' ' + (n === 1 ? s : p);
+const norm = s => String(s || '').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[̀-ͯ]/g, '');
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const DAY = 864e5;
-const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const soma = (L, f) => L.reduce((a, x) => a + (f ? f(x) : x), 0);
+const DIA = 864e5;
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const deISO = s => { const [a, m, d] = String(s).split('-').map(Number); return new Date(a, (m || 1) - 1, d || 1); };
+// nos testes, ?hoje=AAAA-MM-DD fixa o dia (só em endereço local)
+const HOJE_FIXO = (() => { try { const m = /[?&]hoje=(\d{4}-\d{2}-\d{2})/.exec(location.search); return m && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? m[1] : null; } catch { return null; } })();
+const agora = () => HOJE_FIXO ? deISO(HOJE_FIXO).getTime() + (Date.now() % DIA) : Date.now();
+const hojeISO = () => HOJE_FIXO || iso(new Date());
+const maisDias = (s, n) => { const d = deISO(s); d.setDate(d.getDate() + n); return iso(d); };
+const entreDias = (a, b) => Math.round((deISO(b) - deISO(a)) / DIA);
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const SEMANA_L = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+const fmtData = s => { if (!s) return ''; const d = deISO(s); return `${d.getDate()} de ${MESES[d.getMonth()]}${d.getFullYear() !== new Date().getFullYear() ? ' de ' + d.getFullYear() : ''}`; };
+const fmtDataAno = s => { if (!s) return ''; const d = deISO(s); return `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`; };
+const fmtDataCurta = s => { const d = deISO(s); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`; };
+const fmtMin = m => { m = Math.round(m); if (m < 60) return m + ' min'; const h = Math.floor(m / 60), r = m % 60; return r ? `${h} h ${r} min` : `${h} h`; };
+const fmtHoras = m => { const h = m / 60; return (h >= 10 ? Math.round(h) : Math.round(h * 10) / 10).toLocaleString('pt-BR') + ' h'; };
+const fmtRelogio = seg => { seg = Math.max(0, Math.floor(seg)); const h = Math.floor(seg / 3600), m = Math.floor(seg % 3600 / 60), s = seg % 60; return (h ? h + ':' + String(m).padStart(2, '0') : String(m).padStart(2, '0')) + ':' + String(s).padStart(2, '0'); };
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const primeiroNome = n => String(n || '').trim().split(/\s+/)[0] || '';
 
-/* ================= ícones ================= */
-const svg = p => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+/* ---------- ícones: um traço só, grade de 24, traço de 2, pontas redondas (Código, Art. 57) ---------- */
+const svgI = (d, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
 const I = {
-  hoje: svg('<path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9v11h13V9"/><path d="M10 20v-5.5h4V20"/>'),
-  edital: svg('<path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/><path d="M8.5 12.5l1.5 1.5 2.5-2.5M8.5 17.5h7"/>'),
-  agenda: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h2M12 14h2M16 14h.5M8 17.5h2M12 17.5h2"/>'),
-  stats: svg('<path d="M4 20h16"/><path d="M7 16.5V11M12 16.5V6.5M17 16.5v-3.5"/>'),
-  ajustes: svg('<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>'),
-  play: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.2v13.6L18.6 12z" fill="currentColor" stroke="none"/></svg>',
-  pause: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="3.6" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.9" y="5" width="3.6" height="14" rx="1" fill="currentColor" stroke="none"/></svg>',
-  stop: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/></svg>',
-  timer: svg('<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5"/>'),
-  cloud: svg('<path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.1 4.75 4.75 0 0 0 7 18.5z"/>'),
-  x: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
-  check: svg('<path d="m5 12.5 4.5 4.5L19 7.5"/>'),
-  chev: svg('<path d="m9.5 6 6 6-6 6"/>'),
-  chevL: svg('<path d="m14.5 6-6 6 6 6"/>'),
-  down: svg('<path d="m6 9.5 6 6 6-6"/>'),
-  plus: svg('<path d="M12 5v14M5 12h14"/>'),
-  minus: svg('<path d="M5 12h14"/>'),
-  swap: svg('<path d="M7 7h12l-3.5-3.5M17 17H5l3.5 3.5"/>'),
-  lapis: svg('<path d="M4 20h4.5L19 9.5 14.5 5 4 15.5z"/><path d="m12.5 7 4.5 4.5"/>'),
-  lixo: svg('<path d="M4.5 7h15M10 11v6M14 11v6"/><path d="M6.5 7l.8 12.2A1.5 1.5 0 0 0 8.8 20.5h6.4a1.5 1.5 0 0 0 1.5-1.3L17.5 7M9.5 7V4.5h5V7"/>'),
-  link: svg('<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>'),
-  baixar: svg('<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/>'),
-  subir: svg('<path d="M12 15.5V4.5M7.5 9 12 4.5 16.5 9M5 19.5h14"/>'),
-  externo: svg('<path d="M14 4.5h5.5V10M19.5 4.5 11 13M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>'),
-  copiar: svg('<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/>'),
-  celular: svg('<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/>'),
-  arquivo: svg('<path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/>'),
-  sol: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>'),
-  lua: svg('<path d="M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.6 6.6 0 0 0 9.7 9.7z"/>'),
-  busca: svg('<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>'),
-  alerta: svg('<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4.5M12 17.2v.1"/>'),
-  menos: svg('<path d="M6 12h12"/>'),
-  livro: svg('<path d="M12 6.5C10 5 7.5 4.5 4 4.7v13.6c3.5-.2 6 .3 8 1.8 2-1.5 4.5-2 8-1.8V4.7c-3.5-.2-6 .3-8 1.8z"/><path d="M12 6.5v13.6"/>'),
-  filtro: svg('<path d="M4 6h16M7 12h10M10 18h4"/>'),
-  mais3: '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.7" fill="currentColor" stroke="none"/></svg>'
+  hoje: svgI('<path d="M4 11.5 12 5l8 6.500V19a1 1 0 0 1-1 1h-4.500v-5.500h-5V20H5a1 1 0 0 1-1-1z"/>'),
+  plano: svgI('<path d="M7 3.500h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="M9 8.500h6M9 12.500h6M9 16.500h3"/>'),
+  evolucao: svgI('<path d="M4 19.500h16"/><path d="m5 15 4.500-4.500 3.500 3 6-7"/><path d="M15 6.500h4v4"/>'),
+  play: svgI('<path d="M8.500 5.500v13l10-6.500z"/>'),
+  pausa: svgI('<path d="M9 5.500v13M15 5.500v13"/>'),
+  mais: svgI('<path d="M12 5v14M5 12h14"/>'),
+  seta: svgI('<path d="m9.500 6 6 6-6 6"/>', 'seta'),
+  volta: svgI('<path d="m14.500 6-6 6 6 6"/>'),
+  check: svgI('<path d="m5 12.500 4.500 4.500L19 7.500"/>'),
+  x: svgI('<path d="M6 6l12 12M18 6 6 18"/>'),
+  relogio: svgI('<circle cx="12" cy="12.500" r="8"/><path d="M12 8v4.500l3 2"/>'),
+  alvo: svgI('<circle cx="12" cy="12" r="8.500"/><circle cx="12" cy="12" r="4.500"/><path d="M12 12h.01"/>'),
+  revisar: svgI('<path d="M19.500 12a7.500 7.500 0 1 1-2.400-5.500"/><path d="M19.500 4.500v4h-4"/>'),
+  questoes: svgI('<path d="M9.500 9.300a2.700 2.700 0 1 1 3.800 2.500c-.8.4-1.300 1-1.300 1.900"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="9"/>'),
+  livro: svgI('<path d="M5 5.500c2.300-.8 4.700-.6 7 .6 2.300-1.200 4.700-1.400 7-.6v12.500c-2.300-.8-4.700-.6-7 .6-2.300-1.200-4.700-1.400-7-.6zM12 6.100v12.500"/>'),
+  lei: svgI('<path d="M12 4v16M7 20h10M5.500 7.500h13"/><path d="m5.500 7.500-2.500 6a3 3 0 0 0 5 0zM18.500 7.500l-2.500 6a3 3 0 0 0 5 0z"/>'),
+  agenda: svgI('<rect x="4" y="5.500" width="16" height="14.500" rx="2"/><path d="M8 3.500v4M16 3.500v4M4 10.500h16"/>'),
+  medalha: svgI('<circle cx="12" cy="14.500" r="5.500"/><path d="M8.500 3.500 12 9l3.500-5.500M9.200 10 6.500 3.500M14.800 10l2.700-6.500"/>'),
+  chama: svgI('<path d="M12 21a6.500 6.500 0 0 1-6.500-6.500c0-3 1.800-4.600 3-6.500.4 1.600 1.300 2.500 2.300 2.900C10.600 7.500 12 5 14 3c.3 2.600 1.600 4.200 2.800 5.800 1 1.400 1.700 3 1.700 5.700A6.500 6.500 0 0 1 12 21z"/>'),
+  concurso: svgI('<path d="M4 20h16M6 20V9M10 20V9M14 20V9M18 20V9M3.500 9 12 4l8.500 5z"/>'),
+  disciplinas: svgI('<path d="M5 6.500h14M5 12h14M5 17.500h9"/>'),
+  simulado: svgI('<path d="M7 3.500h10a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-13a2 2 0 0 1 2-2z"/><path d="m9 9 1.300 1.300L13 7.700M9 15l1.300 1.300 2.700-2.600M15 9.500h.01M15 15.500h.01"/>'),
+  lixo: svgI('<path d="M5 7h14M10 7V4.500h4V7M7 7l.8 12a1 1 0 0 0 1 1h6.400a1 1 0 0 0 1-1L17 7M10 11v5M14 11v5"/>'),
+  lapis: svgI('<path d="m5 19 1-4L16.500 4.500a2 2 0 0 1 3 3L9 18z"/><path d="m14.500 6.500 3 3"/>'),
+  sobe: svgI('<path d="m6 14.500 6-6 6 6"/>'),
+  desce: svgI('<path d="m6 9.500 6 6 6-6"/>'),
+  ajustes: svgI('<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'),
+  estrela: svgI('<path d="m12 3.500 2.600 5.400 5.900.8-4.300 4.100 1 5.900L12 16.900l-5.200 2.800 1-5.900-4.300-4.100 5.900-.8z"/>'),
+  escudo: svgI('<path d="M12 3.500 5 6v5.500c0 4.300 2.900 7.300 7 9 4.100-1.700 7-4.700 7-9V6z"/>'),
+  raio: svgI('<path d="M13 3 5.500 13.500H11L10 21l8-11h-5.500z"/>'),
+  fora: svgI('<path d="M14 5h5v5M19 5l-8 8M11 6H6.500a1.500 1.500 0 0 0-1.500 1.500v10A1.500 1.500 0 0 0 6.500 19h10a1.500 1.500 0 0 0 1.500-1.500V13"/>'),
+  marca: svgI('<path d="m14.500 4.500 5 5L11 18H6v-5z"/><path d="M4 21h9"/>'),
 };
-const MARCA = `<svg viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="11" fill="#2742D3"/><rect x="11" y="11.5" width="26" height="4.4" rx="2.2" fill="#fff" fill-opacity=".62"/><path d="M8 21.8 40 19.6 40.6 30.2 8.6 32.2z" fill="#DFF65C"/><rect x="12" y="23.6" width="24" height="4.6" rx="2.3" fill="#131A3A"/><rect x="11" y="34.5" width="17" height="4.4" rx="2.2" fill="#fff" fill-opacity=".62"/></svg>`;
 
-/* ================= dados ================= */
-const KEY = "estudofacil.";
+/* ---------- armazenamento ---------- */
+let semSalvar = false; // durante o guia, a demonstração mexe em tudo e nada é gravado
 const LS = {
-  get(k, d) { try { const v = localStorage.getItem(KEY + k); return v ? JSON.parse(v) : d; } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(KEY + k, JSON.stringify(v)); return true; } catch { return false; } }
+  get(k, def) { try { const v = localStorage.getItem(KEY + k); return v ? JSON.parse(v) : def; } catch { return def; } },
+  set(k, v) { if (semSalvar) return true; try { localStorage.setItem(KEY + k, JSON.stringify(v)); return true; } catch { return false; } },
+  del(k) { try { localStorage.removeItem(KEY + k); } catch {} },
 };
-const COLLS = ["concursos", "materias", "topicos", "sessoes", "eventos", "simulados"];
-const CFG_PADRAO = { hDia: 3, qDia: 20, dias: [1, 2, 3, 4, 5, 6], ciclo: [1, 7, 30], moverFolga: true, teoriaAte: "", novosDia: 0, metaMin: 50, pronto: false };
-const STATUS = [["estudando", "Estudando"], ["espera", "Em espera"], ["encerrado", "Encerrado"]];
-const statusTxt = s => (STATUS.find(x => x[0] === s) || STATUS[0])[1];
-/* Modelo:
-   materias = disciplinas, valem para todos os editais { id, nome }
-   topicos = assuntos de cada disciplina { id, m, nome, ord, teoria, tc, ult, rev, ur, prox, nota }; o estudo de um assunto vale em todos os editais que o cobram
-   concursos = editais { id, orgao, cargo, sigla, banca, ..., status, datas[], prova { minPct, naoZerar, grupos[{ id, nome }] },
-     disc: [{ m, g (área da prova), q (questões), valor (pontos por questão), t: [assuntos cobrados] }] } */
-function novoTopico(id, m, nome, ord) { return { id, m, nome, ord, teoria: false, tc: "", ult: "", rev: 0, ur: "", prox: "", nota: "" }; }
-const provaVazia = () => ({ minPct: 0, naoZerar: false, grupos: [] });
-function bancoNovo() {
-  return { v: 2, cfg: { ...CFG_PADRAO }, concursos: [], materias: [], topicos: [], sessoes: [], eventos: [], simulados: [], ativa: null };
-}
-/* dados da versão 1.0 (um concurso por vez, matérias presas ao concurso) para o modelo geral */
-function migrarV1(d) {
-  const ORD = { gerais: 0, inst: 1, esp: 2, geral: 3 };
-  const tops = Array.isArray(d.topicos) ? d.topicos : [], mats = Array.isArray(d.materias) ? d.materias : [];
-  const foco = d.cfg && d.cfg.concurso;
-  const out = { v: 2, cfg: { ...(d.cfg || {}) }, concursos: [], materias: [], topicos: tops, sessoes: d.sessoes || [], eventos: d.eventos || [], simulados: d.simulados || [], ativa: d.ativa || null };
-  delete out.cfg.concurso;
-  for (const c0 of Array.isArray(d.concursos) ? d.concursos : []) {
-    const ms = mats.filter(m => m.c === c0.id && !m.arq).sort((a, b) => (ORD[a.grupo] ?? 9) - (ORD[b.grupo] ?? 9) || (a.ord || 0) - (b.ord || 0));
-    const disc = ms.map(m => ({ m: m.id, g: m.grupo && m.grupo !== "geral" ? m.grupo : "", q: m.q || 0, valor: m.valor ?? 1,
-      t: tops.filter(t => t.m === m.id).sort((a, b) => a.ord - b.ord).map(t => t.id), ...(m.perfil ? { perfil: m.perfil } : {}) }));
-    const c = { ...c0, disc, status: !foco || c0.id === foco ? "estudando" : "espera" };
-    delete c.ativo;
-    c.prova = c0.prova && c0.prova.grupos ? { minPct: c0.prova.minPct || 0, naoZerar: !!c0.prova.naoZerar, grupos: c0.prova.grupos.map(g => ({ id: g.id, nome: g.nome })) } : provaVazia();
-    if (c0.id === "abdi-2026") c.modelo = c0.id;
-    out.concursos.push(c);
-  }
-  for (const m of mats) out.materias.push({ id: m.id, nome: m.nome });
-  return out;
-}
-function arrumarBanco(d) {
-  if (d && typeof d === "object" && d.v === 1) d = migrarV1(d);
-  if (!d || typeof d !== "object" || d.v !== 2) d = bancoNovo();
-  for (const c of COLLS) if (!Array.isArray(d[c])) d[c] = [];
-  d.cfg = { ...CFG_PADRAO, ...(d.cfg || {}) };
-  delete d.cfg.concurso;
-  if (!Array.isArray(d.cfg.dias) || !d.cfg.dias.length) d.cfg.dias = CFG_PADRAO.dias.slice();
-  if (!Array.isArray(d.cfg.ciclo) || !d.cfg.ciclo.length) d.cfg.ciclo = CFG_PADRAO.ciclo.slice();
-  for (const c of d.concursos) {
-    if (!Array.isArray(c.disc)) c.disc = [];
-    if (!Array.isArray(c.datas)) c.datas = [];
-    if (!STATUS.some(s => s[0] === c.status)) c.status = "estudando";
-    if (!c.prova || typeof c.prova !== "object") c.prova = provaVazia();
-    if (!Array.isArray(c.prova.grupos)) c.prova.grupos = [];
-    for (const l of c.disc) if (!Array.isArray(l.t)) l.t = [];
-  }
-  if (d.ativa && (!d.ativa.itens || !d.ativa.itens.length)) d.ativa = null;
-  return d;
-}
 
-/* nome de assunto sem a numeração do edital ("2.1 Crase." vira "Crase") e chave para reconhecer o mesmo assunto em editais diferentes */
-const limparAssunto = s => String(s || "").replace(/\s+/g, " ").trim().replace(/^(?:\d{1,2}(?:\.\d{1,2})*\s*[.)\-–:]?|[a-z][.)\-–])\s+(?=\S)/i, "").replace(/[\s.;,]+$/, "").trim();
-const chave = s => fold(limparAssunto(s)).replace(/[^\p{L}\p{N}]+/gu, " ").trim();
-/* junta disciplinas e assuntos às que já existem (mesmo id ou mesmo nome) e devolve os vínculos com um edital */
-function incorporar(lista) {
-  const links = [];
-  for (const x of lista) {
-    const nome = String(x.nome || "").replace(/\s+/g, " ").trim(); if (!nome) continue;
-    let m = (x.id && DB.materias.find(y => y.id === x.id)) || DB.materias.find(y => chave(y.nome) === chave(nome));
-    if (!m) { m = { id: x.id || uid(), nome }; DB.materias.push(m); }
-    const doM = DB.topicos.filter(t => t.m === m.id);
-    let ord = Math.max(-1, ...doM.map(t => t.ord)) + 1;
-    const t = [];
-    for (const tp of x.tops || []) {
-      const tn = limparAssunto(tp.nome); if (!tn) continue;
-      let top = (tp.id && doM.find(y => y.id === tp.id)) || doM.find(y => chave(y.nome) === chave(tn));
-      if (!top) { top = novoTopico(tp.id && !DB.topicos.some(y => y.id === tp.id) ? tp.id : uid(), m.id, tn, ord++); DB.topicos.push(top); doM.push(top); }
-      if (!t.includes(top.id)) t.push(top.id);
-    }
-    const prev = links.find(l => l.m === m.id);
-    if (prev) { for (const id of t) if (!prev.t.includes(id)) prev.t.push(id); }
-    else links.push({ m: m.id, g: x.g || "", q: x.q || 0, valor: x.valor ?? 1, t, ...(x.perfil ? { perfil: x.perfil } : {}) });
-  }
-  return links;
-}
-/* acrescenta vínculos a um edital (a mesma disciplina não se repete) */
-function vincular(c, links) {
-  for (const l of links) {
-    const ex = c.disc.find(y => y.m === l.m);
-    if (ex) { for (const id of l.t) if (!ex.t.includes(id)) ex.t.push(id); }
-    else c.disc.push(l);
-  }
-}
-/* tira do app as disciplinas que não estão em nenhum edital e nunca foram estudadas */
-function limparOrfas(ids) {
-  const comEstudo = new Set(DB.sessoes.flatMap(s => (s.itens || []).map(i => i.m)));
-  if (DB.ativa) for (const i of DB.ativa.itens) comEstudo.add(i.m);
-  for (const id of ids) {
-    if (DB.concursos.some(c => c.disc.some(l => l.m === id))) continue;
-    if (comEstudo.has(id) || DB.topicos.some(t => t.m === id && (t.teoria || t.ult || t.nota))) continue;
-    DB.materias = DB.materias.filter(m => m.id !== id); DB.topicos = DB.topicos.filter(t => t.m !== id);
-  }
-}
+/* ---------- modelo ----------
+   Tudo num objeto só (estudofacil.db, formato 3). Cada lista tem registros com id; a sincronização junta registro a registro.
+   concursos   editais: situação, datas, prova e os vínculos `disc` (disciplina, área, itens e assuntos cobrados)
+   materias    disciplinas (globais)            topicos    assuntos (globais): o que se estuda vale em todos os editais
+   sessoes     sessões de estudo                revisoes   revisões marcadas para cada assunto
+   dias        dias em que a meta foi batida    marcos     medalhas vistas e marcas do app (guia, abertura)
+   simulados   resultados de simulados          eventos    compromissos da agenda */
+const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'dias', 'marcos', 'simulados', 'eventos'];
+const CFG_PADRAO = { nome: '', metaMin: 60, dias: [0, 1, 2, 3, 4, 5, 6], bloco: 30, metaQ: 15, revisoes: [1, 7, 30], som: true, vibra: true, jogo: true };
+const CORES = ['#2742D3', '#0E8A7D', '#C2410C', '#7C3AED', '#B4235A', '#0369A1', '#4D7C0F', '#B45309', '#BE185D', '#0F766E', '#6D28D9', '#9A3412'];
+const TIPOS = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão', lei: 'Lei seca' };
+const DOMINIOS = ['Novo', 'Começado', 'Estudado', 'Revisado', 'Dominado'];
 
-/* editais prontos da biblioteca (editais.js). Cada um tem as disciplinas comuns e, se houver, os específicos de cada perfil.
-   Os ids dos assuntos são fixos para que dois aparelhos sincronizados reconheçam os mesmos tópicos. */
-const BIBLIOTECA = [EDITAL_ABDI, EDITAL_ANPD];
-const modeloDe = id => BIBLIOTECA.find(E => E.id === id) || null;
-const valorGrupo = (E, g) => ((E.prova.grupos.find(x => x.id === g) || {}).valor) ?? 1;
-function listaModelo(E, pid, soPerfil) {
-  const out = [];
-  if (!soPerfil) E.materias.forEach(x => out.push({ id: x.id, nome: x.nome, g: x.grupo, q: x.q, valor: valorGrupo(E, x.grupo), tops: x.topicos.map((n, j) => ({ id: `${x.id}-${j + 1}`, nome: n })) }));
-  const esp = (E.especificos || {})[pid] || [], tot = sum(esp.map(x => x.topicos.length)) || 1;
-  const gEsp = E.prova.grupos.find(g => g.id === "esp") || { q: 0, valor: 1 };
-  esp.forEach((x, i) => {
-    const id = `${E.base}-${pid}-${i + 1}`;
-    out.push({ id, nome: x.nome, g: "esp", q: gEsp.q * x.topicos.length / tot, valor: gEsp.valor, perfil: pid, tops: x.topicos.map((n, j) => ({ id: `${id}-${j + 1}`, nome: n })) });
+function bancoVazio() { const o = { v: 3, cfg: { ...CFG_PADRAO }, ativa: null }; for (const c of COLLS) o[c] = []; return o; }
+function arrumarBanco(o) {
+  if (!o || o.v !== 3) return null;
+  const b = bancoVazio();
+  b.cfg = { ...CFG_PADRAO, ...(o.cfg || {}) };
+  if (!Array.isArray(b.cfg.dias)) b.cfg.dias = [...CFG_PADRAO.dias];
+  if (!Array.isArray(b.cfg.revisoes) || !b.cfg.revisoes.length) b.cfg.revisoes = [...CFG_PADRAO.revisoes];
+  b.cfg.metaMin = clamp(+b.cfg.metaMin || 60, 15, 600); b.cfg.bloco = clamp(+b.cfg.bloco || 30, 15, 120); b.cfg.metaQ = clamp(+b.cfg.metaQ || 15, 0, 300);
+  for (const c of COLLS) b[c] = Array.isArray(o[c]) ? o[c].filter(r => r && r.id != null) : [];
+  b.ativa = o.ativa && typeof o.ativa === 'object' ? o.ativa : null;
+  return b;
+}
+/* instala um edital da biblioteca: cria as disciplinas e os assuntos que ainda não existem e o concurso com os vínculos */
+function instalarEdital(db, ed, { perfil = '' } = {}) {
+  if (db.concursos.some(c => c.id === ed.id)) return db.concursos.find(c => c.id === ed.id);
+  const lista = ed.materias.map(m => ({ ...m }));
+  const esp = perfil && ed.especificos && ed.especificos[perfil];
+  if (esp) {
+    const nTop = soma(esp, m => m.topicos.length) || 1, qEsp = (ed.prova.grupos.find(g => g.id === 'esp') || {}).q || 0;
+    esp.forEach((m, i) => lista.push({ id: `${ed.base}-${perfil}-${i + 1}`, grupo: 'esp', nome: m.nome, q: Math.round(qEsp * m.topicos.length / nTop * 10) / 10, topicos: m.topicos }));
+  }
+  const disc = [];
+  lista.forEach((m, k) => {
+    let mat = db.materias.find(x => x.id === m.id) || db.materias.find(x => norm(x.nome) === norm(m.nome));
+    if (!mat) { mat = { id: m.id, nome: m.nome, cor: CORES[(m.cor ?? db.materias.length) % CORES.length], dica: m.dica || '' }; db.materias.push(mat); }
+    const ids = m.topicos.map((nome, i) => {
+      let t = db.topicos.find(x => x.m === mat.id && norm(x.nome) === norm(nome));
+      if (!t) { t = { id: `${m.id}-${String(i + 1).padStart(2, '0')}`, m: mat.id, nome, ordem: db.topicos.filter(x => x.m === mat.id).length, teoria: 0 }; db.topicos.push(t); }
+      return t.id;
+    });
+    disc.push({ m: mat.id, grupo: m.grupo || '', q: m.q || 0, f1: m.f1 || 1, topicos: ids });
+    void k;
   });
-  return out;
-}
-function adicionarModelo(E, pid) {
-  const ja = DB.concursos.find(c => c.id === E.id);
-  if (ja) return ja;
-  const c = { id: E.id, modelo: E.id, sigla: E.sigla, orgao: E.orgao, cargo: E.cargo, banca: E.banca, numero: E.numero, site: E.site, email: E.email,
-    remuneracao: E.remuneracao, taxa: E.taxa, lotacao: E.lotacao, regime: E.regime, validade: E.validade, vagas: E.vagas, dataProva: E.dataProva,
-    horaProva: E.horaProva, local: E.local, provaNotas: clone(E.provaNotas || []), plano: clone(E.plano || []), etapas: clone(E.etapas || []), desempate: E.desempate,
-    previsto: !!E.previsto, notaPesos: E.notaPesos || "",
-    prova: { minPct: E.prova.minPct, naoZerar: E.prova.naoZerar, grupos: E.prova.grupos.map(g => ({ id: g.id, nome: g.nome })) },
-    perfis: clone(E.perfis || []), perfil: pid || "", datas: clone(E.datas), status: "estudando", disc: [], criado: today() };
-  c.disc = incorporar(listaModelo(E, pid));
-  DB.concursos.push(c);
+  const c = { id: ed.id, base: ed.base, sigla: ed.sigla, orgao: ed.orgao, cargo: ed.cargo, banca: ed.banca || '', perfil,
+    previsto: !!ed.previsto, situacao: 'ativo', dataProva: ed.dataProva || '', dataEdital: ed.dataEdital || '',
+    prova: JSON.parse(JSON.stringify(ed.prova || { minPct: 50, grupos: [] })), datas: (ed.datas || []).map(d => ({ ...d })), disc, em: agora() };
+  db.concursos.push(c);
   return c;
 }
-/* troca o perfil de um edital da biblioteca: os específicos antigos saem do edital; os que já têm estudo continuam em Disciplinas */
-function trocarPerfil(c, pid) {
-  const E = modeloDe(c.modelo); if (!E) return;
-  const velhos = c.disc.filter(l => l.perfil && l.perfil !== pid).map(l => l.m);
-  c.disc = c.disc.filter(l => !l.perfil || l.perfil === pid);
-  vincular(c, incorporar(listaModelo(E, pid, true)));
-  c.perfil = pid;
-  limparOrfas(velhos);
-  commit();
-  toast(`Perfil alterado para ${((c.perfis || []).find(p => p.id === pid) || {}).nome}.`);
-}
-let DB = (() => { const bruto = LS.get("db", null), d = arrumarBanco(bruto); if (bruto && bruto.v === 1) LS.set("db", d); return d; })();
-let VER = 1;
-/* padrão do Projeto Integrador: avaliação, sobre e privacidade, tema e sincronização vêm do Kit Fácil */
-/* ================= guia do app em 2 níveis (Código, Arts. 77 e 78) =================
-   Simplificado: poucos passos, só com destaque. Completo: o app faz cada ação na tela, ao vivo, numa demonstração que
-   não salva nada (preparar troca os dados por uma cópia e fim recarrega os dados guardados no aparelho). */
-const irTela = async v => { if (route().v !== v || route().sub) go(v); await new Promise(r => setTimeout(r, 120)); };
-const pronto = () => !!(DB.concursos.length || DB.materias.length);
-let GUIA_DEMO = false;
-const navVisivel = v => $$(`#rail-nav [data-go="${v}"], #nav [data-go="${v}"]`).find(el => el.getClientRects().length && !el.closest(".kf-nav-oculto") && !el.classList.contains("kf-nav-oculto"));
-const NAV_SEL = v => `#rail-nav [data-go="${v}"], #nav [data-go="${v}"], #nav [data-kf-nav-mais]`;
-/* troca de tela tocando na barra, como a pessoa faria; no celular, Disciplinas, Desempenho e Ajustes ficam no "Mais" */
-async function tocarNaBarra(m, v, rotulo) {
-  if (v === "estudar") { await m.tocar($$("#rail-nav [data-act=nav-estudar], #nav [data-act=nav-estudar]").find(el => el.getClientRects().length)); return m.esperar(400); }
-  if (v === "ajustes") { const aj = $$("#trilho-ajustes, #nav-ajustes").find(el => el.getClientRects().length && !el.classList.contains("kf-nav-oculto")); if (aj) { await m.tocar(aj); return m.esperar(400); } }
-  else { const el = navVisivel(v); if (el) { await m.tocar(el); return m.esperar(400); } }
-  await m.tocar("#nav [data-kf-nav-mais]"); await m.esperar(500);
-  await m.tocar($$(".kf-mais-lista [data-kf-mais-i]").find(b => b.textContent.trim() === rotulo));
-  await m.esperar(400);
-}
-const fecharJanela = async m => { const x = $$(".kf-ov [data-kf-fechar]").find(el => el.getClientRects().length); if (x) await m.tocar(x); else closeSheet(true); await m.esperar(300); };
-const GUIA_PASSOS_SIMPLES = [
-  { t: "Contagem para a prova", sel: ".contagem", ir: () => irTela("hoje"), d: "Quantos dias faltam para a prova e quanto da teoria já está concluído." },
-  { t: "O que estudar agora", sel: "#main section.agora", ir: () => irTela("hoje"), d: "O app escolhe o próximo assunto pelo peso na prova e pelas revisões vencidas. Toque em Estudar agora para abrir o cronômetro." },
-  { t: "Plano de hoje", sel: ".bloco.plano", ir: () => irTela("hoje"), d: "A meta de tempo, as revisões do dia e os assuntos novos no ritmo certo para terminar a teoria antes da prova." },
-  { t: "Editais", sel: "#main .ed-card", alt: "#main", ir: () => irTela("editais"), d: "Seus concursos: prontos da biblioteca, lidos do PDF ou digitados. Em cada um, o peso das disciplinas e a nota mínima." },
-  { t: "Estudar", sel: "#main details.mat", alt: "#main", ir: () => irTela("estudar"), d: "Todas as disciplinas e assuntos. Toque num assunto para estudar com o cronômetro em tela cheia." },
-].map(p => ({ ...p, niveis: [1], se: pronto }));
-const GUIA_PASSOS_COMPLETO = [
-  { t: "Tela Hoje", sel: NAV_SEL("hoje"), alt: "#main", ir: () => irTela("hoje"), fim: ".contagem", d: "Tudo começa aqui: os dias até a prova e quanto da teoria já está concluído.",
-    acao: async m => { await tocarNaBarra(m, "hoje", "Hoje"); m.destacar(".contagem"); await m.esperar(1400); } },
-  { t: "Adicionar um edital", sel: NAV_SEL("editais"), alt: "#main", fim: ".kf-ov .opcoes", d: "Em Editais, o botão Adicionar edital traz os editais prontos da biblioteca, a leitura do PDF e o cadastro à mão.",
-    acao: async m => { await tocarNaBarra(m, "editais", "Editais"); await m.tocar('[data-act="conc-novo"]'); await m.esperar(500); m.destacar(".kf-ov .opcoes"); await m.esperar(1600); await fecharJanela(m); } },
-  { t: "O peso de cada disciplina", sel: "#main .ed-card", alt: "#main", fim: "#main .pesos", d: "Dentro do edital, a guia Prova mostra quanto vale cada parte. O plano dá mais tempo ao que vale mais.",
-    acao: async m => { await m.tocar("#main .ed-card"); await m.esperar(400); await m.tocar('#main [data-go$="/prova"]'); await m.esperar(400); m.destacar("#main .pesos"); await m.esperar(1400); } },
-  { t: "Disciplinas e assuntos", sel: "#rail-nav [data-act=nav-estudar], #nav [data-act=nav-estudar]", alt: "#main", fim: "#main details.mat", d: "Estudar lista todas as disciplinas. Toque numa para ver os assuntos e o que já foi estudado.",
-    acao: async m => { await tocarNaBarra(m, "estudar", "Estudar"); await m.tocar("#main details.mat summary"); await m.esperar(800); } },
-  { t: "Estudar agora", sel: NAV_SEL("hoje"), alt: "#main", fim: "#foco .relogio", d: "De volta a Hoje, Estudar agora abre o cronômetro em tela cheia no assunto certo.",
-    acao: async m => { await tocarNaBarra(m, "hoje", "Hoje"); await m.tocar('#main section.agora [data-act="estudar"]'); await m.esperar(600); } },
-  { t: "Acertos e erros", sel: "#foco .foco-q", alt: "#foco", fim: '#rail-nav [data-act=nav-estudar], #nav [data-act=nav-estudar]', d: "Toque em Acertei ou Errei a cada questão. Minimize para usar o app; o tempo continua na barra.",
-    acao: async m => { await m.tocar('#foco [data-act="q"][data-k="a"][data-d="1"]'); await m.tocar('#foco [data-act="q"][data-k="a"][data-d="1"]'); await m.tocar('#foco [data-act="q"][data-k="e"][data-d="1"]'); await m.tocar('#foco [data-act="foco-min"]'); await m.esperar(400); } },
-  { t: "Plano e desempenho", sel: ".bloco.plano", alt: "#main", fim: "#main", d: "O plano traz a meta de tempo e as revisões do dia. O link do fim abre o Desempenho da semana.",
-    acao: async m => { m.destacar(".pl-meta"); await m.esperar(1300); await m.tocar(".pl-mais button"); await m.esperar(600); } },
-  { t: "Agenda", sel: NAV_SEL("agenda"), alt: "#main", fim: "#main", d: "O calendário com os dias de estudo, as revisões e as datas dos concursos.",
-    acao: async m => { await tocarNaBarra(m, "agenda", "Agenda"); await m.esperar(800); } },
-  { t: "Disciplinas", sel: NAV_SEL("disciplinas"), alt: "#main", fim: "#main .ed-card", d: "As disciplinas valem para todos os editais: o que você estuda num assunto conta em todos os que o cobram.",
-    acao: async m => { await tocarNaBarra(m, "disciplinas", "Disciplinas"); await m.esperar(800); } },
-  { t: "Rotina e metas", sel: "#trilho-ajustes, #nav-ajustes, #nav [data-kf-nav-mais]", alt: "#main", fim: "#main", d: "Em Ajustes, Rotina e metas muda os dias e as horas de estudo. Revisões muda o ciclo de 1, 7 e 30 dias.",
-    acao: async m => { await tocarNaBarra(m, "ajustes", "Ajustes"); await m.esperar(800); } },
-].map(p => ({ ...p, niveis: [2] }));
-const GUIA = [...GUIA_PASSOS_SIMPLES, ...GUIA_PASSOS_COMPLETO];
-/* demonstração do guia Completo: usa uma cópia dos dados (ou o edital da ANPD, se o app estiver vazio) e não grava nada */
-function guiaPreparar(nivel) {
-  if (nivel !== 2) { if (GUIA_DEMO) { GUIA_DEMO = false; DB = arrumarBanco(LS.get("db", null)); snapAll(); VER++; render(); } return; }
-  if (GUIA_DEMO) return;
-  GUIA_DEMO = true;
-  DB = arrumarBanco(clone(DB)); DB.ativa = null;
-  if (!DB.concursos.length) { adicionarModelo(EDITAL_ANPD, ""); }
-  DB.cfg.pronto = true; VER++; render();
-}
-function guiaFim() {
-  if (!GUIA_DEMO) return;
-  GUIA_DEMO = false;
-  UI.focoAberto = false; liberarWakeLock(); closeSheet(true);
-  DB = arrumarBanco(LS.get("db", null)); snapAll(); VER++;
-  go("hoje", true);
-}
+const editalDaBiblioteca = c => (typeof BIBLIOTECA !== 'undefined' ? BIBLIOTECA : []).find(e => e.id === c.id) || null;
 
-KitFacil.iniciar({
-  app: "estudo-facil", nome: "Estudo Fácil", versao: VERSAO, icone: "icons/icon-192.png",
-  resumo: "Controle de estudos para concursos: editais, disciplinas, plano do dia, cronômetro, revisões e simulados.",
-  tela: () => route().v, exemploDados: "os editais, as sessões de estudo e as anotações",
-  abrirAjustes: secao => {
-    if (route().v !== "ajustes") return go("ajustes");
-    if (secao) return;
-    // a engrenagem de novo fecha os Ajustes (tirando também a guia aberta, no celular)
-    const st = history.state || {};
-    if ((st.d || 0) > 0) history.go(st.kfAjPush ? -2 : -1); else go("hoje", true);
-  },
-  emAjustes: () => route().v === "ajustes",
-  novidades: [{ versao: "0.7.1", itens: ["A janela de Avaliação e feedback ficou mais clara: cada opção é uma linha, com seta.", "Janelas que só precisam ser fechadas não têm mais o botão Fechar: o X fecha."] }, { versao: "0.7.0", itens: ["Puxe a janela para baixo pela barrinha do alto: ela fecha, ou volta se você soltar antes.", "Com o teclado aberto, os botões do pé da janela não sobem mais para cima dele.", "Os botões de excluir, remover e apagar ficaram vermelhos e cheios, também no modo escuro, e mais fáceis de ler.", "Campo que falta preencher fica marcado em vermelho, sem abrir o teclado sozinho."] }, { versao: "0.6.0", itens: ["O presente no alto da tela agora é um ícone de traço, da cor da nuvem e do balão. Tocar nele abre a janela com o presente em 3D, que gira com o dedo.", "Tudo o que abre e fecha tem o mesmo ritmo, mais calmo: janelas, listas, calendário, avisos e troca de tela.", "As janelas fecham descendo pelo pé da tela, do mesmo jeito que abrem, e nenhuma abre com o teclado: ele só sobe quando você toca no campo."] }, { versao: "0.5.0", itens: ["O ícone de apoio no alto da tela agora é um presente, que gira uma vez. Tocar nele abre o Pix para mandar um presente ao criador. É opcional."] }, { versao: "0.4.0", itens: ["Guia completo ao vivo: o app mostra cada ação na tela, com um dedo que toca nos botões, numa demonstração que não salva nada.", "O plano começa pelas disciplinas que mais valem na prova.", "Com o guia aberto, o cronômetro em tela cheia não cobre mais o cartão do guia."] }, { versao: "0.3.0", itens: ["Tela Hoje mais simples: o que estudar agora e o plano do dia, com a meta de tempo no próprio plano. As próximas datas ficam na Agenda.", "Novo na biblioteca: o edital previsto da ANPD (Especialista em Regulação de Proteção de Dados), com o conteúdo provável e um plano de estudos em três fases.", "Guia do app em dois níveis: Simplificado e Completo."] }, { versao: "0.2.1", itens: ["O aviso com Desfazer não some enquanto você está com o dedo, o mouse ou o teclado nele."] }, { versao: "0.2.0", itens: ["Com o teclado aberto, a janela fica acima dele, e o campo em que você digita não fica escondido.", "Quando uma janela muda de tamanho ou de lugar, ela desliza até a nova posição, em vez de pular.", "Os avisos rápidos não cobrem mais os botões de uma janela aberta.", "Nas janelas, a explicação curta vem logo abaixo do título.", "No guia, o dedo não cobre o que você está digitando, e o cartão do guia não cobre a parte que você está conhecendo."] }, { versao: "0.1.0", itens: ["Recomeço: o app está em fase de testes, e a numeração das versões recomeçou em 0.1.0."] }, { versao: "2.15.2", itens: ["Avaliações protegidas contra robôs pelo App Check do Firebase, com o reCAPTCHA do Google."] }, { versao: "2.15.1", itens: ["Por dentro: depois de uma atualização, o app nunca mistura arquivos novos com antigos, e as bibliotecas de fora são sempre conferidas."] }, { versao: "2.15.0", itens: ["Avaliações mais protegidas: no máximo uma mensagem por minuto e dez por dia em cada aparelho, contra envios automáticos.", "Sobre o aplicativo mostra o endereço oficial e o final da chave Pix do apoio, para você reconhecer cópias falsas.", "Por dentro: o app só carrega código dos endereços conhecidos e confere a impressão digital das bibliotecas de fora."] }, { versao: "2.14.0", itens: ["Sem tela inicial separada: o app abre direto na tela Hoje, com o primeiro passo e a rotina padrão (Ajustar a rotina muda os dias e as horas)."] }, { versao: "2.13.3", itens: ["No celular, o destaque do guia acompanha a tela sem atraso."] }, { versao: "2.13.1", itens: ["O guia do app não cobre mais o que está destacado, nem em telas baixas. Quem acabou de começar não recebe mais a janela de Novidades logo depois do primeiro cadastro."] }, { versao: "2.13.0", itens: ["Apresentação curta ao abrir o app e guia em 3 níveis: essencial, exploração e completo. Dá para desligar a apresentação em Ajustes."] }, { versao: "2.12.0", itens: ["Botões, escolhas e as guias do edital com o mesmo jeito dos outros apps da família."] }, { versao: "2.11.0", itens: ["Novo em Ajustes › Privacidade e segurança: Restaurar padrões de fábrica. O app volta como novo neste aparelho, sem dados nem ajustes."] }, { versao: "2.10.0", itens: ["O horário dos eventos e das sessões agora usa o relógio do app, igual em todo aparelho."] }, { versao: "2.9.0", itens: ["Todas as datas (prova, eventos, simulados, rotina) usam o calendário do app, igual em todo aparelho.", "Movimento suave ao trocar de tela, abrir guias dos Ajustes e fechar janelas e listas."] }, { versao: "2.8.0", itens: ["As listas de escolha (área da prova, assunto, ciclo de revisões e outras) agora são do próprio app, iguais no iPhone, no Android e no computador.", "Disciplinas, Mais informações e Anotações da sessão abrem e fecham com movimento suave, como nos outros apps da família."] }, { versao: "2.7.0", itens: ["Agenda com o botão Novo evento, que já marca o dia escolhido no calendário."] }, { versao: "2.6.0", itens: ["Adicionar edital e Nova disciplina viraram um botão que acompanha a tela no celular; no computador, ficam ao lado do título.", "Títulos das telas e listas vazias no mesmo formato nos três apps.", "Janelas e avisos iguais aos dos outros apps.", "Botões e links maiores, mais fáceis de tocar (no mínimo 44 px)."] }, { versao: "2.5.0", itens: ["Barra de baixo mais limpa: Hoje, Editais, Estudar, Agenda e Mais. Disciplinas, Desempenho e Ajustes ficam em Mais, com os nomes sempre inteiros."] }, { versao: "2.4.0", itens: ["O nome Estudo Fácil voltou a aparecer no alto da tela, como nos outros apps.", "No alto da tela ficam só a nuvem, o chopp e o balão, nessa ordem. Desempenho fica na tela Hoje (Últimos 7 dias → Desempenho) e, no computador, também no menu lateral.", "A janela do chopp ficou mais simples: um só botão, Copiar código Pix."] }, { versao: "2.3.2", itens: ["Avaliações e relatos de problema enviados ao criador agora são apagados depois de 2 anos. Veja em Ajustes, Privacidade e segurança."] }, { versao: "2.3.1", itens: [
-    "O chopp para o criador já está no ar: toque na caneca no alto da tela para ver o QR code e o Pix copia e cola. É opcional.",
-    "Ajustes agora fica na barra de baixo (no computador, no pé do menu lateral).",
-    "No alto da tela ficam o chopp, a nuvem e o balão, iguais nos três apps. Desempenho continua no alto.",
-    "Novo: \"Pague um chopp para o criador!\", com QR code e Pix copia e cola. É opcional, o app continua gratuito.",
-    "Depois de cada atualização, o app mostra uma vez o que mudou. A lista também fica em Ajustes, Sobre o aplicativo.",
-  ] }],
-  // Código do Projeto Fácil: sem tela de primeiro uso; quem chega vê a janela de boas-vindas do Kit e começa na tela Hoje
-  boasVindas: { novo: () => !DB.cfg.pronto && !DB.concursos.length && !DB.materias.length && !DB.sessoes.length },
-  apresentacao: { frase: "Seu estudo para concursos, organizado: o app diz o que estudar a cada dia.", pontos: [
-    ["Cadastre o edital", "Pronto da biblioteca, lido do PDF ou digitado com o conteúdo programático."],
-    ["Estude com o cronômetro", "Marque acertos e erros; as revisões entram sozinhas, em 1, 7 e 30 dias."],
-    ["Acompanhe o progresso", "Contagem para a prova, meta do dia e desempenho."]] },
-  guia: { get passos() { return GUIA; }, niveis: [{ nome: "Simplificado" }, { nome: "Completo" }], preparar: guiaPreparar, fim: guiaFim, semPassos: "Cadastre um edital ou uma disciplina para fazer o guia." },
-  copia: { descricao: "Baixe um arquivo com os editais, as disciplinas, as sessões, as revisões e os ajustes.", baixar: () => KitFacil.copia.baixar({ v: 2, ...dadosSync() }, 2), restaurar: f => restaurarCopiaEstudo(f) },
-  textos: { notificacoes: "O Estudo Fácil não envia notificações para o aparelho. Os avisos aparecem na tela enquanto o app está aberto; no fim do tempo de estudo, o app toca um som e vibra (se você deixar ligado abaixo)." },
-  privacidade: [
-    "Os editais, as disciplinas, as sessões de estudo, as revisões, os simulados e os ajustes ficam guardados neste aparelho.",
-    "Os editais em PDF são lidos aqui no aparelho: o arquivo não é enviado para lugar nenhum.",
-  ],
-});
-const SY = KitFacil.sync.criar({
-  app: "estudo-facil", nome: "Estudo Fácil", chave: KEY + "sync", dados: "os mesmos editais, disciplinas, sessões e revisões",
-  carimbar: () => stampAll(), aplicar: R => applyRemote(R), pacote: () => syncPayload(),
-  mesmo: (out, remote) => canon(out) === canon({ v: remote.v, cfg: remote.cfg, ativa: remote.ativa ?? null, ...Object.fromEntries(COLLS.map(c => [c, remote[c]])), st: remote.st, del: remote.del }),
-  redesenhar: () => render(),
-  ocupado: () => busyTyping() || GUIA_DEMO,
-});
-const sync = SY.estado;
-const saveSync = () => SY.salvar();
-let PREF = { tema: "auto", ...LS.get("pref", {}) };
-// o tema é escolhido pelo Kit Fácil (mesma chave); aqui ficam as outras preferências do aparelho
-const savePref = () => { PREF.tema = KitFacil.tema.valor; LS.set("pref", PREF); };
+/* carrega os dados; quem vem do formato antigo (0.x) começa de novo, e a cópia antiga fica guardada no aparelho */
+let DB = (() => {
+  const cru = LS.get('db', null), b = arrumarBanco(cru);
+  if (b) return b;
+  if (cru && !LS.get('db_antigo', null)) LS.set('db_antigo', cru);
+  const novo = bancoVazio();
+  if (typeof EDITAL_ANPD !== 'undefined') instalarEdital(novo, EDITAL_ANPD); // de fábrica: o plano para a ANPD
+  LS.set('db', novo);
+  return novo;
+})();
 const cfg = () => DB.cfg;
+let VER = 0; // muda a cada alteração: os índices derivados são refeitos
 
-/* Cada alteração ganha a hora em que aconteceu, por registro (e por campo, nos ajustes).
-   Na sincronização, a alteração mais recente vence. */
-let SNAP = null;
-function snapAll() {
-  SNAP = { cfg: {}, ativa: JSON.stringify(DB.ativa) };
-  for (const k in DB.cfg) SNAP.cfg[k] = JSON.stringify(DB.cfg[k]);
-  for (const c of COLLS) { const m = new Map(); for (const r of DB[c]) m.set(r.id, JSON.stringify(r)); SNAP[c] = m; }
-}
-function stampAll() {
-  if (!SNAP) return snapAll();
-  const now = Date.now(); let ch = false;
-  for (const k in DB.cfg) { const j = JSON.stringify(DB.cfg[k]); if (SNAP.cfg[k] !== j) { SNAP.cfg[k] = j; sync.st["cfg:" + k] = now; ch = true; } }
-  const a = JSON.stringify(DB.ativa); if (SNAP.ativa !== a) { SNAP.ativa = a; sync.st.ativa = now; ch = true; }
-  for (const c of COLLS) {
-    const m = SNAP[c], vistos = new Set();
-    for (const r of DB[c]) {
-      vistos.add(r.id);
-      const j = JSON.stringify(r);
-      if (m.get(r.id) !== j) { m.set(r.id, j); sync.st[c + ":" + r.id] = now; delete sync.del[c + ":" + r.id]; ch = true; }
-    }
-    for (const id of [...m.keys()]) if (!vistos.has(id)) { m.delete(id); delete sync.st[c + ":" + id]; sync.del[c + ":" + id] = now; ch = true; }
+/* ---------- índices derivados ---------- */
+let IDX = { ver: -1 };
+function idx() {
+  if (IDX.ver === VER) return IDX;
+  const x = { ver: VER, mat: new Map(DB.materias.map(m => [m.id, m])), top: new Map(DB.topicos.map(t => [t.id, t])), topsDe: new Map(), sessT: new Map(), sessDia: new Map(), revT: new Map(), minDia: new Map(), dias: new Set(DB.dias.map(d => d.id)), marcos: new Map(DB.marcos.map(m => [m.id, m])) };
+  for (const t of DB.topicos) { if (!x.topsDe.has(t.m)) x.topsDe.set(t.m, []); x.topsDe.get(t.m).push(t); }
+  for (const L of x.topsDe.values()) L.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+  for (const s of DB.sessoes) {
+    if (s.t) { if (!x.sessT.has(s.t)) x.sessT.set(s.t, []); x.sessT.get(s.t).push(s); }
+    if (!x.sessDia.has(s.dia)) x.sessDia.set(s.dia, []); x.sessDia.get(s.dia).push(s);
+    x.minDia.set(s.dia, (x.minDia.get(s.dia) || 0) + (s.seg || 0) / 60);
   }
-  if (ch) saveSync();
-  return ch;
+  for (const r of DB.revisoes) { if (!x.revT.has(r.t)) x.revT.set(r.t, []); x.revT.get(r.t).push(r); }
+  return (IDX = x);
 }
-function persist() {
-  if (GUIA_DEMO) return;
-  if (!LS.set("db", DB)) toast("O armazenamento do aparelho está cheio. Baixe uma cópia de segurança em Ajustes.");
-}
-let renderQ = false;
-function commit(opts = {}) {
-  if (GUIA_DEMO) { VER++; if (!opts.quiet) agendarRender(); return; } // guia Completo: demonstração, nada é gravado
-  const ch = stampAll();
-  persist(); VER++;
-  if (ch && syncOn()) scheduleSync(opts.syncMs);
-  if (!opts.quiet) agendarRender();
-}
-function agendarRender() { if (renderQ) return; renderQ = true; requestAnimationFrame(() => { renderQ = false; render(); }); }
+const materia = id => idx().mat.get(id) || null;
+const topico = id => idx().top.get(id) || null;
+const topicosDe = mId => idx().topsDe.get(mId) || [];
+const sessoesDe = tId => idx().sessT.get(tId) || [];
+const sessoesDoDia = d => idx().sessDia.get(d) || [];
+const minutosDoDia = d => idx().minDia.get(d) || 0;
+const concursosAtivos = () => DB.concursos.filter(c => c.situacao === 'ativo');
+const concursoFoco = () => concursosAtivos().find(c => c.id === cfg().foco) || concursosAtivos()[0] || null;
+const temMarco = id => idx().marcos.has(id);
+function marcar(id) { if (temMarco(id)) return false; DB.marcos.push({ id, em: agora() }); VER++; return true; }
 
-/* outra aba (ou o app instalado aberto junto com o navegador) mudou os dados */
-window.addEventListener("storage", e => {
-  if (e.key === KEY + "db" && !GUIA_DEMO) { DB = arrumarBanco(LS.get("db", null)); snapAll(); VER++; agendarRender(); }
-});
-
-/* ================= sincronização entre aparelhos ================= */
-// O motor (conexão, criptografia, gist, avisos e telas) é o do Kit Fácil, comum aos apps do projeto. O arquivo no gist
-// continua o mesmo (estudo-facil.json, mesmo formato), então aparelhos com a versão anterior seguem sincronizando.
-// Aqui fica só a regra do Estudo Fácil para juntar os dados.
-const syncOn = () => SY.ligada();
-const scheduleSync = ms => SY.agendar(ms);
-const syncNow = opts => SY.agora(opts);
-const syncStatusText = () => SY.texto();
-const canon = KitFacil.canon;
-const busyTyping = () => KitFacil.dialogo.aberto() || (document.activeElement && document.activeElement.matches("input,textarea,select"));
-// junta duas listas por id; a versão mais recente de cada registro vence
-function mergeList(L, R, lt, rt, del, onRemote) {
-  const rm = new Map(R.map(x => [x.id, x])), used = new Set(), out = [];
-  for (const x of L) {
-    used.add(x.id);
-    const r = rm.get(x.id);
-    if (r) {
-      if ((del(x.id) || 0) >= Math.max(lt(x.id), rt(r.id)) && del(x.id)) continue;
-      if (rt(r.id) > lt(x.id)) { out.push(r); onRemote(r); } else out.push(x);
-    } else if (!(del(x.id) >= lt(x.id) && del(x.id))) out.push(x);
-  }
-  for (const r of R) if (!used.has(r.id) && !(del(r.id) && del(r.id) >= rt(r.id))) { out.push(r); onRemote(r); }
+/* ---------- pesos: quanto cada disciplina vale na prova ----------
+   A fatia de cada disciplina é a média da fatia da nota que ela vale em cada concurso em estudo. Antes do edital
+   (concurso previsto), o fator `f1` puxa para a frente o que quase certamente cai. */
+function fatias(c, { fase = true } = {}) {
+  const valor = g => (c.prova.grupos.find(x => x.id === g) || {}).valor || 1;
+  const pre = fase && c.previsto; // enquanto o edital não for marcado como publicado
+  const bruto = c.disc.filter(d => !d.fora).map(d => [d.m, Math.max(0.01, (d.q || 1) * valor(d.grupo) * (pre ? d.f1 || 1 : 1))]);
+  const tot = soma(bruto, b => b[1]) || 1;
+  return new Map(bruto.map(([m, v]) => [m, v / tot]));
+}
+function pesosAtuais(opts) {
+  const A = concursosAtivos(), out = new Map();
+  if (!A.length) { const M = DB.materias.filter(m => topicosDe(m.id).length); M.forEach(m => out.set(m.id, 1 / M.length)); return out; }
+  for (const c of A) for (const [m, v] of fatias(c, opts)) out.set(m, (out.get(m) || 0) + v / A.length);
   return out;
 }
-function applyRemote(R) {
-  // nuvem gravada pela versão 1.0: converte para o modelo geral antes de juntar
-  if (R && R.v === 1) R = { ...migrarV1(R), st: R.st || {}, del: R.del || {} };
-  const first = !sync.lastSync, rs = R.st || {}, st = { ...sync.st }, del = { ...sync.del };
-  for (const k in (R.del || {})) del[k] = Math.max(del[k] || 0, R.del[k]);
-  const corte = Date.now() - 400 * DAY;
-  for (const k in del) if (del[k] < corte) delete del[k];
-  const antes = canon(dadosSync());
-  // ajustes, campo a campo (na primeira conexão vale o que está na nuvem)
-  const C = { ...DB.cfg }, RC = R.cfg || {};
-  for (const k of Object.keys(RC)) {
-    const rt = rs["cfg:" + k] || 0, lt = st["cfg:" + k] || 0;
-    if ((first && (rt || !lt)) || rt > lt) { C[k] = RC[k]; if (rt) st["cfg:" + k] = rt; }
-  }
-  const novo = { v: 2, cfg: C, ativa: DB.ativa };
-  for (const c of COLLS) {
-    // na primeira conexão, os dados do concurso (perfil, datas) que já estão na nuvem prevalecem, como os ajustes
-    const lt = first && c === "concursos" ? () => 0 : id => st[c + ":" + id] || 0;
-    novo[c] = mergeList(DB[c], Array.isArray(R[c]) ? R[c] : [], lt, id => rs[c + ":" + id] || 0, id => del[c + ":" + id] || 0,
-      r => { const t = rs[c + ":" + r.id]; if (t) st[c + ":" + r.id] = t; });
-  }
-  const rta = rs.ativa || 0, lta = st.ativa || 0;
-  if (rta > lta) { novo.ativa = R.ativa || null; st.ativa = rta; }
-  DB = arrumarBanco(novo);
-  // primeira conexão: os específicos de outro perfil da ABDI escolhido neste aparelho, sem estudo, saem junto com o perfil antigo
-  if (first) {
-    const antes = new Set(DB.materias.map(m => m.id)), topsAntes = new Set(DB.topicos.map(t => t.id));
-    limparOrfas(DB.materias.filter(m => /^abdi-[a-z]+-\d+$/.test(m.id)).map(m => m.id));
-    const agora = Date.now();
-    for (const id of antes) if (!DB.materias.some(m => m.id === id)) { del["materias:" + id] = agora; delete st["materias:" + id]; }
-    for (const id of topsAntes) if (!DB.topicos.some(t => t.id === id)) { del["topicos:" + id] = agora; delete st["topicos:" + id]; }
-  }
-  for (const c of COLLS) {
-    const vivos = new Set(DB[c].map(r => r.id));
-    for (const k of Object.keys(st)) if (k.startsWith(c + ":") && !vivos.has(k.slice(c.length + 1))) delete st[k];
-  }
-  sync.st = st; sync.del = del;
-  persist(); snapAll(); saveSync(); VER++;
-  return antes !== canon(dadosSync());
+// fase do plano de um concurso da biblioteca (base antes do edital, edital na mão, reta final)
+function faseAtual(c) {
+  if (!c || !c.dataProva) return null;
+  const falta = entreDias(hojeISO(), c.dataProva);
+  if (falta < 0) return { id: 'fim', nome: 'Prova feita', i: 3 };
+  if (falta <= 30) return { id: 'f3', nome: 'Reta final', i: 2 };
+  if (c.previsto) return { id: 'f1', nome: 'Base antes do edital', i: 0 };
+  return { id: 'f2', nome: c.previsto ? 'Edital na mão' : 'Cobrir o edital', i: 1 };
 }
-const dadosSync = () => { const o = { cfg: DB.cfg, ativa: DB.ativa }; for (const c of COLLS) o[c] = DB[c]; return o; };
-const syncPayload = () => ({ v: 2, ...dadosSync(), st: sync.st, del: sync.del });
 
+/* ---------- domínio de um assunto (0 a 4) e prontidão ----------
+   0 Novo · 1 Começado (já tem estudo) · 2 Estudado (teoria concluída) · 3 Revisado (1 revisão feita, ou 10+ questões
+   com 70% de acertos) · 4 Dominado (todas as revisões feitas, ou 2 revisões e 20+ questões com 80% de acertos). */
+function dominio(t, ate = Infinity) {
+  if (!t) return 0;
+  const S = sessoesDe(t.id).filter(s => s.ini <= ate), teoria = t.teoria && t.teoria <= ate;
+  if (!S.length && !teoria) return 0;
+  if (!teoria) return 1;
+  const revs = (idx().revT.get(t.id) || []).filter(r => r.feita && r.feita <= ate).length;
+  let ac = 0, tot = 0; for (const s of S) { ac += s.ac || 0; tot += (s.ac || 0) + (s.er || 0); }
+  const p = tot ? ac / tot : 0, todas = Math.max(2, cfg().revisoes.length);
+  if (revs >= todas || (revs >= 2 && tot >= 20 && p >= .8)) return 4;
+  if (revs >= 1 || (tot >= 10 && p >= .7)) return 3;
+  return 2;
+}
+// parte do edital já grifada, contando o peso de cada disciplina (0 a 100)
+function prontidao(c, ate = Infinity) {
+  if (!c) return 0;
+  const F = fatias(c, { fase: false }); let p = 0;
+  for (const d of c.disc) { if (d.fora || !d.topicos.length) continue; p += (F.get(d.m) || 0) * soma(d.topicos, id => dominio(topico(id), ate)) / (d.topicos.length * 4); }
+  return Math.round(p * 100);
+}
+function progressoDisc(d, ate = Infinity) {
+  const T = d.topicos.map(topico).filter(Boolean), n = T.length || 1, D = T.map(t => dominio(t, ate));
+  return { n: T.length, vistos: D.filter(x => x >= 2).length, dominados: D.filter(x => x >= 4).length, pct: Math.round(soma(D) / (n * 4) * 100) };
+}
+function acertosDe(filtro, desde = 0) {
+  let ac = 0, er = 0; for (const s of DB.sessoes) if (s.ini >= desde && (!filtro || filtro(s))) { ac += s.ac || 0; er += s.er || 0; }
+  return { ac, er, tot: ac + er, pct: ac + er ? Math.round(ac / (ac + er) * 100) : null };
+}
 
-snapAll();
+/* ---------- revisões ---------- */
+const revisoesPendentes = () => DB.revisoes.filter(r => !r.feita && topico(r.t)).sort((a, b) => a.due < b.due ? -1 : a.due > b.due ? 1 : 0);
+const revisoesDeHoje = () => revisoesPendentes().filter(r => r.due <= hojeISO());
+function agendarRevisoes(tId, dia) {
+  if (DB.revisoes.some(r => r.t === tId && !r.feita)) return 0;
+  cfg().revisoes.forEach((n, i) => DB.revisoes.push({ id: novoId(), t: tId, due: maisDias(dia, n), n: i + 1, feita: 0 }));
+  return cfg().revisoes.length;
+}
 
-/* ================= índices derivados ================= */
-let IX = { v: -1 };
-const ptsLink = l => (l.q || 0) * (l.valor ?? 1);
-/* O plano junta os assuntos cobrados pelos editais marcados como Estudando.
-   Sem edital em estudo, vale tudo o que está cadastrado em Disciplinas. */
-function ix() {
-  if (IX.v === VER) return IX;
-  const matById = new Map(DB.materias.map(m => [m.id, m])), topById = new Map(DB.topicos.map(t => [t.id, t]));
-  const topsAll = new Map(DB.materias.map(m => [m.id, []]));
-  for (const t of DB.topicos) { const l = topsAll.get(t.m); if (l) l.push(t); }
-  for (const l of topsAll.values()) l.sort((a, b) => a.ord - b.ord);
-  const ativos = DB.concursos.filter(c => c.status === "estudando").sort((a, b) => (a.dataProva || "9999").localeCompare(b.dataProva || "9999"));
-  const ordem = new Set(), share = new Map();
-  let escopo = null;
-  if (ativos.length) {
-    escopo = new Set();
-    const comPts = ativos.filter(c => sum(c.disc.map(ptsLink)) > 0).length;
-    for (const c of ativos) {
-      const tot = sum(c.disc.map(ptsLink));
-      for (const l of c.disc) {
-        if (!matById.has(l.m)) continue;
-        ordem.add(l.m);
-        for (const id of l.t) { const t = topById.get(id); if (t && t.m === l.m) escopo.add(id); }
-        // peso da disciplina: média da parte da nota que ela vale em cada edital em estudo
-        if (tot) share.set(l.m, (share.get(l.m) || 0) + ptsLink(l) / tot / comPts);
-      }
-    }
-  } else DB.materias.slice().sort((a, b) => fold(a.nome).localeCompare(fold(b.nome))).forEach(m => ordem.add(m.id));
-  const topsByMat = new Map();
-  for (const id of ordem) { const l = topsAll.get(id).filter(t => !escopo || escopo.has(t.id)); if (l.length) topsByMat.set(id, l); }
-  const mats = [...topsByMat.keys()].map(id => matById.get(id));
-  const tops = mats.flatMap(m => topsByMat.get(m.id));
-  const stT = new Map(), stM = new Map(), days = new Map();
-  const sess = DB.sessoes.slice().sort((a, b) => b.ini - a.ini);
-  for (const s of sess) {
-    const o = days.get(s.d) || { s: 0, a: 0, e: 0, n: 0 };
-    o.s += s.s || 0; o.a += s.a || 0; o.e += s.e || 0; o.n++; days.set(s.d, o);
-    for (const it of s.itens || []) {
-      const t = stT.get(it.t) || { s: 0, a: 0, e: 0, n: 0, last: "" };
-      t.s += it.s || 0; t.a += it.a || 0; t.e += it.e || 0; t.n++; if (s.d > t.last) t.last = s.d; stT.set(it.t, t);
-      const mm = stM.get(it.m) || { s: 0, a: 0, e: 0 };
-      mm.s += it.s || 0; mm.a += it.a || 0; mm.e += it.e || 0; stM.set(it.m, mm);
+/* ---------- sequência: dias seguidos com a meta batida ----------
+   Dia de folga da rotina não quebra a sequência. A cada 7 dias seguidos o app guarda uma folga (até 2): se você faltar
+   um dia, ela é gasta sozinha e a sequência continua. */
+let SEQ = { ver: -1 };
+function sequencia() {
+  const h = hojeISO();
+  if (SEQ.ver === VER && SEQ.h === h) return SEQ.r;
+  const feitos = idx().dias, rotina = new Set(cfg().dias), prot = new Set();
+  const todos = [...feitos].sort(); let n = 0, folgas = 1, recorde = 0;
+  if (todos.length) {
+    for (let d = todos[0]; d < h; d = maisDias(d, 1)) {
+      if (feitos.has(d)) { n++; if (n % 7 === 0) folgas = Math.min(2, folgas + 1); }
+      else if (!rotina.has(deISO(d).getDay())) continue;
+      else if (n > 0 && folgas > 0) { folgas--; prot.add(d); }
+      else n = 0;
+      recorde = Math.max(recorde, n);
     }
   }
-  const first = sess.length ? sess[sess.length - 1].d : "";
-  IX = { v: VER, ativos, mats, matById, topById, topsAll, topsByMat, tops, stT, stM, days, sess, share, shareTot: sum([...share.values()]), first, est: new Map() };
-  return IX;
+  const hojeFeito = feitos.has(h); if (hojeFeito) n++;
+  recorde = Math.max(recorde, n);
+  const r = { n, hojeFeito, folgas, protegidos: prot, recorde, descanso: !rotina.has(deISO(h).getDay()) };
+  SEQ = { ver: VER, h, r };
+  return r;
 }
-const matNome = id => (ix().matById.get(id) || {}).nome || "Disciplina removida";
-const topNome = id => (ix().topById.get(id) || {}).nome || "Assunto removido";
-const statT = id => ix().stT.get(id) || { s: 0, a: 0, e: 0, n: 0, last: "" };
-const nomeEdital = c => c ? c.sigla || c.orgao || c.cargo || "Edital" : "";
-const editalPorId = id => DB.concursos.find(c => c.id === id);
-const editaisVivos = () => DB.concursos.filter(c => c.status !== "encerrado");
-function resumoEdital(tops = ix().tops) {
-  const n = tops.length, teo = tops.filter(t => t.teoria).length, est = tops.filter(t => t.teoria || t.ult).length;
-  return { n, teo, est, pc: pct(teo, n) };
-}
-/* estrutura de um edital: disciplinas, assuntos cobrados, áreas da prova, questões e pontos */
-function estrutura(c) {
-  const X = ix(); if (X.est.has(c.id)) return X.est.get(c.id);
-  const links = c.disc.filter(l => X.matById.has(l.m)).map(l => ({ ...l, mat: X.matById.get(l.m), pts: ptsLink(l),
-    tops: l.t.map(id => X.topById.get(id)).filter(t => t && t.m === l.m).sort((a, b) => a.ord - b.ord) }));
-  const def = (c.prova && c.prova.grupos) || [];
-  const grupos = def.map(g => ({ id: g.id, nome: g.nome, links: links.filter(l => l.g === g.id) })).filter(g => g.links.length);
-  const sem = links.filter(l => !def.some(g => g.id === l.g));
-  if (sem.length) grupos.push({ id: "", nome: def.length ? "Sem área definida" : "", links: sem });
-  for (const g of grupos) { g.q = sum(g.links.map(l => l.q || 0)); g.pts = sum(g.links.map(l => l.pts)); }
-  const tops = links.flatMap(l => l.tops);
-  const E = { links, grupos, q: sum(links.map(l => l.q || 0)), pts: sum(links.map(l => l.pts)), tops, ...resumoEdital(tops) };
-  X.est.set(c.id, E);
-  return E;
-}
-/* edital em estudo com a prova mais próxima */
-function provaProx() {
-  const t = today();
-  return ix().ativos.find(c => c.dataProva && c.dataProva >= t) || null;
+// confere se o dia bateu a meta e guarda a marca (uma vez por dia)
+function conferirDia(d = hojeISO()) {
+  if (idx().dias.has(d) || minutosDoDia(d) < cfg().metaMin - 0.01) return false;
+  DB.dias.push({ id: d, min: cfg().metaMin }); VER++;
+  return true;
 }
 
-/* ================= rotina, metas e revisões ================= */
-const ehDiaEstudo = d => cfg().dias.includes(toD(d).getDay());
-function proxRevisao(d, n) {
-  const iv = cfg().ciclo; let p = addD(d, iv[Math.min(n, iv.length - 1)]);
-  if (cfg().moverFolga) for (let i = 0; i < 7 && !ehDiaEstudo(p); i++) p = addD(p, 1);
+/* ---------- plano do dia ----------
+   Primeiro as revisões vencidas; depois, blocos das disciplinas mais atrasadas em relação ao peso na prova (conta o
+   estudo dos últimos 14 dias, até ontem: o plano não muda no meio do dia). Em cada disciplina, o próximo assunto é o
+   primeiro sem teoria concluída; com tudo estudado, o de menor domínio, com questões. */
+function proximoAssunto(mId, ids) {
+  const T = (ids ? ids.map(topico).filter(Boolean) : topicosDe(mId));
+  if (!T.length) return null;
+  const novo = T.find(t => !t.teoria);
+  if (novo) return { t: novo, tipo: 'teoria' };
+  let melhor = T[0], dm = 9; for (const t of T) { const d = dominio(t); if (d < dm) { dm = d; melhor = t; } }
+  return { t: melhor, tipo: 'questoes' };
+}
+function topicosAtivos(mId) {
+  const A = concursosAtivos(); if (!A.length) return null;
+  const ids = new Set(); for (const c of A) for (const d of c.disc) if (d.m === mId && !d.fora) d.topicos.forEach(i => ids.add(i));
+  return [...ids];
+}
+function ordemDasDisciplinas() {
+  const P = pesosAtuais(), h = hojeISO(), ini = deISO(maisDias(h, -14)).getTime(), fim = deISO(h).getTime();
+  const min = new Map(); let tot = 0;
+  for (const s of DB.sessoes) if (s.ini >= ini && s.ini < fim && P.has(s.m)) { min.set(s.m, (min.get(s.m) || 0) + s.seg / 60); tot += s.seg / 60; }
+  return [...P.entries()].map(([m, w]) => ({ m, w, falta: w - (tot ? (min.get(m) || 0) / tot : 0) }))
+    .filter(x => materia(x.m) && (topicosAtivos(x.m) || topicosDe(x.m)).length)
+    .sort((a, b) => b.falta - a.falta || b.w - a.w);
+}
+function planoDoDia() {
+  const h = hojeISO(), c = cfg(), S = sessoesDoDia(h);
+  const revs = revisoesDeHoje().map(r => ({ tipo: 'revisao', rev: r.id, t: r.t, m: topico(r.t).m, min: 15, atraso: entreDias(r.due, h), feito: false }));
+  // revisões feitas hoje continuam na lista, riscadas
+  const feitasHoje = DB.revisoes.filter(r => r.feita && iso(new Date(r.feita)) === h && topico(r.t)).map(r => ({ tipo: 'revisao', rev: r.id, t: r.t, m: topico(r.t).m, min: 15, feito: true }));
+  const nBlocos = Math.max(1, Math.round(c.metaMin / c.bloco)), ordem = ordemDasDisciplinas(), blocos = [];
+  for (let i = 0; blocos.length < nBlocos && ordem.length; i++) {
+    const d = ordem[i % ordem.length], ja = blocos.filter(b => b.m === d.m).length;
+    if (i >= ordem.length * 3) break;
+    const T = (topicosAtivos(d.m) || topicosDe(d.m).map(t => t.id)).map(topico).filter(Boolean);
+    const pend = T.filter(t => !t.teoria || S.some(s => s.t === t.id && s.tipo === 'teoria'));
+    const alvo = pend[ja] || null, px = alvo ? { t: alvo, tipo: 'teoria' } : (ja === 0 ? proximoAssunto(d.m, T.map(t => t.id)) : null);
+    if (!px) continue;
+    const minFeito = soma(S.filter(s => s.t === px.t.id && s.tipo !== 'revisao'), s => s.seg / 60);
+    blocos.push({ tipo: px.tipo, t: px.t.id, m: d.m, min: c.bloco, feito: minFeito >= c.bloco * 0.8 || (px.tipo === 'teoria' && !!px.t.teoria && minFeito > 0), minFeito });
+  }
+  const itens = [...revs.slice(0, 5), ...feitasHoje, ...blocos];
+  return { itens, proximo: itens.find(x => !x.feito) || null, minutos: minutosDoDia(h), meta: c.metaMin, revisoesAMais: Math.max(0, revs.length - 5) };
+}
+// sugestão para quem já cumpriu o plano: a próxima disciplina da fila
+function sugestaoExtra() {
+  const feitos = new Set(planoDoDia().itens.map(i => i.t));
+  for (const d of ordemDasDisciplinas()) { const px = proximoAssunto(d.m, topicosAtivos(d.m) || undefined); if (px && !feitos.has(px.t.id)) return { tipo: px.tipo, t: px.t.id, m: d.m, min: cfg().bloco }; }
+  return null;
+}
+
+/* ---------- missões do dia ---------- */
+function missoes(d = hojeISO()) {
+  const c = cfg(), S = sessoesDoDia(d), min = minutosDoDia(d), q = soma(S, s => (s.ac || 0) + (s.er || 0));
+  const L = [{ id: 'tempo', nome: `Estudar ${fmtMin(c.metaMin)}`, ic: 'relogio', v: Math.min(min, c.metaMin), de: c.metaMin, un: 'min' }];
+  if (c.metaQ > 0) L.push({ id: 'questoes', nome: `Resolver ${plural(c.metaQ, 'questão', 'questões')}`, ic: 'questoes', v: Math.min(q, c.metaQ), de: c.metaQ, un: '' });
+  const revHoje = DB.revisoes.filter(r => topico(r.t) && (r.feita ? iso(new Date(r.feita)) === d : r.due <= d));
+  if (revHoje.length) L.push({ id: 'revisoes', nome: revHoje.length === 1 ? 'Fazer a revisão do dia' : `Fazer as ${revHoje.length} revisões do dia`, ic: 'revisar', v: revHoje.filter(r => r.feita).length, de: revHoje.length, un: '' });
+  else { const n = new Set(S.map(s => s.m)).size; L.push({ id: 'variar', nome: 'Estudar 2 disciplinas', ic: 'disciplinas', v: Math.min(n, 2), de: 2, un: '' }); }
+  L.forEach(m => { m.ok = m.v >= m.de - 0.01; });
+  return { lista: L, feitas: L.filter(m => m.ok).length, perfeito: L.every(m => m.ok) };
+}
+
+/* ---------- pontos ----------
+   1 por minuto estudado · 1 por questão e mais 1 por acerto · 15 por revisão · 25 por assunto com a teoria concluída ·
+   30 por dia com a meta batida · 50 por medalha. Tudo sai dos dados, então acompanha a sincronização. */
+const PONTOS = { minuto: 1, questao: 1, acerto: 1, revisao: 15, assunto: 25, dia: 30, medalha: 50 };
+function pontosBase() {
+  let p = 0;
+  for (const s of DB.sessoes) p += Math.round((s.seg || 0) / 60) * PONTOS.minuto + ((s.ac || 0) + (s.er || 0)) * PONTOS.questao + (s.ac || 0) * PONTOS.acerto;
+  p += DB.revisoes.filter(r => r.feita).length * PONTOS.revisao + DB.topicos.filter(t => t.teoria).length * PONTOS.assunto + DB.dias.length * PONTOS.dia;
   return p;
 }
-function diasEstudoEntre(a, b) { let n = 0; for (let d = a; d <= b; d = addD(d, 1)) if (ehDiaEstudo(d)) n++; return n; }
-function teoriaAte() {
-  const c = provaProx(), t = today();
-  if (cfg().teoriaAte) return cfg().teoriaAte;
-  if (c) { const f = addD(c.dataProva, -14); return f > t ? f : addD(c.dataProva, -1); }
-  return addD(t, 60);
-}
-function metaDia(d) {
-  const o = ix().days.get(d) || { s: 0, a: 0, e: 0 };
-  const h = cfg().hDia, q = cfg().qDia;
-  if (!h && !q) return o.s > 0;
-  return (!h || o.s >= h * 3600 - 60) && (!q || o.a + o.e >= q);
-}
-/* Plano do dia: revisões vencidas primeiro, depois tópicos novos.
-   As matérias andam juntas (a mais atrasada em proporção vai primeiro) e, no empate, ganha a que vale mais pontos por tópico. */
-function ritmo() {
-  const X = ix(), t = today(), fim = teoriaAte();
-  const pend = X.tops.filter(x => !x.teoria || x.tc === t).length;
-  const dias = Math.max(1, diasEstudoEntre(t, fim > t ? fim : t));
-  const auto = pend ? clamp(Math.ceil(pend / dias), 1, 8) : 0;
-  return { pend, dias, fim, auto, n: cfg().novosDia || auto };
-}
-function planoHoje() {
-  const X = ix(), t = today();
-  const hojeTeoria = new Set(), hojeRev = new Set();
-  for (const s of X.sess) { if (s.d !== t) continue; for (const it of s.itens || []) (it.tipo === "revisao" ? hojeRev : hojeTeoria).add(it.t); }
-  const peso = m => (X.share.get(m) || 0) / Math.max(1, (X.topsByMat.get(m) || []).length);
-  const rev = X.tops.filter(x => (x.prox && x.prox <= t) || x.ur === t)
-    .map(x => ({ tipo: "revisao", top: x, feito: x.ur === t || hojeRev.has(x.id), atraso: x.prox && x.prox < t ? diffD(x.prox, t) : 0 }))
-    .sort((a, b) => (a.feito - b.feito) || ((a.top.prox || t).localeCompare(b.top.prox || t)) || (peso(b.top.m) - peso(a.top.m)));
-  // revisões por dia: no máximo duas por hora da meta diária; as outras esperam na fila, as mais atrasadas primeiro
-  const capRev = clamp(Math.round((cfg().hDia || 2) * 2), 3, 12);
-  const revFeitas = rev.filter(r => r.feito), revPend = rev.filter(r => !r.feito);
-  const revHoje = [...revPend.slice(0, Math.max(0, capRev - revFeitas.length)), ...revFeitas];
-  const espera = revPend.length - revHoje.filter(r => !r.feito).length;
-  const R = ritmo(), novos = [];
-  const usado = new Set(rev.map(r => r.top.id));
-  for (const id of hojeTeoria) { const x = X.topById.get(id); if (x && !usado.has(id) && X.topsByMat.has(x.m)) { novos.push({ tipo: "teoria", top: x, feito: true }); usado.add(id); } }
-  const alvo = ehDiaEstudo(t) ? R.n : 0;
-  if (novos.length < alvo) {
-    const tot = new Map(), feitos = new Map(), fatia = m => X.share.get(m) || 0, maxFatia = Math.max(0.0001, ...X.mats.map(m => fatia(m.id)));
-    for (const m of X.mats) { const l = X.topsByMat.get(m.id); tot.set(m.id, l.length); feitos.set(m.id, l.filter(x => x.teoria && x.tc !== t).length); }
-    for (const n of novos) feitos.set(n.top.m, (feitos.get(n.top.m) || 0) + 1);
-    while (novos.length < alvo) {
-      let best = null, bestSc = Infinity;
-      for (const m of X.mats) {
-        const cand = X.topsByMat.get(m.id).filter(x => (!x.teoria || x.tc === t) && !usado.has(x.id));
-        if (!cand.length) continue;
-        const sc = (feitos.get(m.id) || 0) / Math.max(1, tot.get(m.id)) - 0.12 * fatia(m.id) / maxFatia; // avança as disciplinas por igual; no empate, a que vale mais na prova
-        if (sc < bestSc) { bestSc = sc; best = { m, cand }; }
-      }
-      if (!best) break;
-      const x = best.cand.find(y => y.ult) || best.cand[0];
-      novos.push({ tipo: "teoria", top: x, feito: false }); usado.add(x.id);
-      feitos.set(best.m.id, (feitos.get(best.m.id) || 0) + 1);
-    }
-  }
-  const itens = [...revHoje, ...novos];
-  return { itens, rev, revPend, espera, novos, ritmo: R, prox: itens.find(i => !i.feito) || null, feitos: itens.filter(i => i.feito).length };
-}
-/* sugestão quando o plano de hoje acabou: o próximo tópico novo pela mesma regra */
-function proximoTopico(excluir = new Set()) {
-  const X = ix(), t = today();
-  const fatia = m => X.share.get(m) || 0, maxFatia = Math.max(0.0001, ...X.mats.map(m => fatia(m.id)));
-  let best = null, bestSc = Infinity;
-  for (const m of X.mats) {
-    const l = X.topsByMat.get(m.id), cand = l.filter(x => !x.teoria && !excluir.has(x.id));
-    if (!cand.length) continue;
-    const sc = l.filter(x => x.teoria).length / l.length - 0.12 * fatia(m.id) / maxFatia;
-    if (sc < bestSc) { bestSc = sc; best = cand.find(y => y.ult && y.ult !== t) || cand[0]; }
-  }
-  return best;
-}
+const totais = () => ({ min: soma(DB.sessoes, s => s.seg / 60), sessoes: DB.sessoes.length, questoes: soma(DB.sessoes, s => (s.ac || 0) + (s.er || 0)), acertos: soma(DB.sessoes, s => s.ac || 0),
+  revisoes: DB.revisoes.filter(r => r.feita).length, assuntos: DB.topicos.filter(t => t.teoria).length, dias: DB.dias.length });
 
-/* ================= sessão de estudo (cronômetro) ================= */
-const atual = a => a.itens[a.itens.length - 1];
-const emPausa = a => { const p = (a.pausas || [])[a.pausas.length - 1]; return !!(p && !p.fim); };
-const pausaTotal = (a, now) => sum((a.pausas || []).map(p => (p.fim || now) - p.ini)) / 1000;
-const estudoTotal = (a, now) => Math.max(0, (now - a.ini) / 1000 - pausaTotal(a, now));
-function estudoItem(a, it, now) {
-  const fim = it.fim || now; let p = 0;
-  for (const x of a.pausas || []) { const i0 = Math.max(x.ini, it.ini), i1 = Math.min(x.fim || now, fim); if (i1 > i0) p += i1 - i0; }
-  return Math.max(0, (fim - it.ini - p) / 1000);
+/* ---------- sessão em andamento ---------- */
+const ativaSeg = (a = DB.ativa) => a ? (a.acum || 0) + (a.desde ? Math.max(0, (Date.now() - a.desde) / 1000) : 0) : 0;
+function iniciarSessao({ t = null, m = null, tipo = 'teoria', alvo = cfg().bloco, rev = null } = {}) {
+  const top = t && topico(t);
+  DB.ativa = { t: top ? top.id : null, m: top ? top.m : m, tipo, alvo, rev, ini: agora(), acum: 0, desde: Date.now(), ac: 0, er: 0, tocou: false };
+  salvar({ quieto: true });
 }
-function tipoSugerido(top) { return top && top.prox && top.prox <= today() ? "revisao" : "teoria"; }
-const TIPO_TXT = { teoria: "Teoria", revisao: "Revisão" };
-function iniciarSessao(topId, tipo, meta) {
-  const top = ix().topById.get(topId); if (!top) return;
-  if (DB.ativa) { abrirFoco(); toast("Já existe uma sessão em andamento."); return; }
-  unlockAudio();
-  const now = Date.now();
-  tipo = tipo || tipoSugerido(top);
-  DB.ativa = { id: uid(), ini: now, meta: meta ? Math.round(meta * 60) : 0, obs: "", pausas: [],
-    itens: [{ t: top.id, m: top.m, tipo, ini: now, fim: 0, a: 0, e: 0 }] };
-  if (meta) cfg().metaMin = meta;
-  UI.alarme = 0;
-  commit({ syncMs: 800 });
-  abrirFoco();
-  pedirWakeLock();
-}
-function trocarTopico(topId, tipo) {
-  const a = DB.ativa, top = ix().topById.get(topId); if (!a || !top) return;
-  const now = Date.now(), cur = atual(a);
-  if (emPausa(a)) { const p = a.pausas[a.pausas.length - 1]; p.fim = now; }
-  if (cur.t === topId && cur.tipo === tipo) return;
-  // trocar logo no começo substitui o tópico em vez de criar um trecho de segundos
-  if (estudoItem(a, cur, now) < 20 && !cur.a && !cur.e) { a.itens.pop(); }
-  else cur.fim = now;
-  a.itens.push({ t: top.id, m: top.m, tipo: tipo || tipoSugerido(top), ini: now, fim: 0, a: 0, e: 0 });
-  commit({ syncMs: 800 });
-}
-function alternarPausa(motivo) {
-  const a = DB.ativa; if (!a) return;
-  const now = Date.now();
-  if (emPausa(a)) { a.pausas[a.pausas.length - 1].fim = now; }
-  else a.pausas.push({ ini: now, fim: 0, mot: motivo || "" });
-  commit({ syncMs: 800 });
-}
-let cntTimer = null;
-function contarQuestao(k, d) {
-  const a = DB.ativa; if (!a) return;
-  const it = atual(a); it[k] = Math.max(0, (it[k] || 0) + d);
-  clearTimeout(cntTimer);
-  cntTimer = setTimeout(() => commit({ quiet: true, syncMs: 1500 }), 600);
-  atualizarFocoContadores();
-}
-/* fecha a sessão em andamento: grava no histórico e atualiza teoria e revisões dos tópicos */
-function salvarSessao(teoriaFeita = new Set(), obs) {
-  const a = DB.ativa; if (!a) return null;
-  clearTimeout(cntTimer);
-  const now = Date.now();
-  const p = a.pausas[a.pausas.length - 1]; if (p && !p.fim) p.fim = now;
-  atual(a).fim = now;
-  const d = ymd(new Date(a.ini));
-  const itens = a.itens.map(it => ({ t: it.t, m: it.m, tn: topNome(it.t), mn: matNome(it.m), tipo: it.tipo, s: Math.round(estudoItem(a, it, now)), a: it.a || 0, e: it.e || 0, ini: it.ini, fim: it.fim }))
-    .filter(it => it.s >= 5 || it.a || it.e);
-  DB.ativa = null;
-  if (!itens.length) { commit(); return null; }
-  const s = { id: uid(), d, ini: a.ini, fim: now, s: sum(itens.map(i => i.s)), p: Math.round(pausaTotal(a, now)), a: sum(itens.map(i => i.a)), e: sum(itens.map(i => i.e)),
-    itens, pausas: a.pausas.map(x => ({ ini: x.ini, fim: x.fim, mot: x.mot || "" })), obs: (obs ?? a.obs ?? "").trim() };
+function pausarSessao(p) { const a = DB.ativa; if (!a) return; if (p && a.desde) { a.acum = ativaSeg(a); a.desde = 0; } else if (!p && !a.desde) a.desde = Date.now(); salvar({ quieto: true }); }
+function descartarSessao() { DB.ativa = null; salvar({ quieto: true }); }
+/* guarda uma sessão (do cronômetro ou lançada à mão) e tudo o que decorre dela: teoria concluída, revisões e a marca do dia */
+function registrarSessao({ t = null, m = null, tipo = 'teoria', seg = 0, ac = 0, er = 0, conf = 2, teoria = false, rev = null, dia = hojeISO(), ini = agora(), manual = false }) {
+  const top = t && topico(t), s = { id: novoId(), t: top ? top.id : null, m: top ? top.m : m, tipo, ini, seg: Math.max(0, Math.round(seg)), ac: Math.max(0, ac | 0), er: Math.max(0, er | 0), conf, dia };
+  if (manual) s.manual = true;
   DB.sessoes.push(s);
-  aplicarNosTopicos(s, teoriaFeita);
-  commit({ syncMs: 600 });
-  liberarWakeLock();
-  return s;
-}
-function aplicarNosTopicos(s, teoriaFeita) {
-  const vistos = new Set();
-  for (const it of s.itens) {
-    const t = ix().topById.get(it.t); if (!t) continue;
-    if (s.d >= (t.ult || "")) t.ult = s.d;
-    if (vistos.has(it.t + it.tipo)) continue; vistos.add(it.t + it.tipo);
-    if (it.tipo === "revisao") { t.rev = (t.rev || 0) + 1; t.ur = s.d; t.prox = proxRevisao(s.d, t.rev); }
-    else { t.rev = 0; t.prox = proxRevisao(s.d, 0); }
-    if (teoriaFeita.has(it.t) && !t.teoria) { t.teoria = true; t.tc = s.d; }
+  const fez = { sessao: s, teoria: false, revisoes: 0, revisao: false };
+  if (top && teoria && !top.teoria) { top.teoria = ini; fez.teoria = true; fez.revisoes = agendarRevisoes(top.id, dia); }
+  if (top && tipo === 'revisao') {
+    const r = (rev && DB.revisoes.find(x => x.id === rev && !x.feita)) || DB.revisoes.filter(x => x.t === top.id && !x.feita).sort((a, b) => a.due < b.due ? -1 : 1)[0];
+    if (r) { r.feita = ini; fez.revisao = true; if (conf === 1) DB.revisoes.push({ id: novoId(), t: top.id, due: maisDias(dia, 2), n: r.n, feita: 0 }); }
   }
-}
-function revisaoFeita(topId) {
-  const t = ix().topById.get(topId); if (!t) return;
-  const d = today();
-  t.rev = (t.rev || 0) + 1; t.ur = d; t.prox = proxRevisao(d, t.rev); if (d > (t.ult || "")) t.ult = d;
-  commit();
-  toast(`Revisão registrada. A próxima fica para ${dLonga(t.prox)}.`);
-}
-function adiarRevisao(topId) {
-  const t = ix().topById.get(topId); if (!t || !t.prox) return;
-  let d = addD(t.prox > today() ? t.prox : today(), 1);
-  for (let i = 0; i < 7 && !ehDiaEstudo(d); i++) d = addD(d, 1);
-  t.prox = d; commit();
-  toast(`Revisão adiada para ${dLonga(d)}.`);
-}
-function marcarTeoria(topId, val) {
-  const t = ix().topById.get(topId); if (!t) return;
-  t.teoria = !!val; t.tc = val ? today() : "";
-  if (val && !t.prox) t.prox = proxRevisao(today(), 0);
-  commit();
+  VER++;
+  fez.dia = conferirDia(dia);
+  return fez;
 }
 
-/* tela sempre acesa e aviso sonoro no fim do tempo */
-let wakeLock = null;
-async function pedirWakeLock() { try { if (navigator.wakeLock && DB.ativa && document.visibilityState === "visible") wakeLock = await navigator.wakeLock.request("screen"); } catch {} }
-function liberarWakeLock() { try { wakeLock && wakeLock.release(); } catch {} wakeLock = null; }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { pedirWakeLock(); agendarRender(); } });
-let audioCtx = null;
-function unlockAudio() { try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch {} }
-function beep() {
-  if (PREF.alarme === false) return; // Ajustes → Notificações: som e vibração no fim do tempo
-  try {
-    unlockAudio(); const t0 = audioCtx.currentTime;
-    for (let i = 0; i < 3; i++) { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination); g.gain.setValueAtTime(.0001, t0 + i * .45); g.gain.exponentialRampToValueAtTime(.3, t0 + i * .45 + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + i * .45 + .35); o.start(t0 + i * .45); o.stop(t0 + i * .45 + .4); }
-  } catch {}
-  try { navigator.vibrate && navigator.vibrate([300, 150, 300, 150, 300]); } catch {}
-}
-
-/* ================= avisos, janelas e campos ================= */
-/* avisos e janelas são os do Kit Fácil (iguais nos três apps); estas funções só traduzem os nomes usados no app */
-function toast(msg, action) { KitFacil.avisar(msg, action); }
-function openSheet({ title, body, foot = "", tall = false, wide = false, onMount, onClose, sub = "" }) {
-  return KitFacil.dialogo.abrir({ titulo: title, sub, corpo: body, pe: foot, classe: [tall && "kf-alto", wide && "kf-largo"].filter(Boolean).join(" "),
-    aoFechar: () => { if (onClose) onClose(); if (UI.pendingRender) render(); },
-    aoMontar: sh => {
-      $$("input:not([type=checkbox]):not([type=radio]):not([type=file])", sh).forEach(i => { if (!i.hasAttribute("enterkeyhint")) i.setAttribute("enterkeyhint", "done"); });
-      onMount && onMount(sh);
-    } });
-}
-function closeSheet(silent) { KitFacil.dialogo.fechar(silent); if (UI.pendingRender) render(); }
-function confirmSheet(title, text, okLabel, onOk, danger = true) {
-  openSheet({ title, body: `<p class="lead">${text}</p>`,
-    foot: `<button class="btn ghost" data-no>Voltar</button><button class="btn ${danger ? "danger" : "pri"}" data-ok>${esc(okLabel)}</button>`,
-    onMount: s => { $("[data-no]", s).onclick = () => closeSheet(); $("[data-ok]", s).onclick = () => { closeSheet(true); onOk(); }; } });
-}
-async function copyText(text, okMsg) {
-  try { await navigator.clipboard.writeText(text); toast(okMsg); return; } catch {}
-  openSheet({ title: "Copiar texto", body: `<textarea id="cp-t" readonly rows="8">${esc(text)}</textarea><p class="hint">Toque e segure no texto e escolha Copiar.</p>`,
-    onMount: s => { const t = $("#cp-t", s); t.focus(); t.select(); } });
-}
-function baixar(nome, blob) {
-  try {
-    const url = URL.createObjectURL(blob), a = document.createElement("a");
-    a.href = url; a.download = nome; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    return true;
-  } catch { toast("Não foi possível baixar o arquivo neste navegador."); return false; }
-}
-document.addEventListener("keydown", e => {
-  const t = e.target;
-  if (e.key !== "Enter" || !t.matches || !t.matches("input:not([type=checkbox]):not([type=radio])") || t.form) return;
-  e.preventDefault(); t.blur();
-});
-const autoGrow = t => { if (!t.offsetParent) return; t.style.height = "auto"; t.style.height = Math.max(80, t.scrollHeight + 2) + "px"; };
-document.addEventListener("input", e => { if (e.target.tagName === "TEXTAREA" && !e.target.hasAttribute("rows")) autoGrow(e.target); });
-
-/* ================= navegação e desenho das telas ================= */
-const UI = { pendingRender: false, alarme: 0, focoAberto: false, edTab: "conteudo", edAberta: new Set(), dsPer: "semana", dsNav: today(), cal: { mes: today().slice(0, 8) + "01", sel: today() }, busca: "", hLim: 30 };
-const VIEWS = {};
-const NAV = [["hoje", "Hoje", "hoje"], ["editais", "Editais", "edital"], ["estudar", "Estudar", "timer"], ["disciplinas", "Disciplinas", "livro"], ["agenda", "Agenda", "agenda"]];
-const RAIL_MAIS = [["desempenho", "Desempenho", "stats"]]; // Ajustes fica no fim da navegação (KitFacil.nav.ajustes), igual nos três apps
-// barra de baixo (Kit Fácil 2.2): 4 principais (Hoje, Editais, Estudar, Agenda) + "Mais" com Disciplinas, Desempenho e Ajustes
-const NAV_MAIS = new Set(["disciplinas", "desempenho"]);
-const ABA = { edital: "editais" };
-function route() {
-  const h = decodeURIComponent(location.hash.replace(/^#\/?/, "")).split("/");
-  const v = VIEWS[h[0]] ? h[0] : "hoje";
-  return { v, sub: h[1] || "", sub2: h[2] || "" };
-}
-function go(path, replace) {
-  const d = (history.state && history.state.d) || 0;
-  if (replace) history.replaceState({ d }, "", "#/" + path); else history.pushState({ d: d + 1 }, "", "#/" + path);
-  closeSheet(true); render({ top: true });
-}
-window.addEventListener("popstate", () => { closeSheet(true); render({ top: true }); });
-
-function render(opts = {}) {
-  const r = route();
-  renderShell(r);
-  const main = $("#main");
-  const act = document.activeElement;
-  if (!opts.force && act && main.contains(act) && /INPUT|TEXTAREA|SELECT/.test(act.tagName) && !/checkbox|radio/.test(act.type)) { UI.pendingRender = true; renderFoco(); return; }
-  UI.pendingRender = false;
-  const y = window.scrollY;
-  const trocou = main.dataset.view !== r.v;
-  main.innerHTML = VIEWS[r.v](r);
-  main.dataset.view = r.v;
-  if (trocou) KitFacil.movimento.entrar(main, { de: "tela" }); // troca de tela com o movimento comum
-  if (VIEWS[r.v].after) VIEWS[r.v].after(r);
-  window.scrollTo(0, opts.top ? 0 : y);
-  renderFoco();
-  tick();
-}
-document.addEventListener("focusout", () => setTimeout(() => { if (UI.pendingRender && !busyTyping()) render(); }, 40));
-
-function renderShell(r) {
-  const a = DB.ativa, aba = ABA[r.v] || r.v;
-  const cur = v => aba === v ? 'aria-current="page"' : "";
-  const navBtn = ([v, l, ic]) => {
-    if (v === "estudar") return `<button class="kf-nav-it nav-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}><span class="nav-fab">${a ? I.timer : I.play}</span><span class="kf-nav-l" ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : l}</span></button>`;
-    return `<button class="kf-nav-it" data-go="${v}" ${cur(v)}${NAV_MAIS.has(v) ? " data-kf-mais" : ""}><span class="kf-nav-ic">${I[ic]}</span><span class="kf-nav-l">${l}</span></button>`;
-  };
-  $("#nav").innerHTML = [...NAV, ...RAIL_MAIS].map(navBtn).join("") + KitFacil.nav.ajustes("nav", { id: "nav-ajustes" });
-  $("#rail-nav").innerHTML = [...NAV, ...RAIL_MAIS].map(([v, l, ic]) => v === "estudar"
-    ? `<button class="kf-trilho-it rail-go${a ? " ativo" : ""}" data-act="nav-estudar" ${cur(v)}>${a ? I.timer : I.play}<span ${a ? 'data-tick="nav"' : ""}>${a ? relogio(estudoTotal(a, Date.now())) : "Estudar"}</span></button>`
-    : `<button class="kf-trilho-it" data-go="${v}" ${cur(v)}>${I[ic]}<span>${l}</span></button>`).join("");
-  // Desempenho: no celular, pelo link "Últimos 7 dias → Desempenho" da tela Hoje; no computador, também no trilho
-  // Ajustes no pé do trilho (computador)
-  if ($("#rail-ajustes")) $("#rail-ajustes").outerHTML = KitFacil.nav.ajustes("trilho", { id: "trilho-ajustes" });
-  // área superior direita padronizada: nuvem, presente e balão
-  if (!$("#topo .kf-topo")) $("#topo").innerHTML = KitFacil.topo.html({ principal: true });
-  KitFacil.topo.atualizar();
-}
-
-/* o relógio da sessão atualiza só os números, sem redesenhar a tela */
-function tick() {
-  const a = DB.ativa;
-  if (!a) return;
-  const now = Date.now(), est = estudoTotal(a, now);
-  $$("[data-tick]").forEach(el => {
-    const k = el.dataset.tick;
-    if (k === "nav") el.textContent = relogio(est);
-    else if (k === "estudo") el.textContent = relogio(a.meta ? Math.max(0, a.meta - est) : est);
-    else if (k === "estudo-real") el.textContent = dur(est);
-    else if (k === "pausa") el.textContent = relogio(pausaTotal(a, now));
-    else if (k === "barra") el.style.width = Math.min(100, pct(est, a.meta)) + "%";
-  });
-  if (a.meta && est >= a.meta && UI.alarme !== a.id && !emPausa(a)) {
-    UI.alarme = a.id; beep();
-    openSheet({ title: "Tempo cumprido", body: `<p class="lead">Você completou ${dur(a.meta)} de estudo. Quer continuar ou concluir a sessão?</p>`,
-      foot: `<button class="btn ghost" data-act="continuar-livre">Continuar estudando</button><button class="btn pri" data-act="concluir">Concluir</button>` });
+/* ---------- gravar ---------- */
+let pintarPendente = false;
+function salvar(opts = {}) {
+  VER++;
+  if (!semSalvar) {
+    const mudou = carimbarTudo();
+    if (!LS.set('db', DB)) KitFacil.avisar('O armazenamento do aparelho está cheio. Baixe uma cópia de segurança nos Ajustes.');
+    if (mudou && SY && SY.ligada()) SY.agendar(opts.syncMs);
   }
+  if (!opts.quieto) agendarPintura();
 }
-setInterval(tick, 1000);
+function agendarPintura() { if (pintarPendente) return; pintarPendente = true; requestAnimationFrame(() => { pintarPendente = false; if (typeof render === 'function') render(); }); }
+// outra aba (ou o app instalado aberto junto com o navegador) mudou os dados
+window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
-/* ================= ações (cliques) ================= */
-const ACT = {};
-const ON = {};
-document.addEventListener("click", ev => {
-  const g = ev.target.closest("[data-go]");
-  if (g) { ev.preventDefault(); if (UI.focoAberto && g.closest("#foco")) fecharFoco(); go(g.dataset.go); return; }
-  const el = ev.target.closest("[data-act]"); if (!el) return;
-  const fn = ACT[el.dataset.act]; if (!fn) return;
-  ev.preventDefault();
-  try { fn(el, ev); } catch (e) { console.error(e); toast("Algo deu errado. Tente de novo."); }
+/* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
+const NOVIDADES = [{ versao: '1.0.0', itens: [
+  'Estudo Fácil de cara nova, refeito do zero: Hoje, Plano, Estudar, Evolução e Mais.',
+  'Plano pronto para a ANPD (Especialista em Regulação), com 12 disciplinas, 119 assuntos e três fases até a prova.',
+  'Sequência de dias, missões do dia, pontos, níveis e medalhas em 3D que giram com o dedo.',
+  'O edital vira um caderno: cada assunto estudado fica grifado, e a prontidão para a prova sobe.',
+  'Modo foco em tela cheia, com cronômetro, acertos e erros; as revisões entram sozinhas em 1, 7 e 30 dias.',
+  'Os dados da versão anterior não foram trazidos; uma cópia deles ficou guardada neste aparelho.',
+] }];
+let SY = null;
+const ocupadoApp = () => (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof focoAberto === 'function' && focoAberto()) || (typeof festaAberta !== 'undefined' && festaAberta);
+KitFacil.iniciar({
+  app: 'estudo-facil', nome: 'Estudo Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
+  resumo: 'Plano de estudos para concursos: o que estudar hoje, modo foco, revisões, sequência de dias e medalhas.',
+  tela: () => (typeof tab !== 'undefined' ? tab : 'hoje'), exemploDados: 'os concursos, as disciplinas, as sessões de estudo e as revisões',
+  abrirAjustes: secao => { if (secao || tab !== 'ajustes') abrirAjustes(); else fecharAjustes(); },
+  emAjustes: () => typeof tab !== 'undefined' && tab === 'ajustes',
+  novidades: [...NOVIDADES],
+  ocupado: ocupadoApp,
+  copia: { descricao: 'Baixe um arquivo com os concursos, as disciplinas, as sessões, as revisões e as medalhas.', baixar: () => KitFacil.copia.baixar({ v: 3, ...dadosSync() }, 3), restaurar: f => restaurarCopia(f) },
+  textos: { notificacoes: 'O Estudo Fácil não envia notificações para o aparelho. No fim do tempo de uma sessão, o app toca um som e vibra, se você deixar ligado abaixo.' },
+  privacidade: [
+    'Os concursos, as disciplinas, as sessões de estudo, as revisões, os simulados e as medalhas ficam guardados neste aparelho.',
+    'Nada do que você estuda é enviado para outro lugar, a menos que você ligue a sincronização entre os seus aparelhos.',
+  ],
 });
-document.addEventListener("change", ev => {
-  const el = ev.target; const fn = el.dataset && ON[el.dataset.on]; if (!fn) return;
-  try { fn(el, ev); } catch (e) { console.error(e); }
-});
+KitFacil.tema.iniciar({ chave: KEY + 'pref', cores: { claro: '#F1F3FA', escuro: '#0B0F24' } });
 
-/* depois de criar um edital, abre o edital (não há tela de primeiro uso: Código do Projeto Fácil) */
-function editalCriado(c, msg) {
-  closeSheet(true);
-  commit({ quiet: true });
-  go("edital/" + c.id);
-  if (msg) toast(msg);
+/* Sincronização: cada registro guarda a hora da última mudança; ao juntar, a mudança mais recente vence, registro a
+   registro, e as exclusões ficam marcadas (Código, Art. 33). O motor (gist, criptografia, telas) é o do Kit. */
+let FOTO = null;
+function fotografar() {
+  FOTO = { cfg: {}, ativa: JSON.stringify(DB.ativa) };
+  for (const k in DB.cfg) FOTO.cfg[k] = JSON.stringify(DB.cfg[k]);
+  for (const c of COLLS) { const m = new Map(); for (const r of DB[c]) m.set(r.id, JSON.stringify(r)); FOTO[c] = m; }
+}
+function carimbarTudo() {
+  if (!SY) return false;
+  if (!FOTO) { fotografar(); return false; }
+  const E = SY.estado, t = Date.now(); let mudou = false;
+  for (const k in DB.cfg) { const j = JSON.stringify(DB.cfg[k]); if (FOTO.cfg[k] !== j) { FOTO.cfg[k] = j; E.st['cfg:' + k] = t; mudou = true; } }
+  const a = JSON.stringify(DB.ativa); if (FOTO.ativa !== a) { FOTO.ativa = a; E.st.ativa = t; mudou = true; }
+  for (const c of COLLS) {
+    const m = FOTO[c], vistos = new Set();
+    for (const r of DB[c]) { vistos.add(r.id); const j = JSON.stringify(r); if (m.get(r.id) !== j) { m.set(r.id, j); E.st[c + ':' + r.id] = t; delete E.del[c + ':' + r.id]; mudou = true; } }
+    for (const id of [...m.keys()]) if (!vistos.has(id)) { m.delete(id); delete E.st[c + ':' + id]; E.del[c + ':' + id] = t; mudou = true; }
+  }
+  if (mudou) SY.salvar();
+  return mudou;
+}
+const dadosSync = () => { const o = { cfg: DB.cfg, ativa: DB.ativa }; for (const c of COLLS) o[c] = DB[c]; return o; };
+function juntarListas(L, R, lt, rt, del, veio) {
+  const rm = new Map(R.map(x => [x.id, x])), usados = new Set(), out = [];
+  for (const x of L) {
+    usados.add(x.id); const r = rm.get(x.id), d = del(x.id) || 0;
+    if (r) { if (d && d >= Math.max(lt(x.id), rt(r.id))) continue; if (rt(r.id) > lt(x.id)) { out.push(r); veio(r); } else out.push(x); }
+    else if (!(d && d >= lt(x.id))) out.push(x);
+  }
+  for (const r of R) if (!usados.has(r.id) && !(del(r.id) && del(r.id) >= rt(r.id))) { out.push(r); veio(r); }
+  return out;
+}
+function aplicarNuvem(R) {
+  // nuvem gravada pelo formato antigo (0.x): não é trazida; o que está neste aparelho passa a valer
+  if (!R || R.v !== 3) R = { v: 3, st: {}, del: {} };
+  const E = SY.estado, primeira = !E.lastSync, rs = R.st || {}, st = { ...E.st }, del = { ...E.del };
+  for (const k in (R.del || {})) del[k] = Math.max(del[k] || 0, R.del[k]);
+  const corte = Date.now() - 400 * DIA; for (const k in del) if (del[k] < corte) delete del[k];
+  const antes = KitFacil.canon(dadosSync());
+  const C = { ...DB.cfg }, RC = R.cfg || {};
+  for (const k of Object.keys(RC)) { const rt = rs['cfg:' + k] || 0, lt = st['cfg:' + k] || 0; if ((primeira && (rt || !lt)) || rt > lt) { C[k] = RC[k]; if (rt) st['cfg:' + k] = rt; } }
+  const novo = { v: 3, cfg: C, ativa: DB.ativa };
+  for (const c of COLLS) novo[c] = juntarListas(DB[c], Array.isArray(R[c]) ? R[c] : [], id => st[c + ':' + id] || 0, id => rs[c + ':' + id] || 0, id => del[c + ':' + id] || 0, r => { const t = rs[c + ':' + r.id]; if (t) st[c + ':' + r.id] = t; });
+  if ((rs.ativa || 0) > (st.ativa || 0)) { novo.ativa = R.ativa || null; st.ativa = rs.ativa; }
+  DB = arrumarBanco(novo) || DB;
+  for (const c of COLLS) { const vivos = new Set(DB[c].map(r => String(r.id))); for (const k of Object.keys(st)) if (k.startsWith(c + ':') && !vivos.has(k.slice(c.length + 1))) delete st[k]; }
+  E.st = st; E.del = del;
+  LS.set('db', DB); fotografar(); SY.salvar(); VER++;
+  return antes !== KitFacil.canon(dadosSync());
+}
+SY = KitFacil.sync.criar({
+  app: 'estudo-facil', nome: 'Estudo Fácil', chave: KEY + 'sync', dados: 'os concursos, as disciplinas, as sessões, as revisões e as medalhas',
+  carimbar: () => carimbarTudo(), aplicar: R => aplicarNuvem(R), pacote: () => ({ v: 3, ...dadosSync(), st: SY.estado.st, del: SY.estado.del }),
+  mesmo: (a, r) => KitFacil.canon(a) === KitFacil.canon({ v: r.v, cfg: r.cfg, ativa: r.ativa ?? null, ...Object.fromEntries(COLLS.map(c => [c, r[c]])), st: r.st, del: r.del }),
+  redesenhar: () => { if (typeof render === 'function') render(); },
+  ocupado: () => KitFacil.dialogo.aberto() || !!(document.activeElement && document.activeElement.matches && document.activeElement.matches('input:not([type=checkbox]),textarea,select')) || ocupadoApp(),
+  textoLigada: () => `Sincronização ligada. ${plural(DB.sessoes.length, 'sessão de estudo', 'sessões de estudo')} neste aparelho.`,
+});
+fotografar();
+
+async function restaurarCopia(arquivo) {
+  const r = await KitFacil.copia.ler(arquivo), b = arrumarBanco(r && r.dados);
+  if (!b) { avisar('Este arquivo não é uma cópia de segurança do Estudo Fácil 1.0.'); return; }
+  confirmar('Restaurar a cópia?', 'Os dados deste aparelho são trocados pelos do arquivo.', 'Restaurar cópia', () => { DB = b; salvar(); avisar('Cópia restaurada.'); });
+}
+// apaga tudo, inclusive na nuvem: os registros ficam marcados como excluídos e a sincronização leva a exclusão
+function apagarTudo() {
+  const novo = bancoVazio(); novo.cfg = { ...CFG_PADRAO };
+  DB = novo; salvar({ syncMs: 300 });
 }
 
-/* ================= sincronização: atalhos (as janelas e os textos são do Kit Fácil) ================= */
-Object.assign(ACT, {
-  "sync-start": () => SY.dialogoConectar(),
-  "sync-dica-off": () => { sync.tipOff = true; saveSync(); render(); }
-});
+/* ---------- janelas e avisos: os do Kit ---------- */
+function abrirJanela({ titulo, sub = '', contexto = '', corpo, pe = '', alto = false, largo = false, aoMontar, aoFechar }) {
+  return KitFacil.dialogo.abrir({ titulo, sub, contexto, corpo, pe, classe: [alto && 'kf-alto', largo && 'kf-largo'].filter(Boolean).join(' '), aoFechar, aoMontar });
+}
+const fecharJanela = quieto => KitFacil.dialogo.fechar(quieto);
+const confirmar = (titulo, texto, ok, aoConfirmar, desfaz = 'Não dá para desfazer.') => KitFacil.dialogo.confirmar({ titulo, texto, desfaz, ok, perigo: /^(Excluir|Remover|Apagar)/.test(ok), aoConfirmar });
+const avisar = (m, acao) => KitFacil.avisar(m, acao);
+const semMovimento = () => KitFacil.movimento.reduzido();

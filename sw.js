@@ -1,9 +1,9 @@
 // Estudo Fácil · uso sem internet (modelo do Projeto Integrador).
 // Arquivos do app: busca a versão nova primeiro e usa a guardada se estiver sem internet.
-// Bibliotecas (fontes e leitor de PDF) têm versão fixa: usa a guardada.
+// Bibliotecas (fontes) têm versão fixa: usa a guardada.
 // O cache leva a versão do app (package.json); cada app só apaga as próprias cópias antigas.
-const CACHE = 'estudo-facil-0.7.1';
-const APP = ['./', './index.html', './comum/kit-facil.js', './comum/kit-facil.css', './comum/kit-jogo.js', './editais.js', './app.js', './telas.js', './cadastros.js', './leitor-pdf.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/favicon-32.png'];
+const CACHE = 'estudo-facil-1.0.0';
+const APP = ['./', './index.html', './estilo.css', './comum/kit-facil.js', './comum/kit-facil.css', './comum/kit-jogo.js', './editais.js', './app.js', './jogo.js', './estudar.js', './telas.js', './casca.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/favicon-32.png'];
 const LIBS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', e => {
