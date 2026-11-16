@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.6.0';
+const VERSAO = '1.7.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -32,9 +32,10 @@ const SEMANA_L = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', '
 const fmtData = s => { if (!s) return ''; const d = deISO(s); return `${d.getDate()} de ${MESES[d.getMonth()]}${d.getFullYear() !== new Date().getFullYear() ? ' de ' + d.getFullYear() : ''}`; };
 const fmtDataAno = s => { if (!s) return ''; const d = deISO(s); return `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`; };
 const fmtDataCurta = s => { const d = deISO(s); return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`; };
-const fmtMin = m => { m = Math.round(m); if (m < 60) return m + ' min'; const h = Math.floor(m / 60), r = m % 60; return r ? `${h} h ${r} min` : `${h} h`; };
-const fmtHoras = m => { const h = m / 60; return (h >= 10 ? Math.round(h) : Math.round(h * 10) / 10).toLocaleString('pt-BR') + ' h'; };
-const fmtRelogio = seg => { seg = Math.max(0, Math.floor(seg)); const h = Math.floor(seg / 3600), m = Math.floor(seg % 3600 / 60), s = seg % 60; return (h ? h + ':' + String(m).padStart(2, '0') : String(m).padStart(2, '0')) + ':' + String(s).padStart(2, '0'); };
+// todo tempo do app aparece em hh:mm:ss
+const fmtRelogio = seg => { seg = Math.max(0, Math.round(seg)); const p = n => String(n).padStart(2, '0'); return `${p(Math.floor(seg / 3600))}:${p(Math.floor(seg % 3600 / 60))}:${p(seg % 60)}`; };
+const fmtMin = m => fmtRelogio(m * 60);
+const fmtHoras = fmtMin;
 const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
 const primeiroNome = n => String(n || '').trim().split(/\s+/)[0] || '';
 
@@ -96,7 +97,7 @@ const LS = {
                oficial marcado (pv:<prova>:<item>)       redacoes   textos do treino da discursiva
    cadernos    cadernos de questões: os seus e o andamento dos de fábrica (cadernos.js) */
 const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'respostas', 'cadernos', 'textos', 'redacoes', 'dias', 'marcos', 'simulados', 'eventos'];
-const CFG_PADRAO = { nome: '', metaMin: 60, dias: [0, 1, 2, 3, 4, 5, 6], bloco: 30, metaQ: 15, revisoes: [1, 7, 30], som: true, vibra: true, jogo: true };
+const CFG_PADRAO = { nome: '', metaMin: 60, dias: [0, 1, 2, 3, 4, 5, 6], bloco: 30, metaQ: 50, revisoes: [1, 7, 30], som: true, vibra: true, jogo: true };
 const CORES = ['#2742D3', '#0E8A7D', '#C2410C', '#7C3AED', '#B4235A', '#0369A1', '#4D7C0F', '#B45309', '#BE185D', '#0F766E', '#6D28D9', '#9A3412'];
 const TIPOS = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão', lei: 'Lei seca' };
 const DOMINIOS = ['Novo', 'Começado', 'Estudado', 'Revisado', 'Dominado'];
@@ -108,7 +109,7 @@ function arrumarBanco(o) {
   b.cfg = { ...CFG_PADRAO, ...(o.cfg || {}) };
   if (!Array.isArray(b.cfg.dias)) b.cfg.dias = [...CFG_PADRAO.dias];
   if (!Array.isArray(b.cfg.revisoes) || !b.cfg.revisoes.length) b.cfg.revisoes = [...CFG_PADRAO.revisoes];
-  b.cfg.metaMin = clamp(+b.cfg.metaMin || 60, 15, 600); b.cfg.bloco = clamp(+b.cfg.bloco || 30, 15, 120); b.cfg.metaQ = clamp(+b.cfg.metaQ || 15, 0, 300);
+  b.cfg.metaMin = clamp(+b.cfg.metaMin || 60, 15, 600); b.cfg.bloco = clamp(+b.cfg.bloco || 30, 15, 120); b.cfg.metaQ = clamp(b.cfg.metaQ == null ? 50 : +b.cfg.metaQ || 0, 0, 300);
   for (const c of COLLS) b[c] = Array.isArray(o[c]) ? o[c].filter(r => r && r.id != null) : [];
   b.ativa = o.ativa && typeof o.ativa === 'object' ? o.ativa : null;
   return b;
@@ -308,14 +309,15 @@ function ordemDasDisciplinas() {
     .sort((a, b) => b.falta - a.falta || b.w - a.w);
 }
 // assunto com questões no banco do app (questoes.js): o estudo dele é pelo treino de questões
-const temBanco = tId => typeof questoesDe === 'function' && questoesDe(tId).length > 0;
+const temBanco = tId => typeof questoesDoAssunto === 'function' && questoesDoAssunto(tId).length > 0;
 const tipoDoEstudo = (tId, tipo) => tipo === 'teoria' && temBanco(tId) ? 'questoes' : tipo;
 function planoDoDia() {
   const h = hojeISO(), c = cfg(), S = sessoesDoDia(h);
   const revs = revisoesDeHoje().map(r => ({ tipo: 'revisao', rev: r.id, t: r.t, m: topico(r.t).m, min: 15, atraso: entreDias(r.due, h), feito: false }));
   // revisões feitas hoje continuam na lista, riscadas
   const feitasHoje = DB.revisoes.filter(r => r.feita && iso(new Date(r.feita)) === h && topico(r.t)).map(r => ({ tipo: 'revisao', rev: r.id, t: r.t, m: topico(r.t).m, min: 15, feito: true }));
-  const nBlocos = Math.max(1, Math.round(c.metaMin / c.bloco)), ordem = ordemDasDisciplinas(), blocos = [];
+  const ordem = ordemDasDisciplinas(), nBlocos = Math.max(ordem.length > 1 ? 2 : 1, Math.round(c.metaMin / c.bloco)), blocos = [], qBloco = Math.ceil(c.metaQ / nBlocos);
+  const qNaMateria = m => soma(S.filter(s => s.m === m && s.tipo !== 'revisao'), s => (s.ac || 0) + (s.er || 0));
   for (let i = 0; blocos.length < nBlocos && ordem.length; i++) {
     const d = ordem[i % ordem.length], ja = blocos.filter(b => b.m === d.m).length;
     if (i >= ordem.length * 3) break;
@@ -325,7 +327,8 @@ function planoDoDia() {
     if (!px) continue;
     const minFeito = soma(S.filter(s => s.t === px.t.id && s.tipo !== 'revisao'), s => s.seg / 60);
     const tipo = tipoDoEstudo(px.t.id, px.tipo);
-    blocos.push({ tipo, t: px.t.id, m: d.m, min: c.bloco, nq: tipo === 'questoes' && temBanco(px.t.id) ? questoesDe(px.t.id).length : 0, feito: minFeito >= c.bloco * 0.8 || (px.tipo === 'teoria' && !!px.t.teoria && minFeito > 0), minFeito });
+    const nq = tipo === 'questoes' && temBanco(px.t.id) ? qBloco || questoesDoAssunto(px.t.id).length : 0;
+    blocos.push({ tipo, t: px.t.id, m: d.m, min: c.bloco, nq, feito: minFeito >= c.bloco * 0.8 || (px.tipo === 'teoria' && !!px.t.teoria && minFeito > 0) || (nq > 0 && qNaMateria(d.m) >= nq * (ja + 1)), minFeito });
   }
   const itens = [...revs.slice(0, 5), ...feitasHoje, ...blocos];
   return { itens, proximo: itens.find(x => !x.feito) || null, minutos: minutosDoDia(h), meta: c.metaMin, revisoesAMais: Math.max(0, revs.length - 5) };
@@ -333,7 +336,7 @@ function planoDoDia() {
 // sugestão para quem já cumpriu o plano: a próxima disciplina da fila
 function sugestaoExtra() {
   const feitos = new Set(planoDoDia().itens.map(i => i.t));
-  for (const d of ordemDasDisciplinas()) { const px = proximoAssunto(d.m, topicosAtivos(d.m) || undefined); if (px && !feitos.has(px.t.id)) { const tipo = tipoDoEstudo(px.t.id, px.tipo); return { tipo, t: px.t.id, m: d.m, min: cfg().bloco, nq: tipo === 'questoes' && temBanco(px.t.id) ? questoesDe(px.t.id).length : 0 }; } }
+  for (const d of ordemDasDisciplinas()) { const px = proximoAssunto(d.m, topicosAtivos(d.m) || undefined); if (px && !feitos.has(px.t.id)) { const tipo = tipoDoEstudo(px.t.id, px.tipo); return { tipo, t: px.t.id, m: d.m, min: cfg().bloco, nq: tipo === 'questoes' && temBanco(px.t.id) ? questoesDoAssunto(px.t.id).length : 0 }; } }
   return null;
 }
 
@@ -408,7 +411,14 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.6.0', itens: [
+const NOVIDADES = [{ versao: '1.7.0', itens: [
+  'O app ficou integrado: o que você resolve no plano de hoje aparece nos cadernos, e o contrário também.',
+  'Cada questão de prova tem o seu assunto, e cada segundo numa questão soma no tempo desse assunto e na meta do dia.',
+  'Acabaram as questões do assunto? O treino segue no próximo assunto da disciplina.',
+  'Meta de 50 questões por dia, e o plano de hoje já vem do tamanho das missões.',
+  'Tempo sempre em hh:mm:ss. O texto de apoio abre sem esconder a questão.',
+  'As questões escritas pelo instrutor levam o selo "Feita por IA". A aula do assunto saiu.',
+] }, { versao: '1.6.0', itens: [
   'Três provas novas do Cebraspe: ANTT 2024, conhecimentos básicos e específicos dos cargos 1 e 2.',
   'São mais 124 questões oficiais do seu edital, com LGPD, Marco Civil, concorrência, controle da administração e inteligência artificial.',
   'Para resolvê-las aqui, abra o arquivo das provas atualizado, em Cadernos.',

@@ -57,7 +57,7 @@ for (const tema of ['light', 'dark']) {
     // treino de questões: antes e depois da resposta, com a aula aberta e a resposta do instrutor; a pergunta e os flashcards
     await p.evaluate(() => { INSTRUTOR = { 'lgpd-016': [{ em: '16/11/2026', r: 'O art. 11 não traz o legítimo interesse.' }] }; DB.respostas.push({ id: 'lgpd-004', n: 1, ac: 0, ok: false, em: agora(), cx: 0, due: hojeISO(), rv: 0 }); salvar(); irPara('hoje'); treinoAbrir({ lista: [QID.get('lgpd-016'), QID.get('lgpd-017'), QID.get('lgpd-018')] }); });
     await p.locator('#treino.dentro').waitFor(); await varrer(p, `treino, pergunta (${nome})`);
-    await p.click('#treino [data-resp="C"]'); await p.click('#treino .tr-aula summary'); await p.waitForTimeout(200); await varrer(p, `treino, errou (${nome})`);
+    await p.click('#treino [data-resp="C"]'); await p.waitForTimeout(200); await varrer(p, `treino, errou (${nome})`);
     await p.click('#tr-perguntar'); await p.locator('#in-ok').waitFor(); await varrer(p, `perguntar ao instrutor (${nome})`); await p.keyboard.press('Escape');
     await p.click('#tr-prox'); await p.click('#treino [data-resp="C"]'); await p.click('#tr-prox'); await p.click('#treino [data-resp="C"]'); await p.waitForTimeout(200); await varrer(p, `treino, acertou com combo (${nome})`);
     await p.click('#tr-prox'); await p.locator('#festa-ok').waitFor(); await varrer(p, `festa do treino (${nome})`); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });

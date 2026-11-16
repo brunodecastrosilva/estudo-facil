@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.6 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.7 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -66,7 +66,7 @@ test('edital da ANPD: itens somam as áreas, pesos somam 100% e os fatos trazem 
 test('plano do dia: dois blocos, o primeiro de questões da LGPD; revisões vencidas vêm antes', async () => {
   const a = await abrir(), p = a.page;
   let pl = await p.evaluate(() => planoDoDia().itens.map(i => [i.tipo, i.m, i.nq || i.min]));
-  assert.equal(pl.length, 2); assert.deepEqual(pl[0], ['questoes', 'anpd-lgpd', 3], 'assunto com questões do app: o estudo é pelo treino'); assert.notEqual(pl[1][1], 'anpd-lgpd');
+  assert.equal(pl.length, 2); assert.deepEqual(pl[0], ['questoes', 'anpd-lgpd', 25], 'o plano traz questões que somam a meta do dia (50), em duas disciplinas'); assert.notEqual(pl[1][1], 'anpd-lgpd');
   await estudar(p, { dia: '2026-11-15', min: 40 });
   pl = await p.evaluate(() => planoDoDia().itens.map(i => [i.tipo, i.t]));
   assert.equal(pl[0][0], 'revisao', 'a revisão de 1 dia abre o plano de hoje');
@@ -116,19 +116,20 @@ test('treino de questões pela tela: certo ou errado, comentário, aula, combo, 
   await p.click('#hoje-estudar'); await p.locator('#es-ok').waitFor();
   assert.match(await p.locator('#es-banco').innerText(), /3 questões do app/);
   await p.click('#es-ok'); await p.locator('#treino.dentro').waitFor();
-  assert.equal(await p.evaluate(() => !DB.ativa && treinoAberto() && TR.lista.map(q => q.id).join()), 'lgpd-001,lgpd-002,lgpd-003');
+  assert.equal(await p.evaluate(() => !DB.ativa && treinoAberto() && TR.lista.slice(0, 4).map(q => q.id).join() + ':' + (TR.lista.length > 60) + ':' + new Set(TR.lista.map(q => topico(q.t).m)).size), 'lgpd-001,lgpd-002,lgpd-003,lgpd-004:true:1', 'depois do assunto, vêm os próximos da disciplina');
+  assert.equal(await p.locator('#treino .selo-ia').innerText(), 'Feita por IA');
   assert.equal(await p.locator('#tr-prox').count(), 0, 'o comentário só aparece depois da resposta');
   await p.keyboard.press('c'); await p.locator('#tr-prox').waitFor();
   assert.match(await p.locator('#treino .tr-fb').innerText(), /Você acertou[\s\S]*Gabarito: Certo/);
   assert.match(await p.locator('#treino .tr-fund').innerText(), /LGPD, art\. 3º, III/);
-  await p.click('#treino .tr-aula summary'); assert.match(await p.locator('#treino .tr-aula').innerText(), /uso particular e não econômico/);
-  assert.equal(await p.evaluate(() => document.activeElement.closest('#treino') !== null), true, 'o foco fica dentro do treino');
+  assert.equal(await p.locator('#treino .tr-aula').count(), 0, 'a aula do assunto saiu do app');
+  await p.waitForFunction(() => document.activeElement && document.activeElement.id === 'tr-prox', null, { timeout: 3000 }); // o foco vai para o botão de seguir, dentro do treino
   await p.click('#tr-prox'); await p.click('#treino [data-resp="C"]'); await p.locator('#treino .tr-combo').waitFor();
   await p.click('#tr-prox'); await p.click('#treino [data-resp="C"]');
   assert.match(await p.locator('#treino .tr-fb').innerText(), /Você errou[\s\S]*Gabarito: Errado · você marcou Certo/);
   assert.match(await p.locator('#treino .tr-fc').innerText(), /virou flashcard/);
-  assert.equal(await p.locator('#tr-prox').innerText(), 'Concluir treino');
-  await p.click('#tr-prox'); await p.locator('#festa-ok').waitFor();
+  assert.equal(await p.locator('#tr-prox').innerText(), 'Próxima questão', 'acabou o assunto: o treino segue no próximo');
+  await p.click('#tr-prox'); assert.equal(await p.evaluate(() => TR.lista[TR.i].t), 'anpd-lgpd-02'); await p.keyboard.press('Escape'); await p.locator('#festa-ok').waitFor();
   assert.match(await p.locator('#festa-t').innerText(), /Assunto grifado/);
   await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
   const r = await p.evaluate(() => ({ s: DB.sessoes.map(s => [s.t, s.tipo, s.ac, s.er, s.combo]), resp: DB.respostas.map(r => [r.id, r.n, r.ac, r.ok, r.cx ?? null, r.due || '']), teoria: !!topico('anpd-lgpd-01').teoria, rev: DB.revisoes.map(r => r.due), fc: flashcardsDeHoje().length, plano: planoDoDia().itens[0].feito, pts: pontosBase() - Math.round(DB.sessoes[0].seg / 60), ganhas: jogoEstado().ganhas }));
@@ -209,11 +210,11 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   await p.click('#view [data-act="abrir-cad"][data-id="p:anatel24-cb1"]'); await p.locator('#cad-ir').waitFor();
   assert.equal(await p.locator('#view .cad-q').count(), 43); assert.deepEqual(await p.locator('#view .sub-t').allInnerTexts(), ['Língua Portuguesa', 'Língua Inglesa', 'Regulação e agências reguladoras', 'Direito Administrativo', 'Direito Constitucional']);
   await p.click('#cad-ir'); await p.locator('#treino.dentro').waitFor();
-  assert.match(await p.locator('#treino .etiqueta').innerText(), /Cebraspe · ANATEL 2024 · item 1/); assert.equal(await p.locator('#treino .tr-cmd').innerText(), 'Julgue os itens a seguir, relativos ao texto CB1.');
+  assert.match(await p.locator('#treino .etiqueta >> nth=0').innerText(), /Cebraspe · ANATEL 2024 · item 1/); assert.equal(await p.locator('#treino .etiqueta >> nth=1').innerText(), 'Compreensão e interpretação de textos'); assert.equal(await p.locator('#treino .selo-ia').count(), 0); assert.equal(await p.locator('#treino .tr-cmd').innerText(), 'Julgue os itens a seguir, relativos ao texto CB1.');
   assert.match(await p.locator('#treino .tr-apoio').innerText(), /Texto de apoio/); assert.equal(await p.locator('#treino .tr-enun').innerText(), 'Item inventado 1, só para o teste.');
   await p.click('#treino [data-resp="E"]'); assert.match(await p.locator('#treino .tr-fb').innerText(), /Você acertou/); assert.match(await p.locator('#treino .tr-fund').innerText(), /Gabarito oficial definitivo · Cebraspe · ANATEL 2024 · item 1/);
   await p.keyboard.press('Escape'); await p.locator('#festa-ok').waitFor(); assert.match(await p.locator('.festa').innerText(), /Caderno · ANATEL 2024/); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' }); await fechaMedalhas();
-  assert.deepEqual(await p.evaluate(() => [DB.sessoes.map(s => [s.t, s.m, s.tipo, s.ac, s.er]), DB.respostas.map(r => [r.id, r.v, r.ok, r.cor])]), [[[null, 'anpd-lp', 'questoes', 1, 0]], [['pv:anatel24-cb1:1', 'E', true, 1]]]);
+  assert.deepEqual(await p.evaluate(() => [DB.sessoes.map(s => [s.t, s.m, s.tipo, s.ac, s.er]), DB.respostas.map(r => [r.id, r.v, r.ok, r.cor])]), [[['anpd-lp-01', 'anpd-lp', 'questoes', 1, 0]], [['pv:anatel24-cb1:1', 'E', true, 1]]]);
   // o item 24 (o 23º do caderno): o destaque vira negrito, o HTML de fora não entra, e o erro vira flashcard
   await p.click('#view .cad-q >> nth=22'); await p.locator('#treino.dentro').waitFor();
   assert.deepEqual(await p.evaluate(() => [TR.lista[TR.i].id, document.querySelector('#treino .tr-enun b').textContent, document.querySelector('#treino .tr-cmd b').textContent, !!document.querySelector('#inj') || !!window.__xss, !!document.querySelector('#treino .tr-apoio')]), ['pv:anatel24-cb1:24', 'pode', 'regulação', false, false]);
@@ -393,7 +394,7 @@ test('domínio do assunto, prontidão e missões do dia', async () => {
   assert.equal(pr[0], 1, 'um assunto dominado de 19 da LGPD, que vale 18,9% da prova'); assert.equal(pr[1], 0);
   const m0 = await p.evaluate(() => missoes().lista.map(m => [m.id, m.ok]));
   assert.deepEqual(m0.map(m => m[0]), ['tempo', 'questoes', 'variar'], 'sem revisão para hoje, a terceira missão é variar de disciplina');
-  await estudar(p, { i: 1, min: 55, ac: 12, er: 3 }); await estudar(p, { m: 'anpd-da', min: 10 });
+  await estudar(p, { i: 1, min: 55, ac: 40, er: 10 }); await estudar(p, { m: 'anpd-da', min: 10 });
   assert.deepEqual(await p.evaluate(() => missoes('2026-11-17').lista.map(m => m.id)), ['tempo', 'questoes', 'revisoes'], 'amanhã há revisões: a missão muda');
   const fez = await p.evaluate(() => [missoes().perfeito, temMarco('p:' + hojeISO()), jogoEstado().ganhas.includes('perf1')]);
   assert.deepEqual(fez, [true, true, true], 'dia perfeito');

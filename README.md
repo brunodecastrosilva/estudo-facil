@@ -5,7 +5,7 @@ e no computador. O app gira em torno de **cadernos de questões** de certo ou er
 comentadas; transforma os erros em flashcards, traz as provas oficiais da banca com correção, treina a discursiva, lembra
 das revisões e mostra a evolução, com sequência de dias, missões e mais de cem medalhas.
 
-Versão **1.6.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.7.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno e todo voltado ao concurso
 > da ANPD. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
@@ -20,7 +20,7 @@ referência do projeto (Art. 93).
 - **Cadernos de questões:** um caderno por disciplina (as doze do plano), com as questões agrupadas por assunto. Cada caderno guarda o seu andamento: continuar de onde parou, abrir qualquer questão pelo número, refazer só as erradas ou zerar as respostas
 - **Atalhos:** só as que errei, nunca resolvidas e o desafio do dia
 - **Meus cadernos:** cadernos montados por disciplina, filtro (todas, nunca resolvidas ou as que errei) e tamanho
-- **Questões nativas:** 220 questões de certo ou errado no estilo Cebraspe, **escritas dentro do app** (`questoes.js` e `questoes2.js`) a partir da lei e das armadilhas vistas nas provas oficiais. Cada uma tem gabarito, comentário, fundamento e uma aula curta do assunto. Não são questões de prova
+- **Questões nativas:** 220 questões de certo ou errado no estilo Cebraspe, **escritas dentro do app** (`questoes.js` e `questoes2.js`) a partir da lei e das armadilhas vistas nas provas oficiais. Cada uma tem gabarito, comentário e fundamento, e leva o selo "Feita por IA". Não são questões de prova
 - **Questões oficiais do Cebraspe:** o texto das provas cadastradas chega ao aparelho e cada prova vira caderno, só com os itens do edital, com comando, texto de apoio, gabarito definitivo e comentário do instrutor. As questões de prova também entram no caderno da disciplina, nos atalhos, nos cadernos montados e nos flashcards. **O texto fica só nos dados de quem usa; não entra no repositório** (veja "A ponte das provas")
 - **Hoje:** a sequência de dias, a meta do dia, as três missões, o caderno em andamento e o plano de hoje
 - **Plano do dia:** revisões vencidas primeiro; depois, blocos das disciplinas mais atrasadas em relação ao peso na prova
@@ -132,6 +132,10 @@ Regras:
 - **sequência:** dias seguidos em `dias`; dia fora da rotina é neutro; a cada 7 dias seguidos entra uma folga (até 2), gasta sozinha num dia de falta;
 - **treino:** primeiro os itens errados por último, depois os nunca respondidos, depois os mais antigos. Respondeu todas as questões de um assunto, ele fica grifado e as revisões entram;
 - **provas oficiais:** a correção é por bloco; a nota é a líquida da banca (certo +1, errado −1, em branco e anulado 0) e cada bloco corrigido vira uma sessão de questões da disciplina;
+- **integração:** a resposta dada em qualquer lugar (plano de hoje, treino, caderno) vale em todo caderno de fábrica que tem a questão: o da disciplina e, se for de prova, o da prova;
+- **assunto da questão oficial:** o bloco da prova tem um assunto de partida e as palavras do comando e do item apontam o mais específico (`ASSUNTO_DO_BLOCO` e `REGRAS_ASSUNTO`, em `provas.js`); é automático e pode errar;
+- **tempo:** cada segundo com a questão na tela soma no assunto dela (o relógio para quando o app sai da tela e não passa de 30 minutos por questão); o treino de um assunto segue pelos próximos assuntos da disciplina; todo tempo aparece em hh:mm:ss;
+- **plano do dia e missões:** as questões do plano somam a meta de questões (50 por dia, de fábrica), em pelo menos duas disciplinas;
 - **cadernos:** a resposta vale duas vezes: no caderno (o andamento, que pode ser zerado) e no histórico geral da questão (flashcards, estatísticas e medalhas, que ficam). "Refazer as erradas" tira do caderno as respostas erradas e volta nelas; ao sair, as questões respondidas viram uma sessão por assunto;
 - **flashcards:** item errado entra na caixa 0 e volta no dia seguinte; "Lembrei" sobe de caixa (1, 3, 7, 15 e 30 dias) e "Não lembrei" volta para o começo;
 - **pontos:** 1 por minuto, 1 por questão e mais 2 por acerto, 1 de bônus por acerto a partir do terceiro seguido, 20 pelo desafio do dia (mais 30 com 80% de acertos), 2 por flashcard revisto, 15 por revisão, 25 por assunto grifado, 30 por dia com a meta batida e 50 por medalha. Tudo sai dos dados, então acompanha a sincronização.

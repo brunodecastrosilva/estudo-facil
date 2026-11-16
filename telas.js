@@ -29,7 +29,7 @@ function tiraSemana() {
   }).join('')}</ol>`;
 }
 const linhaPlano = (it, i) => {
-  const n = nomeItem(it), rot = it.tipo === 'revisao' ? `Revisão${it.atraso > 0 ? ` · ${plural(it.atraso, 'dia', 'dias')} de atraso` : ''}` : `${TIPOS[it.tipo]} · ${it.nq ? plural(it.nq, 'questão', 'questões') : it.min + ' min'}`;
+  const n = nomeItem(it), rot = it.tipo === 'revisao' ? `Revisão${it.atraso > 0 ? ` · ${plural(it.atraso, 'dia', 'dias')} de atraso` : ''}` : `${TIPOS[it.tipo]} · ${it.nq ? plural(it.nq, 'questão', 'questões') : fmtMin(it.min)}`;
   return `<li class="pl-item ${it.feito ? 'feito' : ''}"><span class="pl-marca" aria-hidden="true">${it.feito ? I.check : it.tipo === 'revisao' ? I.revisar : I.livro}</span>
     <span class="pl-tx"><b>${it.feito ? `<span class="grifo">${esc(n.t)}</span>` : esc(n.t)}</b><small>${esc(n.m)} · ${rot}${it.feito ? ' · feito' : ''}</small></span>
     ${it.feito ? '' : `<button type="button" class="btn-ic comecar" data-act="estudar-item" data-i="${i}" aria-label="Estudar ${esc(n.t)}">${I.play}</button>`}</li>`;
@@ -62,7 +62,7 @@ const viewHoje = {
         <div class="hf-seq"><span class="hf-chama">${chamaHTML(S.hojeFeito)}</span><span class="hf-seq-tx"><b><span class="hf-n">${S.n}</span> ${S.n === 1 ? 'dia seguido' : 'dias seguidos'}</b><small>${S.folgas ? `${plural(S.folgas, 'folga guardada', 'folgas guardadas')}` : 'Sem folga guardada'} · recorde ${S.recorde}</small></span>
           <button type="button" class="btn-ic" data-act="sobre-sequencia" aria-label="Como funciona a sequência">${I.questoes}</button></div>
         ${tiraSemana()}
-        <div class="hf-meta">${anelHTML(P.minutos, P.meta, { centro: `<b>${min}</b><small>de ${P.meta} min</small>` })}
+        <div class="hf-meta">${anelHTML(P.minutos, P.meta, { centro: `<b class="anel-hms">${fmtRelogio(P.minutos * 60)}</b><small>de ${fmtMin(P.meta)}</small>` })}
           <div class="hf-meta-tx"><p class="hf-estado" role="status">${estado}</p>
             ${nx ? `<p class="hf-prox"><span class="rotulo-mini">${P.proximo ? 'Próximo' : 'Para adiantar'}</span>${esc(nx.t)}<small>${esc(nx.m)}</small></p>` : ''}</div></div>
         <button type="button" class="kf-btn kf-comecar bloco" id="hoje-estudar" data-act="estudar-proximo">${I.play}${DB.ativa ? 'Voltar ao foco' : min > 0 ? 'Continuar estudando' : 'Estudar agora'}</button>
@@ -71,7 +71,7 @@ const viewHoje = {
       ${centralQuestoes()}
 
       <section class="card" aria-labelledby="mis-t"><div class="sec-cab"><h2 class="sec-t" id="mis-t">Missões de hoje</h2><span class="apoio">${M.feitas} de ${M.lista.length}</span></div>
-        <ul class="missoes">${M.lista.map(m => `<li class="missao ${m.ok ? 'ok' : ''}"><span class="mi-ic" aria-hidden="true">${m.ok ? I.check : I[m.ic]}</span><span class="mi-tx"><b>${esc(m.nome)}</b>${barraHTML(m.v / m.de * 100, `${Math.floor(m.v)} de ${m.de}`)}</span><span class="mi-n" aria-hidden="true">${Math.floor(m.v)}/${m.de}</span></li>`).join('')}</ul>
+        <ul class="missoes">${M.lista.map(m => `<li class="missao ${m.ok ? 'ok' : ''}"><span class="mi-ic" aria-hidden="true">${m.ok ? I.check : I[m.ic]}</span><span class="mi-tx"><b>${esc(m.nome)}</b>${barraHTML(m.v / m.de * 100, m.un === 'min' ? `${fmtMin(m.v)} de ${fmtMin(m.de)}` : `${Math.floor(m.v)} de ${m.de}`)}</span><span class="mi-n" aria-hidden="true">${m.un === 'min' ? fmtMin(m.v) : `${Math.floor(m.v)}/${m.de}`}</span></li>`).join('')}</ul>
         ${M.perfeito ? `<p class="mis-perfeito"><span class="grifo">Dia perfeito.</span> As missões de hoje estão cumpridas.</p>` : ''}</section>
 
       <section aria-labelledby="pl-t"><div class="sec-cab"><h2 class="sec-t" id="pl-t">Plano de hoje</h2><button type="button" class="kf-btn kf-link" data-kf-ir="plano">Ver o edital</button></div>

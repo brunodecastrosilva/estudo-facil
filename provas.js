@@ -263,6 +263,35 @@ async function abrirArquivoDeProvas(arq) {
   } catch { avisar('Este arquivo não é o das provas do Estudo Fácil.'); }
 }
 document.addEventListener('change', e => { const el = e.target; if (el && el.id === 'pv-arquivo') { abrirArquivoDeProvas(el.files && el.files[0]); el.value = ''; } });
+/* Assunto de cada questão oficial. O bloco da prova tem um assunto de partida; dentro da disciplina, as palavras do
+   comando e do item apontam o assunto mais específico (a primeira regra que casar vale). É automático: pode errar. */
+const ASSUNTO_DO_BLOCO = {
+  'anatel24-cb1': { 1: 'lp-01', 16: 'ing-01', 24: 'regul-03', 34: 'da-02', 43: 'dc-02' },
+  'anac24-cb1': { 1: 'ing-01', 11: 'da-05', 19: 'etica-01', 29: 'dc-02', 43: 'regul-05' },
+  'anm24-cg4': { 1: 'lp-01', 9: 'ing-01', 14: 'dc-09', 18: 'da-07', 30: 'lgpd-01', 31: 'etica-03', 32: 'regul-01' },
+  'dataprev23-seg': { 51: 'dig-01', 55: 'ti-02', 66: 'lgpd-10', 71: 'dig-05', 75: 'ti-03', 94: 'ti-06', 105: 'ti-02' },
+  'antt24-cb1': { 1: 'lp-01', 16: 'regul-01', 26: 'regul-05', 37: 'da-04', 42: 'etica-01', 44: 'dc-02' },
+  'antt24-c1': { 1: 'ti-10', 27: 'etica-03' },
+  'antt24-c2': { 1: 'dc-09', 8: 'econ-03', 14: 'regul-11', 19: 'dc-09', 21: 'dig-03', 36: 'da-06', 46: 'da-06', 60: 'da-06', 86: 'dig-02', 89: 'lgpd-01', 92: 'dig-01', 95: 'etica-03', 101: 'da-09', 117: 'regul-10', 119: 'da-09' },
+};
+const REGRAS_ASSUNTO = {
+  'anpd-lgpd': [['18', /sanç|multa|advertência/], ['11', /decis(ão|ões) automatizad/], ['13', /transferência internacional/], ['08', /criança|adolescente/], ['06', /legítimo interesse/], ['05', /consentimento/], ['07', /sensíve/], ['16', /incidente|segurança|sigilo/], ['12', /poder público|órgãos? públic|uso compartilhado/], ['10', /direitos? do titular|portabilidade|revogação/], ['14', /controlador|operador|encarregado|relatório de impacto|registro das operações/], ['15', /responsabil|ressarc|indeniz/], ['17', /boas práticas|governança/], ['19', /anpd|autoridade nacional|conselho nacional/], ['04', /bases? lega(l|is)|hipóteses? de tratamento/], ['03', /princípio|finalidade|necessidade|adequação/], ['09', /término do tratamento|eliminação/], ['02', /anonimiz|dado pessoal|dados pessoais são|considera-se/]],
+  'anpd-regul': [['06', /impacto regulat|\bair\b|resultado regulat/], ['05', /9\.986|10\.871|carreira|mandato|dirigente|quarentena/], ['04', /13\.848|lei geral das agências|natureza especial|autonomia (decis|administr|financ)/], ['07', /liberdade econômica|13\.874|abuso do poder regulat/], ['08', /consulta pública|audiência pública|agenda regulat/], ['09', /responsiv|sandbox|experimental/], ['10', /tribunal de contas|\btcu\b|controle externo|congresso nacional|poder judiciário/], ['11', /\bcade\b|concorr/], ['03', /captura|interesse público|escolha pública|teoria/], ['02', /falhas? de mercado|externalidade|monopólio|assimetria|bens? públic/]],
+  'anpd-da': [['06', /14\.133|licitaç|pregão|contrato|inexigib/], ['05', /9\.784|processo administrativo|recurso administrativo|decadência|reclamação/], ['10', /improbidade|8\.429/], ['11', /anticorrupção|12\.846|leniência/], ['12', /governo digital|14\.129/], ['08', /responsabilidade civil|indeniza|regresso/], ['07', /8\.112|servidor|cargo público|estabilidade|agentes? públic/], ['09', /controle|tribuna(l|is) de contas|\btcu\b|ministério público/], ['04', /atos? administrativos?|anula|revoga|convalida|motivaç/], ['03', /poder de polícia|poder(es)? (hierárquic|disciplinar|regulamentar|da administração)/], ['02', /autarquia|administração indireta|fundaç|empresa pública|sociedade de economia|agências? reguladora|descentraliza/]],
+  'anpd-dc': [['03', /emenda constitucional n\.º 115|proteção de dados/], ['04', /habeas data|intimidade|vida privada|sigilo|domicílio/], ['09', /ordem econômica|atividade econômica|livre iniciativa|livre concorrência/], ['08', /controle de constitucionalidade|inconstitucional/], ['07', /poder executivo|poder legislativo|medida provisória|presidente da república|processo legislativo|fiscalização contábil/], ['06', /administração pública|servidor|concurso público/], ['05', /competência|organização do estado|união,|estados e|municípios/], ['02', /direitos e garantias|direitos fundamentais|direitos? (individua|socia|polític)|partidos políticos|nacionalidade/]],
+  'anpd-etica': [['04', /lgpd|dados pessoais/], ['03', /acesso à informação|12\.527|7\.724|sigilo|classificaç/], ['02', /conflito de interesses|12\.813/], ['05', /governança|9\.203|integridade|compliance|gestão de riscos/]],
+  'anpd-dig': [['01', /marco civil|12\.965|neutralidade|provedor/], ['02', /crime|hacker|invas|budapeste|154-a/], ['03', /consumidor|8\.078/], ['04', /cadastro positivo|12\.414/], ['05', /gdpr|rgpd|regulamento geral|união europeia/], ['06', /convenção 108|ocde/], ['07', /\bstf\b|6\.?387/], ['08', /compartilhamento|setor público/]],
+  'anpd-ti': [['11', /regulaç(ão|ões) (de|da) (ia|inteligência)/], ['10', /inteligência artificial|aprendizado|redes? neura|machine learning|deep learning|linguagem natural|visão computacional/], ['09', /big data|mineração|ciência de dados|perfilamento|\betl\b/], ['05', /anonimiz|pseudonimiz/], ['06', /privacy by|desde a concepção|por padrão/], ['12', /cookie|rastre/], ['03', /criptogra|hash|autenticaç|controle de acesso|certificado|assinatura digital|biometri/], ['04', /incidente|ataque|malware|phishing|ransomware|ddos|vulnerab/], ['02', /risco|27001|27002|27701|27005|sgsi|gestão de segurança/], ['07', /banco de dados|\bsql\b|relacional/], ['08', /nuvem|cloud|iaas|saas|paas/]],
+  'anpd-econ': [['03', /concorr|\bcade\b|12\.529|cartel|posição dominante/], ['02', /plataforma|efeito de rede|economia de dados/], ['04', /custo-benefício/]],
+  'anpd-lp': [['07', /vírgula|pontuaç|travess|dois-pontos|aspas|parênteses/], ['09', /crase|acento grave|regência|preposiç/], ['08', /concord/], ['10', /colocação|próclise|ênclise|pronome átono/], ['12', /redação oficial|manual de redação|ofício/], ['11', /reescrit|substitu|correção gramatical|sem prejuízo/], ['03', /acentua|ortogra|grafia/], ['06', /oraç(ão|ões)|subordina|coordena|sujeito|complemento|sintát/], ['05', /forma verbal|verbo|tempo verbal|modo verbal|classe gramatical/], ['04', /coes|conjunç|conectiv|referente|retoma|refere-se|expressa (ideia|noção)|sentido de/], ['02', /tipolog|gênero textual|dissertativ|narrativ/]],
+  'anpd-ing': [['02', /synonym|meaning|means|the word|the expression|replaced/], ['03', /refers to|pronoun|verb|tense|conjunction|connector/], ['04', /infer|suggest|impl(y|ied|ies)|main idea|conclude/]],
+};
+function assuntoDoItem(p, b, texto) {
+  const s = semMarca(texto).toLowerCase();
+  for (const [k, re] of REGRAS_ASSUNTO[b.m] || []) if (re.test(s) && topico(b.m + '-' + k)) return b.m + '-' + k;
+  const base = 'anpd-' + ((ASSUNTO_DO_BLOCO[p.id] || {})[b.de] || '');
+  return topico(base) ? base : (topicosDe(b.m)[0] || {}).id || null;
+}
 // as questões oficiais que já têm texto no aparelho, só dos blocos do edital; anuladas e itens com figura ficam de fora
 let ofMemo = { k: null, L: [] };
 function oficiais() {
@@ -277,7 +306,7 @@ function oficiais() {
       const gr = gi >= 0 ? tx.grupos[gi] : null, cmd = gr ? gr.cmd : '';
       // texto de apoio: o do próprio grupo; se o comando fala em "texto", o último texto apresentado antes
       let apoio = gr ? gr.apoio : ''; if (!apoio && /\btext[o]?\b/i.test(cmd)) for (let i = gi - 1; i >= 0 && !apoio; i--) if (tx.grupos[i].de >= b.de) apoio = tx.grupos[i].apoio;
-      L.push({ id: idResp(p, n), m: b.m, g, e, c: p.itens[n] || '', f: `Cebraspe · ${p.org} ${p.ano} · item ${n}`, of: { p: p.id, n, cmd, apoio, rot: `${p.org} ${p.ano}` } });
+      L.push({ id: idResp(p, n), t: assuntoDoItem(p, b, cmd + ' ' + e), m: b.m, g, e, c: p.itens[n] || '', f: `Cebraspe · ${p.org} ${p.ano} · item ${n}`, of: { p: p.id, n, cmd, apoio, rot: `${p.org} ${p.ano}` } });
     }
   }
   for (const id of [...QID.keys()]) if (id.startsWith('pv:')) QID.delete(id);

@@ -3,6 +3,23 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.7.0 · 2026-11-16
+
+O app passa a funcionar como uma coisa só: plano, cadernos, provas, tempo e edital conversam.
+
+- **Cadernos integrados:** a questão resolvida no plano de hoje, num treino ou em outro caderno aparece resolvida em todo caderno que a contém. O que você já tinha respondido entrou junto.
+- **Cada questão de prova tem o seu assunto:** além da disciplina, a questão oficial é ligada ao assunto do edital. A ligação é automática, pelo comando e pelas palavras do item, e pode errar.
+- **Tempo por questão:** cada segundo com a questão na tela soma no assunto dela e na meta do dia, mesmo sem responder. O relógio para quando o app sai da tela.
+- **O treino não acaba no assunto:** esgotadas as questões, ele segue no próximo assunto da disciplina.
+- **Meta de 50 questões por dia** (dá para mudar em Ajustes → Rotina e metas).
+- **Plano de hoje do tamanho das missões:** as questões do plano somam a meta do dia, em pelo menos duas disciplinas.
+- **Tempo em hh:mm:ss** em todo o app.
+- **Texto de apoio:** rola dentro da própria caixa; aberto, não esconde mais o enunciado.
+- **Selo "Feita por IA"** nas questões escritas pelo instrutor. As de prova mostram a banca, a prova e o item.
+- **Saiu** a "Aula do assunto".
+- **Ainda não entrou:** as leis na íntegra dentro do app e o tempo de leitura de PDF (dependem de trazer os textos oficiais do Planalto).
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os 23 testes do app, os 2 do leitor de prova e a varredura de acessibilidade.
+
 ## 1.6.0 · 2026-11-16
 
 - **Três provas novas do Cebraspe:** ANTT 2024, conhecimentos básicos (todos os cargos) e específicos do cargo 1 (qualquer área) e do cargo 2 (Direito), com gabarito definitivo.

@@ -7,6 +7,22 @@ QUESTOES.forEach(q => { if (!QDE.has(q.t)) QDE.set(q.t, []); QDE.get(q.t).push(q
 const questoesDe = tId => QDE.get(tId) || [];
 const questoesDaMateria = mId => topicosDe(mId).flatMap(t => questoesDe(t.id));
 const respostaDe = id => idx().resp.get(id) || null;
+// todas as questões de um assunto: as do app e as de prova endereçadas a ele
+const questoesDoAssunto = tId => questoesDe(tId).concat(typeof oficiais === 'function' ? oficiais().filter(q => q.t === tId) : []);
+// o treino de um assunto não acaba nele: segue pelos próximos assuntos da disciplina (só o que falta resolver ou foi errado)
+function filaDoAssunto(tId) {
+  const t = topico(tId); if (!t) return []; const T = topicosDe(t.m), i = T.findIndex(x => x.id === tId), ordem = T.slice(i).concat(T.slice(0, i));
+  const nota = q => { const r = respostaDe(q.id); return !r ? 0 : r.ok ? r.em : r.em - 1e14; };
+  return ordem.flatMap((x, k) => { const Q = questoesDoAssunto(x.id); return k === 0 ? Q.map((q, j) => [nota(q), j, q]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(z => z[2]) : Q.filter(q => (respostaDe(q.id) || {}).ok !== true); });
+}
+// os cadernos de fábrica em que a questão aparece: o da disciplina e, se for de prova, o da prova
+const cadernosDaQuestao = q => { const m = q.of ? q.m : (topico(q.t) || {}).m, L = m ? ['m:' + m] : []; if (q.of) L.push('p:' + q.of.p); return L; };
+/* tempo: cada segundo com a questão na tela soma no assunto dela (e na meta do dia). O relógio para quando o app sai
+   da tela e não passa de 30 minutos por questão, para uma aba esquecida não virar estudo. */
+const trChave = q => q.t && topico(q.t) ? q.t : 'm:' + q.m;
+function trTempoParar() { if (!TR || !TR.rel) return; const k = trChave(TR.lista[TR.i]); TR.segT.set(k, (TR.segT.get(k) || 0) + Math.min(Date.now() - TR.rel, 18e5) / 1000); TR.rel = 0; }
+function trTempoSeguir() { if (TR && !TR.rel && document.visibilityState === 'visible') TR.rel = Date.now(); }
+document.addEventListener('visibilitychange', () => { if (TR) document.visibilityState === 'visible' ? trTempoSeguir() : trTempoParar(); });
 const GAB = { C: 'Certo', E: 'Errado' };
 const FC_DIAS = [1, 3, 7, 15, 30]; // caixas do flashcard: lembrou, sobe de caixa e volta mais tarde
 
@@ -32,9 +48,9 @@ const treinoAberto = () => !!treinoEl;
 function treinoAbrir({ t = null, m = null, n = 10, tipo = 'questoes', rev = null, desafio = false, lista = null, caderno = null, i = 0 } = {}) {
   if (treinoEl) return;
   const C = caderno ? cadernoDe(caderno) : null;
-  const L = C ? C.itens : lista || (desafio ? desafioDoDia().lista : escolherQuestoes({ t, m, n }));
+  const L = C ? C.itens : lista || (desafio ? desafioDoDia().lista : t ? filaDoAssunto(t) : escolherQuestoes({ t, m, n }));
   if (!L.length) { avisar('Ainda não há questões do app para este assunto. Use o cronômetro.'); return; }
-  TR = { lista: L, i: C ? clamp(i | 0, 0, L.length - 1) : 0, ac: 0, er: 0, combo: 0, maxCombo: 0, bonus: 0, ini: Date.now(), porT: new Map(), tipo, rev, desafio, marcou: null, cad: C ? C.id : null, nome: C ? C.nome : '' };
+  TR = { lista: L, i: C ? clamp(i | 0, 0, L.length - 1) : 0, ac: 0, er: 0, combo: 0, maxCombo: 0, bonus: 0, ini: Date.now(), rel: Date.now(), segT: new Map(), porT: new Map(), tipo, rev, desafio, marcou: null, cad: C ? C.id : null, nome: C ? C.nome : '' };
   if (C) TR.marcou = cadernoEstado(C).r[L[TR.i].id] || null;
   treinoEl = document.createElement('div'); treinoEl.className = 'treino'; treinoEl.id = 'treino';
   treinoEl.setAttribute('data-kf-tela-cheia', ''); treinoEl.setAttribute('role', 'dialog'); treinoEl.setAttribute('aria-modal', 'true'); treinoEl.setAttribute('aria-labelledby', 'tr-t');
@@ -66,15 +82,14 @@ function treinoPintar() {
   const inst = (INSTRUTOR[q.id] || []).slice(-2);
   treinoEl.innerHTML = `<div class="treino-in">
       <div class="tr-topo"><button type="button" class="btn-ic" id="tr-sair" aria-label="Encerrar o treino">${I.x}</button>${barraHTML((TR.i + (fez ? 1 : 0)) / n * 100, `Questão ${TR.i + 1} de ${n}`)}<span class="tr-cont" aria-hidden="true">${TR.i + 1}/${n}</span></div>
-      <div class="tr-meta"><span class="etiqueta">${esc(O ? q.f : t ? t.nome : '')}</span>${TR.combo >= 2 ? `<span class="tr-combo">${I.raio}Combo ${TR.combo}</span>` : ''}</div>
+      <div class="tr-meta"><span class="etiqueta">${esc(O ? q.f : t ? t.nome : '')}</span>${O ? (t ? `<span class="etiqueta">${esc(t.nome)}</span>` : '') : '<span class="etiqueta selo-ia">Feita por IA</span>'}${TR.combo >= 2 ? `<span class="tr-combo">${I.raio}Combo ${TR.combo}</span>` : ''}</div>
       <h2 class="kf-so-leitor" id="tr-t" tabindex="-1">${TR.desafio ? 'Desafio do dia. ' : TR.cad ? `Caderno ${esc(TR.nome)}. ` : ''}Questão ${TR.i + 1} de ${n}</h2>
-      ${O && O.apoio ? `<details class="tr-aula tr-apoio" data-kf-secao><summary><b>Texto de apoio</b></summary>${O.apoio.split('\n').map(x => `<p>${marcado(x)}</p>`).join('')}</details>` : ''}
+      ${O && O.apoio ? `<details class="tr-aula tr-apoio" data-kf-secao><summary><b>Texto de apoio</b></summary><div class="tr-apoio-tx" tabindex="0" role="region" aria-label="Texto de apoio">${O.apoio.split('\n').map(x => `<p>${marcado(x)}</p>`).join('')}</div></details>` : ''}
       <div class="folha tr-folha">${O && O.cmd ? `<p class="tr-cmd">${marcado(O.cmd)}</p>` : '<p class="rotulo-mini">Julgue o item</p>'}<p class="tr-enun">${O ? marcado(q.e) : esc(q.e)}</p></div>
       ${!fez ? `<div class="tr-botoes" role="group" aria-label="Sua resposta"><button type="button" class="kf-btn kf-sec tr-b" data-resp="C">${I.check}Certo</button><button type="button" class="kf-btn kf-sec tr-b" data-resp="E">${I.x}Errado</button></div>
         <p class="tr-dica" aria-hidden="true">No teclado: C para certo, E para errado</p>`
       : `<div class="tr-fb ${ok ? 'ok' : 'no'}" role="status"><span class="tr-fb-ic" aria-hidden="true">${ok ? I.check : I.x}</span><span><b>${ok ? 'Você acertou' : 'Você errou'}</b><small>Gabarito: ${GAB[q.g]} · você marcou ${GAB[fez]}</small></span></div>
         <div class="tr-exp">${q.c ? `<p>${esc(q.c)}</p>` : ''}<p class="tr-fund">${I.lei}<span>${esc(O ? 'Gabarito oficial definitivo · ' + q.f : q.f)}</span></p></div>
-        ${AULAS[q.t] ? `<details class="tr-aula" data-kf-secao><summary><b>Aula do assunto</b></summary><p>${esc(AULAS[q.t])}</p></details>` : ''}
         ${inst.map(x => `<div class="tr-inst"><span class="rotulo-mini">Instrutor · ${esc(x.em || '')}</span><p>${esc(x.r || '')}</p></div>`).join('')}
         ${ok ? '' : '<p class="tr-fc">Esta questão virou flashcard e volta amanhã.</p>'}
         <div class="tr-acoes"><button type="button" class="kf-btn kf-sec" id="tr-perguntar">Perguntar ao instrutor</button><button type="button" class="kf-btn kf-comecar" id="tr-prox">${ult ? (TR.cad ? 'Fechar o caderno' : 'Concluir treino') : 'Próxima questão'}</button></div>`}
@@ -85,11 +100,12 @@ function treinoResponder(v) {
   const q = TR.lista[TR.i]; if (TR.marcou) return;
   const ok = v === q.g, h = hojeISO(); TR.marcou = v;
   if (ok) { TR.ac++; TR.combo++; TR.maxCombo = Math.max(TR.maxCombo, TR.combo); if (TR.combo >= 3) TR.bonus++; } else { TR.er++; TR.combo = 0; }
-  const kp = q.of ? 'm:' + q.m : q.t, p = TR.porT.get(kp) || { ac: 0, er: 0 }; ok ? p.ac++ : p.er++; TR.porT.set(kp, p);
+  const kp = trChave(q), p = TR.porT.get(kp) || { ac: 0, er: 0 }; ok ? p.ac++ : p.er++; TR.porT.set(kp, p);
   // a resposta fica guardada por questão; item errado vira flashcard e volta amanhã
   let r = DB.respostas.find(x => x.id === q.id); if (!r) { r = { id: q.id, n: 0, ac: 0, rv: 0 }; DB.respostas.push(r); }
   r.n = (r.n || 0) + 1; r.ac = (r.ac || 0) + (ok ? 1 : 0); r.ok = ok; r.v = v; r.em = agora(); if (q.of) r.cor = 1; // na folha de respostas da prova, o item já conta como corrigido
   if (TR.cad) cadernoMarcar(TR.cad, q, v);
+  cadernosDaQuestao(q).forEach(id => { if (id !== TR.cad) cadernoMarcar(id, q, v); }); // o app é um só: a resposta vale em todo caderno que tem a questão
   if (!ok) { r.cx = 0; r.due = maisDias(h, 1); }
   salvar({ quieto: true }); vibrar(ok ? 10 : [30, 40, 30]);
   treinoPintar();
@@ -101,8 +117,8 @@ function proximaDoCaderno() {
   return -1;
 }
 function treinoSeguir() {
-  if (TR.cad) { const j = proximaDoCaderno(); if (j < 0) return treinoEncerrar(); TR.i = j; TR.marcou = null; return treinoPintar(); }
-  if (TR.i >= TR.lista.length - 1) return treinoEncerrar(); TR.i++; TR.marcou = null; treinoPintar();
+  if (TR.cad) { const j = proximaDoCaderno(); if (j < 0) return treinoEncerrar(); trTempoParar(); TR.i = j; TR.marcou = null; trTempoSeguir(); return treinoPintar(); }
+  if (TR.i >= TR.lista.length - 1) return treinoEncerrar(); trTempoParar(); TR.i++; TR.marcou = null; trTempoSeguir(); treinoPintar();
 }
 function treinoFechar() {
   if (!treinoEl) return; const el = treinoEl; treinoEl = null; TR = null; document.body.classList.remove('com-foco'); document.removeEventListener('keydown', treinoTecla, true);
@@ -111,14 +127,16 @@ function treinoFechar() {
 }
 // fecha o treino: guarda uma sessão por assunto, grifa o assunto que teve todas as questões respondidas e abre a festa
 function treinoEncerrar() {
-  const T = TR; if (!T) return; const feitas = T.ac + T.er;
-  if (!feitas) { treinoFechar(); render(); return; }
-  const antes = { s: jogoEstado(), perfeito: missoes().perfeito }, seg = Math.min((Date.now() - T.ini) / 1000, feitas * 180), completo = feitas === T.lista.length;
+  const T = TR; if (!T) return; trTempoParar(); const feitas = T.ac + T.er, tempo = soma([...T.segT.values()], x => x), daM = c => c.startsWith('m:');
+  // só olhou as questões: o tempo conta mesmo assim (a partir de 5 segundos)
+  if (!feitas) { if (tempo >= 5) { for (const [c, sg] of T.segT) if (sg >= 1) registrarSessao({ t: daM(c) ? null : c, m: daM(c) ? c.slice(2) : null, tipo: 'questoes', seg: sg, ini: T.ini }); salvar({ quieto: true }); treinoFechar(); jogoConferir(); render(); return; } treinoFechar(); render(); return; }
+  for (const [c, sg] of T.segT) if (sg >= 1 && !T.porT.has(c)) T.porT.set(c, { ac: 0, er: 0 });
+  const antes = { s: jogoEstado(), perfeito: missoes().perfeito }, seg = tempo, completo = feitas === T.lista.length;
   let bonus = T.bonus; if (T.desafio && completo && !temMarco('d:' + hojeISO())) { marcar('d:' + hojeISO()); bonus += 20 + (T.ac / feitas >= .8 ? 30 : 0); }
   const fez = { teoria: false, revisoes: 0, revisao: false, dia: false }, daProva = c => c.startsWith('m:'), c0 = [...T.porT.keys()][0]; let k = 0, unico = T.porT.size === 1 && !daProva(c0) ? c0 : null;
   for (const [tId, p] of T.porT) {
     const toda = !daProva(tId) && questoesDe(tId).every(q => respostaDe(q.id) || DB.respostas.some(r => r.id === q.id));
-    const r = registrarSessao({ t: daProva(tId) ? null : tId, m: daProva(tId) ? tId.slice(2) : null, tipo: T.tipo === 'revisao' && k === 0 ? 'revisao' : 'questoes', seg: seg * (p.ac + p.er) / feitas, ac: p.ac, er: p.er, teoria: toda, rev: k === 0 ? T.rev : null, ini: T.ini + k,
+    const r = registrarSessao({ t: daProva(tId) ? null : tId, m: daProva(tId) ? tId.slice(2) : null, tipo: T.tipo === 'revisao' && k === 0 ? 'revisao' : 'questoes', seg: T.segT.get(tId) || 0, ac: p.ac, er: p.er, teoria: toda, rev: k === 0 ? T.rev : null, ini: T.ini + k,
       extra: k === 0 ? { bonus, combo: T.maxCombo, gab: completo && feitas >= 10 && !T.er ? 1 : 0, ...(T.desafio ? { desafio: 1 } : {}) } : null });
     fez.teoria = fez.teoria || r.teoria; fez.revisoes += r.revisoes; fez.revisao = fez.revisao || r.revisao; fez.dia = fez.dia || r.dia; k++;
   }
@@ -135,7 +153,7 @@ function flashcardsAbrir() {
   const fila = flashcardsDeHoje(); if (!fila.length) { avisar('Nenhum flashcard para hoje. Eles nascem das questões que você erra.'); return; }
   let i = 0, virado = false, lembrou = 0;
   const corpo = () => { const r = fila[i], q = QID.get(r.id), t = topico(q.t);
-    return `<p class="apoio" role="status">Flashcard ${i + 1} de ${fila.length}</p><span class="etiqueta">${esc(q.of ? q.f : t ? t.nome : '')}</span>
+    return `<p class="apoio" role="status">Flashcard ${i + 1} de ${fila.length}</p><span class="etiqueta">${esc(q.of ? q.f : t ? t.nome : '')}</span>${q.of ? '' : '<span class="etiqueta selo-ia">Feita por IA</span>'}
       <div class="folha fc-carta"><p class="rotulo-mini">Certo ou errado? Por quê?</p>${q.of && q.of.cmd ? `<p class="tr-cmd">${marcado(q.of.cmd)}</p>` : ''}<p class="tr-enun">${q.of ? marcado(q.e) : esc(q.e)}</p></div>
       ${virado ? `<div class="tr-exp"><p><b>${GAB[q.g]}.</b> ${esc(q.c)}</p><p class="tr-fund">${I.lei}<span>${esc(q.f)}</span></p></div>` : ''}`; };
   const pe = () => virado ? `<button type="button" class="kf-btn kf-sec" id="fc-nao">Não lembrei</button><button type="button" class="kf-btn kf-pri" id="fc-sim">Lembrei</button>` : `<button type="button" class="kf-btn kf-pri" id="fc-ver">Ver resposta</button>`;

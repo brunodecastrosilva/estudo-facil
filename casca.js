@@ -330,6 +330,12 @@ KitFacil.campo.ligar();
 $('#topo').outerHTML = KitFacil.topo.html({ principal: true });
 // link de "Conectar outro aparelho" (a chave vem depois do #, que não sai do aparelho)
 receberProva(); oficiais(); // a prova que chega pela ponte entra antes da primeira pintura
+// uma vez por aparelho: a meta de questões passa a 50 e os cadernos recebem as respostas que já existiam
+if (!LS.get('integrado', 0)) {
+  if (cfg().metaQ === 15) cfg().metaQ = 50;
+  for (const r of DB.respostas) { const q = QID.get(r.id); if (!q || r.ok == null) continue; const v = r.v || (r.ok ? q.g : q.g === 'C' ? 'E' : 'C'); cadernosDaQuestao(q).forEach(id => { const c = regCaderno(id); if (!c || !c.r || !c.r[q.id]) cadernoMarcar(id, q, v); }); }
+  LS.set('integrado', 1); salvar({ quieto: true });
+}
 const linkSync = SY.tokenDoLink();
 if (linkSync) try { history.replaceState(null, '', location.pathname + location.search); } catch {}
 render();
