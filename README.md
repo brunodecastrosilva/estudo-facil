@@ -5,7 +5,7 @@ e no computador. O app gira em torno de **cadernos de questões** de certo ou er
 comentadas; transforma os erros em flashcards, traz as provas oficiais da banca com correção, treina a discursiva, lembra
 das revisões e mostra a evolução, com sequência de dias, missões e mais de cem medalhas.
 
-Versão **1.7.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.7.2** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno e todo voltado ao concurso
 > da ANPD. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
