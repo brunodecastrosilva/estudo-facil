@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.7 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.8 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -45,7 +45,7 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral, com o
   await a.page.reload(); await a.page.locator('#view .hoje-folha').waitFor();
   // fase fechada: as funções gerais e o guia ficam fora da tela
   const f = await a.page.evaluate(() => { const r = []; for (const t of ['concursos', 'concurso', 'disciplinas', 'disciplina', 'simulados', 'agenda']) { irPara(t); r.push(tab); } irPara('mais'); return { r, mais: [...document.querySelectorAll('#view .kf-mais-lin')].map(e => e.dataset.kfIr || e.dataset.kf || e.dataset.act), guia: !!document.querySelector('#ma-guia'), medGuia: medalhasDoApp().some(m => m.id === 'guia'), nav: [...document.querySelectorAll('#tabs [id^="kf-nav-"]')].map(e => e.id.slice(7)) }; });
-  assert.deepEqual(f.r, Array(6).fill('hoje'), 'telas gerais não abrem'); assert.deepEqual(f.mais, ['plano', 'evolucao', 'provas', 'discursivas', 'flashcards', 'revisoes', 'instrutor', 'ajustes']); assert.deepEqual([f.guia, f.medGuia], [false, false]);
+  assert.deepEqual(f.r, Array(6).fill('hoje'), 'telas gerais não abrem'); assert.deepEqual(f.mais, ['plano', 'evolucao', 'leis', 'provas', 'discursivas', 'flashcards', 'revisoes', 'instrutor', 'ajustes']); assert.deepEqual([f.guia, f.medGuia], [false, false]);
   assert.deepEqual(f.nav, ['hoje', 'cadernos', 'estudar', 'medalhas', 'mais']);
   assert.deepEqual(await a.page.evaluate(() => [DB.concursos[0].banca, DB.concursos[0].datas.filter(x => x.id === 'd03b').length]), ['Cebraspe', 1]);
   await a.fechar();
@@ -248,6 +248,25 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   for (const ruim of [provaInventada({ prova: 'nao-existe' }), provaInventada({ itens: { 1: 'só um' } }), 'lixo']) {
     const b = await abrir({ caminho: '?hoje=' + HOJE + '#prova=' + ruim }); assert.deepEqual(await b.page.evaluate(() => [DB.textos.length, location.hash, oficiais().length]), [0, '', 0]); assert.deepEqual(b.erros, []); await b.fechar();
   }
+});
+
+test('leis na íntegra: lista por disciplina, texto do Planalto sem alteração, revogados e tempo de leitura no assunto', async () => {
+  // o arquivo de cada lei existe, tem a fonte oficial e está ligado a um assunto do edital
+  const { readdirSync } = await import('node:fs'); const arqs = readdirSync(new URL('../leis/', import.meta.url)).filter(f => f.endsWith('.json'));
+  const a = await abrir(), p = a.page;
+  const L = await p.evaluate(() => LEIS.map(l => [l.id, !!topico(l.t)])); assert.equal(L.length, 24); assert.ok(L.every(x => x[1]), 'toda lei tem assunto'); assert.deepEqual(arqs.sort(), L.map(x => x[0] + '.json').sort());
+  for (const f of arqs) { const j = JSON.parse(readFileSync(new URL('../leis/' + f, import.meta.url), 'utf8')); assert.match(j.fonte, /^https:\/\/www\.planalto\.gov\.br\/ccivil_03\//); assert.ok(j.p.length > 50 && j.p.every(x => typeof x.t === 'string' && x.t), f); }
+  await nav(p, 'mais'); await p.click('#view [data-kf-ir="leis"]'); assert.equal(await p.locator('#view [data-act="abrir-lei"]').count(), 24);
+  await p.click('#view [data-act="abrir-lei"][data-id="lgpd"]'); await p.locator('#view .lei-folha p').first().waitFor();
+  const lgpd = JSON.parse(readFileSync(new URL('../leis/lgpd.json', import.meta.url), 'utf8'));
+  const tela = await p.evaluate(() => ({ n: document.querySelectorAll('.lei-folha p').length, txt: [...document.querySelectorAll('.lei-folha p')].map(e => e.textContent), risc: document.querySelectorAll('.lei-folha .lei-r s').length, art: document.querySelector('.lei-folha .lei-art b').textContent, link: document.querySelector('#view .apoio a').href }));
+  assert.equal(tela.n, lgpd.p.length); assert.deepEqual(tela.txt, lgpd.p.map(x => x.t), 'o texto da tela é o do arquivo, sem alteração'); assert.equal(tela.risc, lgpd.p.filter(x => x.r).length); assert.equal(tela.art, 'Art. 1º'); assert.equal(tela.link, lgpd.fonte);
+  assert.ok(await p.locator('.lei-folha .lei-r').first().isVisible()); await p.click('label[for="lei-rev"], #lei-rev >> xpath=..'); assert.equal(await p.locator('.lei-folha .lei-r').first().isVisible(), false, 'dá para ocultar o revogado');
+  // o tempo de leitura vira sessão de lei seca no assunto da lei e entra na meta do dia
+  await p.evaluate(() => { leiRel.acc += 125000; }); await nav(p, 'hoje');
+  const s = await p.evaluate(() => DB.sessoes.map(x => [x.t, x.tipo, Math.round(x.seg), x.ac || 0])); assert.deepEqual(s.map(x => [x[0], x[1], x[3]]), [['anpd-lgpd-01', 'lei', 0]]); assert.ok(s[0][2] >= 125 && s[0][2] < 140); assert.ok(await p.evaluate(() => minutosDoDia(hojeISO()) >= 2));
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
 });
 
 test('flashcards, desafio do dia e instrutor: o erro volta, o desafio rende bônus e a pergunta é copiada', async () => {

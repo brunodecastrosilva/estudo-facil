@@ -593,3 +593,15 @@ body.kf-com-guia .festa{bottom:var(--kf-pe)}
 }
 
 [tabindex="-1"]:focus-visible{outline:none}
+
+/* ---------- leis na íntegra: leitura na folha do caderno ---------- */
+.lei-barra{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.lei-tempo{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.lei-tempo svg{width:18px;height:18px}
+.lei-folha{display:block;padding:18px 16px 22px 32px}
+.lei-folha p{font-size:16.5px;line-height:1.65;overflow-wrap:anywhere;padding-bottom:12px}
+.lei-folha .lei-c{text-align:center;font-weight:800;padding-top:8px}
+.lei-folha .lei-art{padding-top:6px}
+.lei-folha .lei-r{color:var(--muted)}
+.lei-folha.sem-rev .lei-r{display:none}
+.lei-folha b{font-weight:800}

@@ -242,6 +242,7 @@ const viewMais = {
     return `${cab('Mais')}${KitFacil.nav.mais({ linhas: [
       { id: 'plano', titulo: 'Edital', texto: c ? `${prontidao(c)}% de prontidão · ${plural(DB.topicos.length, 'assunto', 'assuntos')}` : 'O edital, assunto por assunto', icone: I.plano },
       ...(jogoLigado() ? [{ id: 'evolucao', titulo: 'Evolução', texto: 'Prontidão, constância, horas e acertos', icone: I.evolucao }] : []),
+      { id: 'leis', titulo: 'Leis', texto: `${LEIS.length} normas do edital, na íntegra`, icone: I.lei },
       { id: 'provas', titulo: 'Provas do Cebraspe', texto: `${PROVAS.length} cadernos oficiais, com gabarito e comentário`, icone: I.simulado },
       { id: 'discursivas', titulo: 'Discursiva', texto: `${DISCURSIVAS.length} temas, com o que a banca espera`, icone: I.lapis },
       { titulo: 'Flashcards', texto: fc ? `${plural(fc, 'questão para rever hoje', 'questões para rever hoje')}` : 'Nenhum para hoje', icone: I.cartas, attrs: 'data-act="flashcards" id="ma-flash"' },

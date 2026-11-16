@@ -3,12 +3,12 @@
 
 /* ---------- navegação ---------- */
 let tab = 'hoje', novoItem = null;
-const TELAS = { hoje: viewHoje, cadernos: viewCadernos, caderno: viewCaderno, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, provas: viewProvas, prova: viewProva, discursivas: viewDiscursivas, discursiva: viewDiscursiva, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
-const TITULOS = { hoje: 'Hoje', cadernos: 'Cadernos', caderno: 'Caderno', plano: 'Edital', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', provas: 'Provas do Cebraspe', prova: 'Prova', discursivas: 'Discursiva', discursiva: 'Discursiva', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
-const PAI = { concurso: 'concursos', disciplina: 'disciplinas', prova: 'provas', discursiva: 'discursivas', caderno: 'cadernos' };
+const TELAS = { hoje: viewHoje, cadernos: viewCadernos, caderno: viewCaderno, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, leis: viewLeis, lei: viewLei, provas: viewProvas, prova: viewProva, discursivas: viewDiscursivas, discursiva: viewDiscursiva, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
+const TITULOS = { hoje: 'Hoje', cadernos: 'Cadernos', caderno: 'Caderno', plano: 'Edital', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', leis: 'Leis', lei: 'Lei', provas: 'Provas do Cebraspe', prova: 'Prova', discursivas: 'Discursiva', discursiva: 'Discursiva', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
+const PAI = { concurso: 'concursos', disciplina: 'disciplinas', prova: 'provas', discursiva: 'discursivas', caderno: 'cadernos', lei: 'leis' };
 // telas das funções gerais, fora da fase fechada (GERAL, em app.js)
 const TELAS_GERAIS = new Set(['concursos', 'concurso', 'disciplinas', 'disciplina', 'simulados', 'agenda']);
-const DE_MAIS = new Set(['plano', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva']);
+const DE_MAIS = new Set(['plano', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'instrutor', 'leis', 'lei', 'provas', 'prova', 'discursivas', 'discursiva']);
 function irPara(t, { topo = true } = {}) {
   if (t === 'estudar') { abrirEstudar(); return; }
   if (t === 'ajustes') { abrirAjustes(); return; }
@@ -26,7 +26,7 @@ function pintarNav() {
   const html = KitFacil.nav.barra({ itens: [it('hoje', 'Hoje', I.hoje), it('cadernos', 'Cadernos', I.questoes, ['caderno']), terceiro], centro, mais: { atual: tab === 'mais' || DE_MAIS.has(tab) || (jogo && tab === 'evolucao') } });
   const nav = $('#tabs'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
   const lado = KitFacil.nav.trilho({ destaque: { ...centro, rotulo: viva ? 'Voltar ao foco' : 'Estudar agora' },
-    itens: [it('hoje', 'Hoje', I.hoje), it('cadernos', 'Cadernos', I.questoes, ['caderno']), ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('plano', 'Edital', I.plano), it('evolucao', 'Evolução', I.evolucao), it('provas', 'Provas', I.simulado, ['prova']), it('discursivas', 'Discursiva', I.lapis, ['discursiva']), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar),
+    itens: [it('hoje', 'Hoje', I.hoje), it('cadernos', 'Cadernos', I.questoes, ['caderno']), ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('plano', 'Edital', I.plano), it('evolucao', 'Evolução', I.evolucao), it('leis', 'Leis', I.lei, ['lei']), it('provas', 'Provas', I.simulado, ['prova']), it('discursivas', 'Discursiva', I.lapis, ['discursiva']), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar),
       ...(GERAL ? [it('concursos', 'Concursos', I.concurso, ['concurso']), it('disciplinas', 'Disciplinas', I.disciplinas, ['disciplina']), it('simulados', 'Simulados', I.simulado), it('agenda', 'Agenda', I.agenda)] : [])], mais: { atual: tab === 'mais' } });
   const t = $('#trilho'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
 }
@@ -39,6 +39,7 @@ $('#marca').addEventListener('click', () => irPara('hoje'));
 
 /* ---------- ações das telas ---------- */
 const ACOES = {
+  ...ACOES_LEI,
   ...ACOES_CAD,
   'estudar-proximo': () => abrirEstudar(),
   'estudar-item': b => { const it = planoDoDia().itens[+b.dataset.i]; if (it) abrirEstudar(it); },
@@ -89,13 +90,15 @@ function render() {
   if (tab === 'disciplina' && !materia(discId)) tab = 'disciplinas';
   if (tab === 'prova' && !PROVA.has(provaId)) tab = 'provas';
   if (tab === 'caderno' && !cadernoDe(cadId)) tab = 'cadernos';
+  if (tab === 'lei' && !LEI.has(leiId)) tab = 'leis';
+  if (tab === 'lei') leiTempoAbrir(leiId); else leiTempoFechar(); // o relógio da leitura anda só com a lei aberta
   if (!GERAL && TELAS_GERAIS.has(tab)) tab = 'hoje';
   if (tab === 'discursiva' && !DISC.has(redId)) tab = 'discursivas';
   if (!TELAS[tab] && tab !== 'ajustes') tab = 'hoje';
   pintarNav();
   const v = $('#view'), tela = tab === 'ajustes' ? viewAjustes : TELAS[tab];
   $('.wrap').classList.toggle('largo', tab === 'ajustes');
-  const chaveTela = tab + (tab === 'concurso' ? concId : tab === 'disciplina' ? discId : tab === 'prova' ? provaId : tab === 'discursiva' ? redId : tab === 'caderno' ? cadId : '');
+  const chaveTela = tab + (tab === 'concurso' ? concId : tab === 'disciplina' ? discId : tab === 'prova' ? provaId : tab === 'discursiva' ? redId : tab === 'caderno' ? cadId : tab === 'lei' ? leiId + (LEI_TXT[leiId] ? '' : '…') : '');
   const trocou = v.dataset.telaAtual !== chaveTela; v.dataset.telaAtual = chaveTela;
   // as seções abertas continuam abertas depois de redesenhar
   const abertas = trocou ? null : new Set($$('details[data-chave]', v).filter(d => d.open).map(d => d.dataset.chave)), fechadas = trocou ? null : new Set($$('details[data-chave]', v).filter(d => !d.open).map(d => d.dataset.chave));

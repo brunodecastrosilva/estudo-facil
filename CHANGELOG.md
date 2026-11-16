@@ -3,6 +3,14 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.8.0 · 2026-11-16
+
+- **Leis na íntegra:** 24 normas do edital dentro do app, em Mais → Leis, por disciplina: LGPD, Lei 15.352/2026, ECA Digital, Marco Civil, CDC, leis das agências, AIR, Liberdade Econômica, concorrência, processo administrativo, licitações, Lei 8.112, improbidade, Anticorrupção, Governo Digital, LAI, ética, governança e a Constituição.
+- **Texto oficial, sem alteração:** copiado do texto compilado do Planalto, parágrafo a parágrafo, com link para conferir. O texto revogado aparece riscado, como lá, e dá para ocultar.
+- **Tempo de leitura:** cada segundo com a lei aberta soma no assunto dela e na meta do dia. O relógio para quando o app sai da tela.
+- **Ainda faltam** as resoluções e os guias da ANPD, que não estão no Planalto.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os testes do app e a varredura de acessibilidade.
+
 ## 1.7.3 · 2026-11-16
 
 - **Texto de apoio:** abre inteiro, sem rolagem dentro da caixa. Fica logo abaixo do enunciado, que continua no alto da tela.
