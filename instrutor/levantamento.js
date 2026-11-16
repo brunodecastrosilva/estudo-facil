@@ -23,8 +23,8 @@ async function lerGabarito(pdfjs, bytes) {
   }
   const linhas = []; T.sort((a, b) => a.pg - b.pg || b.y - a.y || a.x - b.x);
   for (const t of T) { const u = linhas[linhas.length - 1]; if (u && u.pg === t.pg && Math.abs(u.y - t.y) < 2.5) u.ts.push(t); else linhas.push({ pg: t.pg, y: t.y, ts: [t] }); }
-  for (const L of linhas) { L.ts.sort((a, b) => a.x - b.x);
-    const nums = L.ts.filter(t => /^\d{1,3}$/.test(t.s)), lets = L.ts.filter(t => /^[A-EX*]$/.test(t.s));
+  for (const L of linhas) { L.ts = L.ts.filter(t => t.s !== '0' && !/^(itens?|gabaritos?)$/i.test(t.s)).sort((a, b) => a.x - b.x);
+    const nums = L.ts.filter(t => /^[1-9]\d{0,2}$/.test(t.s)), lets = L.ts.filter(t => /^[A-EX*]$/.test(t.s));
     L.tipo = nums.length >= 3 && nums.length >= L.ts.length * 0.8 ? 'n' : lets.length >= 3 && lets.length >= L.ts.length * 0.8 ? 'l' : ''; L.v = L.tipo === 'n' ? nums : L.tipo === 'l' ? lets : []; }
   const B = {}, A = {}; let okB = true, dup = false;
   for (let i = 0; i < linhas.length; i++) { const N = linhas[i]; if (N.tipo !== 'n') continue;
@@ -46,18 +46,20 @@ const LV_REGRAS = [
   ['ing', c => /\bjudge\b|\bfollowing items?\b|\bthe (preceding |previous |above )?text\b/i.test(c)],
   ['lp', c => /lingu[ií]stic|ideias (do|d[eo]s?|veiculadas|e a)|sentidos? d[oe]|gramatic|reescrit|redação oficial|manual de redação|tipologia|coes[ãa]o|(compreensão|interpretação) d[eo] texto|classes de palavras|sintax|sintát|pontuação|ortogr|acentuação|concordância|regência|crase|norma(-| )padrão|língua portuguesa|texto CB\w+/i.test(c)],
   ['lgpd', c => /13\.709|\blgpd\b|lei geral de proteção de dados/i.test(c)],
-  ['regul', c => /agências? reguladoras?|13\.848|9\.986|10\.871|impacto regulatório|teorias? da regulação|regulação (econômica|setorial|responsiva|de mercados?)|poder regulatório|atividade regulatória|10\.411|resultado regulatório|estado regulador/i.test(c)],
+  ['regul', c => (/regula(ção|dor(a|es)?|tóri[oa]s?)(?![a-zà-ú])/i.test(c) && !/saúde|\bsus\b|gêni|hormon|emocion|metab|temperatura|tensão|velocidade|profiss|assistencial|leitos|ambiental|sanitári|medicament|urban/i.test(c)) || /agências? reguladoras?|13\.848|9\.986|10\.871|impacto regulatório|teorias? da regulação|regulação (econômica|setorial|responsiva|de mercados?)|poder regulatório|atividade regulatória|10\.411|resultado regulatório|estado regulador/i.test(c)],
   ['etica', c => !LV_PROF.test(c) && /1\.171|12\.527|acesso à informação|12\.813|conflito de interesses|9\.203|7\.724|governança pública|(^|[^a-zà-ú])ética (no|na|e) (serviço|setor|administração|função|moral|cidadania)|ética no serviço público/i.test(c)],
   ['dig', c => /12\.965|marco civil|crimes? (cibernétic|informátic|digita)|12\.737|defesa do consumidor|8\.078|\bcdc\b|12\.414|cadastro positivo|\bgdpr\b|direito digital/i.test(c)],
   ['econ', c => /12\.529|defesa da concorrência|\bcade\b|falhas? de mercado|estruturas? de mercado|microeconomi|economia da regulação|monopóli|oligopóli|concorrência perfeita|custo-benefício/i.test(c)],
   ['ti', c => /segurança da informação|segurança (cibernética|de redes|em redes|de dados)|criptograf|2700[1257]|27701|inteligência artificial|aprendizado de máquina|machine learning|big data|ciência de dados|mineração de dados|anonimiza|computação em nuvem|cloud computing|bancos? de dados|modelagem de dados|qualidade de dados|malware|ataques? (cibern|a redes|e ameaças)|autenticação|controle de acesso|privacidade|redes neurais|linguagem natural|ia generativa|\bsgbd\b|data (warehouse|lake|mining)/i.test(c)],
-  ['da', c => !LV_FORA.test(c) && /direito administrativo|atos? administrativos?|licitaç|14\.133|8\.112|9\.784|processo administrativo|improbidade|8\.429|poder(es)? (administrativos?|de polícia)|agentes? públicos|controle da administração|responsabilidade civil do estado|12\.846|anticorrupção|14\.129|governo digital|organização administrativa|administração (direta|indireta)|serviços públicos|contratos administrativos|regime jurídico-administrativo/i.test(c)],
+  ['da', c => !LV_FORA.test(c) && /direito administrativo|atos? administrativos?|licitaç|14\.133|8\.112|9\.784|processo administrativo|improbidade|8\.429|poder(es)? (administrativos?|de polícia)|agentes? públicos|controle da administração|responsabilidade civil do estado|12\.846|anticorrupção|14\.129|governo digital|organização administrativa|administração (direta|indireta)|serviços públicos|contratos administrativos|regime jurídico-administrativo|controle (externo|interno|administrativo|judicial)|tribuna(l|is) de contas/i.test(c)],
   ['dc', c => !LV_FORA.test(c) && /direito constitucional|constituição federal|constituição da república|\bcf\b|direitos e (garantias|deveres)|direitos fundamentais|organização (do estado|político-administrativa|dos poderes)|poder (legislativo|executivo|judiciário)|ordem (econômica|social)|controle de constitucionalidade|processo legislativo|princípios fundamentais/i.test(c)],
 ];
 const LV_ITEM = [['lgpd', /13\.709|\blgpd\b|lei geral de proteção de dados/i], ['regul', /13\.848|agências? reguladoras?|impacto regulatório/i], ['etica', /12\.527|lei de acesso à informação|12\.813|1\.171/i], ['dig', /12\.965|marco civil da internet/i], ['econ', /12\.529/i], ['da', /9\.784|14\.133|8\.112|8\.429|12\.846|14\.129/i]];
 const lvIngles = s => { const p = (s.toLowerCase().match(/[a-zà-ú]+/g) || []); if (p.length < 40) return false; const en = p.filter(w => /^(the|of|and|to|is|that|in|for|with|are|by|as|it|this|from)$/.test(w)).length, pt = p.filter(w => /^(de|que|em|para|uma|com|os|as|não|por|do|da)$/.test(w)).length; return en > pt * 2 && en / p.length > 0.12; };
 const lvLimpo = s => String(s || '').replace(/[\u0001\u0002]/g, '');
-function lvClasseDoGrupo(g) { const c = lvLimpo(g.cmd); if (!c) return null; if (lvIngles(lvLimpo(g.apoio))) return 'ing'; for (const [m, f] of LV_REGRAS) if (f(c)) return m; return null; }
+function lvClasseDoGrupo(g) { let c = lvLimpo(g.cmd); if (!c) return null;
+  // comando partido em duas linhas: o começo ficou no fim do texto de apoio
+  if (/^[a-zà-ú]/.test(c)) c = lvLimpo(g.apoio).split('\n').pop().slice(-300) + ' ' + c; if (lvIngles(lvLimpo(g.apoio))) return 'ing'; for (const [m, f] of LV_REGRAS) if (f(c)) return m; return null; }
 function lvClasseDoItem(m, texto) { if (m === 'lp' || m === 'ing') return m; const s = lvLimpo(texto); if (LV_ITEM[0][1].test(s)) return 'lgpd'; if (m) return m; for (const [k, re] of LV_ITEM) if (re.test(s)) return k; return null; }
 const lvChave = s => lvLimpo(s).toLowerCase().replace(/[^a-z0-9à-ú]+/g, ' ').trim();
 
@@ -68,7 +70,8 @@ async function lvCaderno(pdfjs, e) {
   if (gb.gab.length < 20) return { erro: 'gab-curto' };
   const bytes = await (await fetch(base + e.cad)).arrayBuffer();
   let ano = 0; try { const d = await pdfjs.getDocument({ data: bytes.slice(0) }).promise, t = (await (await d.getPage(1)).getTextContent()).items.map(i => i.str).join(' '); const m = /Aplicaç[ãa]o:\s*(?:\d{1,2}\/\d{1,2}\/)?(\d{4})/i.exec(t) || /(?:Edital|EDITAL)[^\d]{0,30}(20\d\d)/.exec(t); if (m) ano = +m[1]; } catch {}
-  const r = await lerCadernoPDF(pdfjs, bytes, { de: gb.de, ate: gb.ate });
+  // o caderno não pode ter item além do último do gabarito lido: seria gabarito lido pela metade
+  const r = await lerCadernoPDF(pdfjs, bytes, { de: gb.de, ate: gb.ate + 1 }); if ((gb.ate + 1) in r.itens) return { erro: 'gab-incompleto' };
   const faltam = []; for (let n = gb.de; n <= gb.ate; n++) if (!(n in r.itens)) faltam.push(n); if (faltam.length) return { erro: 'itens-faltando', q: faltam.length };
   r.grupos.sort((a, b) => a.de - b.de); const M = {}, conta = {};
   for (let n = gb.de; n <= gb.ate; n++) {
