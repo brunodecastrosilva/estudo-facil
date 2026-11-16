@@ -127,11 +127,13 @@ function treinoFechar() {
 }
 // fecha o treino: guarda uma sessão por assunto, grifa o assunto que teve todas as questões respondidas e abre a festa
 function treinoEncerrar() {
-  const T = TR; if (!T) return; trTempoParar(); const feitas = T.ac + T.er, tempo = soma([...T.segT.values()], x => x), daM = c => c.startsWith('m:');
-  // só olhou as questões: o tempo conta mesmo assim (a partir de 5 segundos)
-  if (!feitas) { if (tempo >= 5) { for (const [c, sg] of T.segT) if (sg >= 1) registrarSessao({ t: daM(c) ? null : c, m: daM(c) ? c.slice(2) : null, tipo: 'questoes', seg: sg, ini: T.ini }); salvar({ quieto: true }); treinoFechar(); jogoConferir(); render(); return; } treinoFechar(); render(); return; }
+  const T = TR; if (!T) return; trTempoParar(); const feitas = T.ac + T.er, daM = c => c.startsWith('m:');
+  // abrir uma questão e sair sem responder não é sessão de estudo: nada é registrado
+  if (!feitas) { treinoFechar(); render(); return; }
+  // com outra sessão em andamento (o cronômetro), o tempo já está sendo contado nela: aqui entram só as respostas
+  if (DB.ativa) T.segT.clear();
   for (const [c, sg] of T.segT) if (sg >= 1 && !T.porT.has(c)) T.porT.set(c, { ac: 0, er: 0 });
-  const antes = { s: jogoEstado(), perfeito: missoes().perfeito }, seg = tempo, completo = feitas === T.lista.length;
+  const antes = { s: jogoEstado(), perfeito: missoes().perfeito }, seg = DB.ativa ? 0 : soma([...T.segT.values()], x => x), completo = feitas === T.lista.length;
   let bonus = T.bonus; if (T.desafio && completo && !temMarco('d:' + hojeISO())) { marcar('d:' + hojeISO()); bonus += 20 + (T.ac / feitas >= .8 ? 30 : 0); }
   const fez = { teoria: false, revisoes: 0, revisao: false, dia: false }, daProva = c => c.startsWith('m:'), c0 = [...T.porT.keys()][0]; let k = 0, unico = T.porT.size === 1 && !daProva(c0) ? c0 : null;
   for (const [tId, p] of T.porT) {

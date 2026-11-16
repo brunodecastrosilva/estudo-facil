@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.9 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.10 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -269,9 +269,16 @@ test('leis na íntegra: lista por disciplina, texto do Planalto sem alteração,
   await p.click('#lei-topo'); await p.waitForFunction(() => { const y = scrollY; return new Promise(r => setTimeout(() => r(scrollY === y), 300)); }, null, { timeout: 8000 }); assert.ok(await p.evaluate(() => document.querySelector('#lei-sumario summary').getBoundingClientRect().top < innerHeight));
   assert.deepEqual(await p.evaluate(() => [leiSumario(LEI_TXT.lgpd.p).artigos.length, LEI_TXT.lgpd.p.length]), [0, lgpd.p.length]);
   assert.ok(await p.locator('.lei-folha .lei-r').first().isVisible()); await p.click('label[for="lei-rev"], #lei-rev >> xpath=..'); assert.equal(await p.locator('.lei-folha .lei-r').first().isVisible(), false, 'dá para ocultar o revogado');
-  // o tempo de leitura vira sessão de lei seca no assunto da lei e entra na meta do dia
-  await p.evaluate(() => { leiRel.acc += 125000; }); await nav(p, 'hoje');
-  const s = await p.evaluate(() => DB.sessoes.map(x => [x.t, x.tipo, Math.round(x.seg), x.ac || 0])); assert.deepEqual(s.map(x => [x[0], x[1], x[3]]), [['anpd-lgpd-01', 'lei', 0]]); assert.ok(s[0][2] >= 125 && s[0][2] < 140); assert.ok(await p.evaluate(() => minutosDoDia(hojeISO()) >= 2));
+  // abrir a lei não é estudar: sem sessão e sem tempo; a sessão começa no botão e é uma só
+  await p.waitForTimeout(1200); await nav(p, 'hoje'); assert.deepEqual(await p.evaluate(() => [DB.sessoes.length, !!DB.ativa, minutosDoDia(hojeISO())]), [0, false, 0]);
+  await p.evaluate(() => { leiId = 'lgpd'; irPara('lei'); }); await p.click('#lei-estudar');
+  assert.deepEqual(await p.evaluate(() => [DB.ativa.t, DB.ativa.tipo, DB.sessoes.length, !!document.querySelector('#lei-estudar')]), ['anpd-lgpd-01', 'lei', 0, false]);
+  await p.evaluate(() => { leiId = 'l9784'; irPara('lei'); }); await p.locator('#view .lei-folha p').first().waitFor();
+  assert.match(await p.locator('#view [role="status"]').first().innerText(), /Sessão em andamento: Aplicação da lei[\s\S]*O tempo desta leitura conta nela\./); assert.deepEqual(await p.evaluate(() => [DB.ativa.t, DB.sessoes.length, !!document.querySelector('#lei-estudar')]), ['anpd-lgpd-01', 0, false], 'outra lei aberta: a sessão continua uma só');
+  // questão resolvida com a sessão em andamento: entra a resposta, não o tempo
+  await p.evaluate(() => { DB.ativa.acum = 600; treinoAbrir({ caderno: 'm:anpd-etica', i: 0 }); }); await p.locator('#treino.dentro').waitFor(); await p.click('#treino [data-resp="E"]'); await p.keyboard.press('Escape'); await p.locator('#festa-ok').waitFor(); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
+  assert.deepEqual(await p.evaluate(() => [DB.sessoes.map(x => [x.tipo, x.ac, Math.round(x.seg)]), !!DB.ativa]), [[['questoes', 1, 0]], true]);
+  await p.evaluate(() => { descartarSessao(); irPara('lei'); });
   // norma sem capítulos: atalho para cada artigo; a Constituição tem títulos
   await p.evaluate(() => { leiId = 'd9203'; irPara('lei'); }); await p.locator('#lei-sumario .lei-arts .lei-ir').first().waitFor(); assert.ok(await p.locator('#lei-sumario .lei-arts .lei-ir').count() >= 15); assert.equal(await p.locator('#lei-sumario .lei-arts .lei-ir').first().innerText(), 'Art. 1');
   for (const [f, min] of [['cf', 60], ['l14133', 40], ['l8112', 30], ['l12527', 6]]) { const j = JSON.parse(readFileSync(new URL('../leis/' + f + '.json', import.meta.url), 'utf8')); const n = await p.evaluate(P => leiSumario(P).partes.length, j.p); assert.ok(n >= min, f + ': ' + n + ' partes no sumário'); }

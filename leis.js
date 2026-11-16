@@ -1,8 +1,7 @@
 /* Estudo Fácil · as leis na íntegra, dentro do app.
    O texto vem do site do Planalto (texto compilado), parágrafo a parágrafo, sem alteração: fica em leis/<id>.json
    ({ fonte, lido, p: [{ t: texto, r: 1 se revogado (riscado no Planalto), c: 1 se centralizado }] }).
-   Aqui ficam a lista, a tela de leitura na identidade do app e o relógio: cada segundo de leitura soma no assunto
-   da lei e na meta do dia (o relógio para quando o app sai da tela). */
+   Aqui ficam a lista, o sumário e a tela de leitura na identidade do app. */
 const LEIS = [
   ['lgpd', 'Lei 13.709/2018', 'Lei Geral de Proteção de Dados (LGPD)', 'anpd-lgpd-01'],
   ['l15352', 'Lei 15.352/2026', 'ANPD como agência reguladora e carreira', 'anpd-inst-01'],
@@ -31,19 +30,11 @@ const LEIS = [
 ].map(([id, nome, sub, t]) => ({ id, nome, sub, t }));
 const LEI = new Map(LEIS.map(l => [l.id, l]));
 const LEI_TXT = {};          // textos já buscados nesta visita
-let leiId = null, leiRel = null;
+let leiId = null;
 
-// tempo de leitura da lei aberta, em segundos (só conta com o app na tela)
-const leiSeg = () => leiRel ? (leiRel.acc + (leiRel.ini ? Date.now() - leiRel.ini : 0)) / 1000 : 0;
-function leiTempoAbrir(id) { if (leiRel && leiRel.id === id) return; leiTempoFechar(); leiRel = { id, acc: 0, ini: document.visibilityState === 'visible' ? Date.now() : 0, t: setInterval(() => { const el = document.querySelector('#lei-relogio'); if (el) el.textContent = fmtRelogio(leiSeg()); }, 1000) }; }
-function leiTempoFechar() {
-  const R = leiRel; if (!R) return; leiRel = null; clearInterval(R.t);
-  const seg = (R.acc + (R.ini ? Date.now() - R.ini : 0)) / 1000, L = LEI.get(R.id), t = L && topico(L.t);
-  if (seg >= 5 && t) { registrarSessao({ t: t.id, tipo: 'lei', seg }); salvar({ quieto: true }); if (typeof jogoConferir === 'function') jogoConferir(); }
-}
-document.addEventListener('visibilitychange', () => { if (!leiRel) return; if (document.visibilityState === 'visible') { if (!leiRel.ini) leiRel.ini = Date.now(); } else if (leiRel.ini) { leiRel.acc += Date.now() - leiRel.ini; leiRel.ini = 0; } });
-addEventListener('pagehide', () => leiTempoFechar());
-
+/* Abrir uma lei não é estudar: só ler não cria sessão nem conta tempo. O tempo conta dentro de uma sessão de estudo:
+   a que já está em andamento (a leitura entra nela, seja qual for a lei) ou a que começa no botão "Estudar esta lei".
+   Assim nunca há duas sessões ao mesmo tempo. */
 const viewLeis = {
   html() {
     const porM = []; for (const L of LEIS) { const t = topico(L.t), m = t && materia(t.m); if (!m) continue; const g = porM.find(x => x.m.id === m.id); g ? g.L.push(L) : porM.push({ m, L: [L] }); }
@@ -85,7 +76,9 @@ const viewLei = {
     const sumario = S.partes.length >= 3 ? `<ol class="lei-sum">${S.partes.map(x => `<li class="n${Math.min(x.n, 3)}"><button type="button" class="lei-ir" data-act="lei-ir" data-i="${x.i}"><b>${esc(x.t)}</b>${x.nome ? `<span>${esc(x.nome)}</span>` : ''}</button></li>`).join('')}</ol>`
       : S.artigos.length ? `<ol class="lei-arts">${S.artigos.map(x => `<li><button type="button" class="lei-ir" data-act="lei-ir" data-i="${x.i}" aria-label="Artigo ${esc(x.t)}">Art. ${esc(x.t)}</button></li>`).join('')}</ol>` : '';
     return `${volta}${cab(L.nome, esc(L.sub))}
-      <div class="lei-barra"><span class="etiqueta">${esc(t ? t.nome : '')}</span><span class="lei-tempo" aria-label="Tempo de leitura">${I.relogio || ''}<b id="lei-relogio">${fmtRelogio(leiSeg())}</b></span></div>
+      <div class="lei-barra"><span class="etiqueta">${esc(t ? t.nome : '')}</span></div>
+      ${DB.ativa ? `<p class="apoio" role="status">Sessão em andamento${topico(DB.ativa.t) ? ': ' + esc(topico(DB.ativa.t).nome) : ''}. O tempo desta leitura conta nela.</p>`
+        : `<button type="button" class="kf-btn kf-comecar bloco" data-act="lei-estudar" id="lei-estudar">${I.play}Estudar esta lei</button><p class="apoio">Só abrir a lei não conta tempo. A sessão de estudo começa neste botão.</p>`}
       ${rev ? linhaChave('lei-rev', !semRev, 'Mostrar o texto revogado', `${plural(rev, 'trecho riscado', 'trechos riscados')}, como no Planalto`) : ''}
       ${sumario ? `<details class="tr-aula lei-sumario" id="lei-sumario" data-kf-secao open><summary><b>Sumário</b></summary>${sumario}</details>` : ''}
       <article class="folha lei-folha${semRev ? ' sem-rev' : ''}" lang="pt-BR">${tx.p.map((p, i) => leiParagrafo(p, i)).join('')}</article>
@@ -99,6 +92,7 @@ document.addEventListener('change', e => { if (e.target && e.target.id === 'lei-
 const leiRolar = el => { if (!el) return; el.scrollIntoView({ block: 'start', behavior: KitFacil.movimento && KitFacil.movimento.reduzido && KitFacil.movimento.reduzido() ? 'auto' : 'smooth' }); try { el.focus({ preventScroll: true }); } catch {} };
 const ACOES_LEI = {
   'abrir-lei': b => { if (LEI.has(b.dataset.id)) { leiId = b.dataset.id; irPara('lei'); } },
+  'lei-estudar': () => { const L = LEI.get(leiId); if (!L || DB.ativa || !topico(L.t)) return; iniciarSessao({ t: L.t, tipo: 'lei' }); render(); avisar('Sessão começou. O tempo está contando.'); },
   'lei-ir': b => leiRolar(document.getElementById('lei-p' + b.dataset.i)),
   'lei-sumario': () => { const d = document.getElementById('lei-sumario'); if (d) { d.open = true; leiRolar(d.querySelector('summary')); } },
 };

@@ -5,7 +5,7 @@ e no computador. O app gira em torno de **cadernos de questões** de certo ou er
 comentadas; transforma os erros em flashcards, traz as provas oficiais da banca com correção, treina a discursiva, lembra
 das revisões e mostra a evolução, com sequência de dias, missões e mais de cem medalhas.
 
-Versão **1.9.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.10.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno e todo voltado ao concurso
 > da ANPD. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
@@ -22,7 +22,7 @@ referência do projeto (Art. 93).
 - **Meus cadernos:** cadernos montados por disciplina, filtro (todas, nunca resolvidas ou as que errei) e tamanho
 - **Questões nativas:** 220 questões de certo ou errado no estilo Cebraspe, **escritas dentro do app** (`questoes.js` e `questoes2.js`) a partir da lei e das armadilhas vistas nas provas oficiais. Cada uma tem gabarito, comentário e fundamento, e leva o selo "Feita por IA". Não são questões de prova
 - **Questões oficiais do Cebraspe:** o texto das provas cadastradas chega ao aparelho e cada prova vira caderno, só com os itens do edital, com comando, texto de apoio, gabarito definitivo e comentário do instrutor. As questões de prova também entram no caderno da disciplina, nos atalhos, nos cadernos montados e nos flashcards. **O texto fica só nos dados de quem usa; não entra no repositório** (veja "A ponte das provas")
-- **Leis na íntegra** (em Mais): 24 normas do edital com o texto compilado do Planalto, sem alteração (`leis/<id>.json`: `fonte`, `lido` e `p`, a lista de parágrafos, com `r` no que está revogado e `c` no que é centralizado). Cada lei tem um sumário montado na hora, a partir dos títulos centralizados (ou dos artigos, quando não há capítulos), com link para cada parte. O tempo de leitura vira sessão de "Lei seca" no assunto da lei. A lista e a tela ficam em `leis.js`
+- **Leis na íntegra** (em Mais): 24 normas do edital com o texto compilado do Planalto, sem alteração (`leis/<id>.json`: `fonte`, `lido` e `p`, a lista de parágrafos, com `r` no que está revogado e `c` no que é centralizado). Cada lei tem um sumário montado na hora, a partir dos títulos centralizados (ou dos artigos, quando não há capítulos), com link para cada parte. Abrir a lei não conta tempo: a sessão de "Lei seca" começa no botão "Estudar esta lei" (o cronômetro do app); com uma sessão em andamento, a leitura entra nela, e nunca há duas sessões ao mesmo tempo. A lista e a tela ficam em `leis.js`
 - **Hoje:** a sequência de dias, a meta do dia, as três missões, o caderno em andamento e o plano de hoje
 - **Plano do dia:** revisões vencidas primeiro; depois, blocos das disciplinas mais atrasadas em relação ao peso na prova
 - **Edital da ANPD** (em Mais): 12 disciplinas, 119 assuntos, pesos, três fases até a prova e fontes oficiais; cada assunto estudado fica grifado e a prontidão sobe. O edital ainda não saiu: o que é estimativa está marcado como estimativa

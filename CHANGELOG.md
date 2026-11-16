@@ -3,6 +3,13 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.10.0 · 2026-11-16
+
+- **Abrir não é estudar:** abrir uma lei, ou abrir uma questão e sair sem responder, não cria sessão nem conta tempo.
+- **Sessão na lei:** começa no botão "Estudar esta lei" e usa o cronômetro do app, no assunto da lei.
+- **Uma sessão por vez:** com uma sessão em andamento, ler qualquer lei conta nela, e as questões resolvidas no meio entram só com as respostas. O tempo não é contado duas vezes.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os testes do app e a varredura de acessibilidade.
+
 ## 1.9.0 · 2026-11-16
 
 - **Sumário em cada lei:** no alto do texto, com link rápido para livros, títulos, capítulos, seções e anexos, com o nome de cada parte.

@@ -91,7 +91,6 @@ function render() {
   if (tab === 'prova' && !PROVA.has(provaId)) tab = 'provas';
   if (tab === 'caderno' && !cadernoDe(cadId)) tab = 'cadernos';
   if (tab === 'lei' && !LEI.has(leiId)) tab = 'leis';
-  if (tab === 'lei') leiTempoAbrir(leiId); else leiTempoFechar(); // o relógio da leitura anda só com a lei aberta
   if (!GERAL && TELAS_GERAIS.has(tab)) tab = 'hoje';
   if (tab === 'discursiva' && !DISC.has(redId)) tab = 'discursivas';
   if (!TELAS[tab] && tab !== 'ajustes') tab = 'hoje';
