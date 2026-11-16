@@ -89,22 +89,38 @@ async function lvCaderno(pdfjs, e) {
   const nulos = r.grupos.filter(g => !g.m && g.cmd).map(g => g.de + ':' + lvLimpo(g.cmd).slice(0, 70));
   return { de: gb.de, gab: gb.gab, conf: gb.conf, ano, blocos, conta, q, nulos, texto: { itens, grupos } };
 }
-/* A lista: [{ id, cad, gab, nome }]. Vai guardando; pode ser chamada de novo que pula o que já foi feito. */
-async function lvRodar(pdfjs, lista, { vias = 3, minimo = 8 } = {}) {
-  LV.total = lista.length; LV.feito = 0; LV.fim = 0;
-  const fila = lista.slice(), um = async () => { while (fila.length) { const e = fila.shift();
+/* A lista: [{ id, cad, gab, nome, semente? }]. Guarda o andamento no localStorage desta página: se um PDF travar a
+   página, basta recarregar e chamar de novo, que o levantamento continua de onde parou e pula o caderno que travou.
+   As "sementes" são as provas que já estão no app: só marcam os itens como vistos. */
+const lvLS = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } };
+async function lvPreparar(lista) {
+  LV.vistos.clear(); LV.res = {};
+  for (const p of await lvTudo()) { const { itens, grupos, ...meta } = p; LV.res[p.id] = meta; Object.values(itens).forEach(t => { if (t) LV.vistos.add(lvChave(t)); }); }
+  const fe = lvLS('ef-fe', {}); for (const id of lvLS('ef-and', [])) fe[id] = 'travou'; localStorage.setItem('ef-fe', JSON.stringify(fe)); localStorage.setItem('ef-and', '[]');
+  return lista.filter(e => e.semente || (!LV.res[e.id] && !fe[e.id]));
+}
+async function lvRodar(pdfjs, lista, { vias = 2, minimo = 8 } = {}) {
+  const pend = await lvPreparar(lista), fila = pend.slice(); LV.total = pend.length; LV.feito = 0; LV.fim = 0;
+  const um = async () => { while (fila.length) { const e = fila.shift(); let st = '';
+    localStorage.setItem('ef-and', JSON.stringify(lvLS('ef-and', []).concat(e.id)));
     try { const r = await lvCaderno(pdfjs, e);
-      if (e.semente) { /* prova que já está no app: só marca os itens como vistos */ }
-      else if (r.erro) LV.erros[e.id] = r.erro + (r.q ? ':' + r.q : '');
-      else if (r.q < minimo) LV.erros[e.id] = 'poucos:' + r.q;
-      else { const { texto, ...meta } = r; await lvPor(e.id, { id: e.id, cad: e.cad, gabUrl: e.gab, nome: e.nome, ...meta, itens: texto.itens, grupos: texto.grupos }); LV.res[e.id] = meta; }
-    } catch (x) { LV.erros[e.id] = 'falha:' + String(x && x.message || x).slice(0, 60); }
-    LV.feito++; } };
+      if (e.semente) st = ''; else if (r.erro) st = r.erro + (r.q ? ':' + r.q : ''); else if (r.q < minimo) st = 'poucos:' + r.q;
+      else { const { texto, ...meta } = r, base = { id: e.id, cad: e.cad, gabUrl: e.gab, nome: e.nome, ...meta }; await lvPor(e.id, { ...base, itens: texto.itens, grupos: texto.grupos }); LV.res[e.id] = base; }
+    } catch (x) { st = 'falha:' + String(x && x.message || x).slice(0, 60); }
+    if (st) { const fe = lvLS('ef-fe', {}); fe[e.id] = st; localStorage.setItem('ef-fe', JSON.stringify(fe)); }
+    localStorage.setItem('ef-and', JSON.stringify(lvLS('ef-and', []).filter(x => x !== e.id))); LV.feito++; } };
   await Promise.all(Array.from({ length: vias }, um)); LV.fim = 1;
 }
-/* Manda um lote de provas guardadas para o app, pelo endereço. */
+/* O cadastro que viaja com o texto: órgão, ano, nome do caderno, endereços, gabarito e blocos por disciplina. */
+const LV_ORG = { FUNPRESP_24_EXE: 'FUNPRESP-EXE', CPNUJE_24: 'TSE Unificado', PF_25_ADM: 'PF', FNDE_23_ESPECIALISTA: 'FNDE', MP_CE_25_SERVIDOR: 'MP-CE', MP_GO_24_SERVIDOR: 'MP-GO', MP_TO_24_SERVIDOR: 'MP-TO', TJ_CE_23_SERVIDOR: 'TJ-CE', TJ_ES_23: 'TJ-ES', TCE_AC_24: 'TCE-AC', TC_DF_23: 'TC-DF', TC_DF_24_AUDITOR: 'TC-DF', TCE_PR_24_AUDITOR: 'TCE-PR', SEPLAG_CE_24: 'SEPLAG-CE', PGE_PI_25: 'PGE-PI', CGE_RJ_23: 'CGE-RJ', AGER_MT_23: 'AGER-MT', SEFIN_FORTALEZA_CE_23: 'SEFIN Fortaleza', PETROBRAS_23_NTJ: 'PETROBRAS', CAU_BR_23: 'CAU-BR', ANEEL_25_CF: 'ANEEL', ANS_25_CF: 'ANS', TRT10_24: 'TRT-10', TRF6_24: 'TRF-6' };
+function lvMeta(p) {
+  const slug = p.cad.split('/')[0], yy = +(/_(\d\d)(_|$)/.exec(slug) || [0, 0])[1], cod = p.cad.split('/').pop().replace(/\.pdf$/i, '');
+  let nome = String(p.nome || '').replace(/^PROVAS? OBJET\w*\s*[-–—:]*\s*/i, '').replace(/\s+/g, ' ').trim().toLowerCase(); nome = nome ? nome[0].toUpperCase() + nome.slice(1) : 'Prova objetiva';
+  return { org: LV_ORG[slug] || slug.replace(/_\d\d.*$/, '').replace(/_/g, ' '), ano: p.ano >= 2015 && p.ano <= 2030 ? p.ano : 2000 + yy, nome: (nome + ' · ' + cod).slice(0, 200), cad: p.cad, gab: p.gabUrl, de: p.de, g: p.gab, bl: p.blocos };
+}
+/* Manda um lote de provas guardadas para o app, pelo endereço (o app confere que veio do site da banca). */
 async function lvEnviar(ids, app = 'https://brunodecastrosilva.github.io/estudo-facil/') {
-  const provas = []; for (const id of ids) { const p = await lvLer(id); if (p) provas.push({ prova: id, itens: p.itens, grupos: p.grupos }); }
+  const provas = []; for (const id of ids) { const p = await lvLer(id); if (p) provas.push({ prova: id, meta: lvMeta(p), itens: p.itens, grupos: p.grupos }); }
   const b = new TextEncoder().encode(JSON.stringify({ v: 1, provas })); let bin = ''; for (let i = 0; i < b.length; i += 8192) bin += String.fromCharCode(...b.subarray(i, i + 8192));
   location.href = app + '#prova=' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
