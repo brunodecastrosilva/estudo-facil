@@ -29,11 +29,23 @@ function tiraSemana() {
   }).join('')}</ol>`;
 }
 const linhaPlano = (it, i) => {
-  const n = nomeItem(it), rot = it.tipo === 'revisao' ? `Revisão${it.atraso > 0 ? ` · ${plural(it.atraso, 'dia', 'dias')} de atraso` : ''}` : `${TIPOS[it.tipo]} · ${it.min} min`;
+  const n = nomeItem(it), rot = it.tipo === 'revisao' ? `Revisão${it.atraso > 0 ? ` · ${plural(it.atraso, 'dia', 'dias')} de atraso` : ''}` : `${TIPOS[it.tipo]} · ${it.nq ? plural(it.nq, 'item', 'itens') : it.min + ' min'}`;
   return `<li class="pl-item ${it.feito ? 'feito' : ''}"><span class="pl-marca" aria-hidden="true">${it.feito ? I.check : it.tipo === 'revisao' ? I.revisar : I.livro}</span>
     <span class="pl-tx"><b>${it.feito ? `<span class="grifo">${esc(n.t)}</span>` : esc(n.t)}</b><small>${esc(n.m)} · ${rot}${it.feito ? ' · feito' : ''}</small></span>
     ${it.feito ? '' : `<button type="button" class="btn-ic comecar" data-act="estudar-item" data-i="${i}" aria-label="Estudar ${esc(n.t)}">${I.play}</button>`}</li>`;
 };
+// Hoje: o desafio do dia, os flashcards que venceram e o treino livre
+function centralQuestoes() {
+  if (!QUESTOES.some(q => topico(q.t))) return '';
+  const D = desafioDoDia(), fc = flashcardsDeHoje().length, feitas = DB.respostas.filter(r => QID.has(r.id)).length;
+  const lin = (act, ic, t, sub, selo = '') => `<li><button type="button" class="lin" data-act="${act}"><span class="lin-ic">${ic}</span><span class="lin-tx"><b>${t}</b><small>${sub}</small></span>${selo}${I.seta}</button></li>`;
+  return `<section aria-labelledby="cq-t"><div class="sec-cab"><h2 class="sec-t" id="cq-t">Questões</h2><span class="apoio">${feitas} de ${QUESTOES.length} respondidas</span></div>
+    <ul class="card lista central-q">
+      ${lin('desafio', I.raio, 'Desafio do dia', D.feito ? 'Feito hoje. Amanhã tem outro.' : '10 itens sorteados · bônus de pontos', D.feito ? `<span class="etiqueta ok">${I.check}Feito</span>` : '')}
+      ${lin('flashcards', I.revisar, 'Flashcards', fc ? `${plural(fc, 'item que você errou volta', 'itens que você errou voltam')} hoje` : 'Nenhum para hoje. Eles nascem dos seus erros.', fc ? `<span class="etiqueta">${fc}</span>` : '')}
+      ${lin('treino-livre', I.questoes, 'Treino livre', '10 itens: primeiro os que você errou, depois os novos')}
+    </ul></section>`;
+}
 const viewHoje = {
   html() {
     const c = concursoFoco(), P = planoDoDia(), S = sequencia(), M = missoes(), s = jogoEstado(), ct = contagem(c), fase = faseAtual(c);
@@ -56,6 +68,8 @@ const viewHoje = {
         <button type="button" class="kf-btn kf-comecar bloco" id="hoje-estudar" data-act="estudar-proximo">${I.play}${DB.ativa ? 'Voltar ao foco' : min > 0 ? 'Continuar estudando' : 'Estudar agora'}</button>
       </section>
 
+      ${centralQuestoes()}
+
       <section class="card" aria-labelledby="mis-t"><div class="sec-cab"><h2 class="sec-t" id="mis-t">Missões de hoje</h2><span class="apoio">${M.feitas} de ${M.lista.length}</span></div>
         <ul class="missoes">${M.lista.map(m => `<li class="missao ${m.ok ? 'ok' : ''}"><span class="mi-ic" aria-hidden="true">${m.ok ? I.check : I[m.ic]}</span><span class="mi-tx"><b>${esc(m.nome)}</b>${barraHTML(m.v / m.de * 100, `${Math.floor(m.v)} de ${m.de}`)}</span><span class="mi-n" aria-hidden="true">${Math.floor(m.v)}/${m.de}</span></li>`).join('')}</ul>
         ${M.perfeito ? `<p class="mis-perfeito"><span class="grifo">Dia perfeito.</span> As missões de hoje estão cumpridas.</p>` : ''}</section>
@@ -67,6 +81,7 @@ const viewHoje = {
       ${c ? `<button type="button" class="card conc-card" data-kf-ir="plano"><span class="cc-topo"><b>${esc(c.sigla)}</b>${fase ? `<span class="etiqueta">${esc(fase.nome)}</span>` : ''}</span><span class="cc-cargo">${esc(c.cargo || '')}</span>
         <span class="cc-pront"><span>Prontidão para a prova</span><b>${prontidao(c)}%</b></span>${barraHTML(prontidao(c), `Prontidão: ${prontidao(c)}%`, 'grifada')}
         <span class="kf-so-leitor">. Ver o plano</span></button>` : ''}
+      ${DB.sessoes.length ? `<button type="button" class="kf-btn kf-link" data-kf-ir="evolucao">Ver a sua evolução</button>` : ''}
 
       ${jogoLigado() ? `<button type="button" class="card nivel-card" data-act="ver-medalhas"><span class="kf-so-leitor">Nível ${s.nivel}: </span>${seloNivelHTML(s)}${nivelHTML(s)}
         ${proxima ? `<span class="nivel-prox"><span class="med-mini">${medalhaSVG(proxima, { apagada: true })}</span><span><small>Próxima medalha</small><b>${esc(proxima.nome)}</b></span></span>` : ''}<span class="kf-so-leitor">. ${s.ganhas.length} de ${s.total} medalhas. Ver a coleção</span></button>` : ''}`}`;
@@ -117,8 +132,7 @@ const viewPlano = {
   ligar(v) { $('#pl-conc', v)?.addEventListener('change', e => { planoConc = e.target.value; render(); }); },
 };
 
-/* ---------- Evolução: desempenho e medalhas ---------- */
-let evoAba = 'desempenho';
+/* ---------- Evolução: desempenho ---------- */
 const semanas = n => { const h = hojeISO(), seg = maisDias(h, -((deISO(h).getDay() + 6) % 7)); return Array.from({ length: n }, (_, i) => maisDias(seg, -7 * (n - 1 - i))); };
 function barrasSVG(vals, rotulos, fmt, titulo) {
   const W = 320, H = 150, n = vals.length, max = Math.max(1, ...vals), bw = W / n * .56, passo = W / n;
@@ -144,15 +158,7 @@ function calorHTML() {
 }
 const viewEvolucao = {
   html() {
-    const s = jogoEstado(), abas = KitFacil.ui.abas({ itens: [['desempenho', 'Desempenho'], ['medalhas', 'Medalhas', `${s.ganhas.length}/${s.total}`]], atual: evoAba, rotulo: 'Partes da evolução', dado: 'evo' });
-    const topo = `${cab('Evolução', 'Quanto você já avançou, e por onde seguir.')}${jogoLigado() ? abas : ''}`;
-    if (evoAba === 'medalhas' && jogoLigado()) {
-      const ganhas = new Set(s.ganhas), ord = [...medalhasDoApp()].sort((a, b) => ganhas.has(b.id) - ganhas.has(a.id));
-      return `${topo}<div class="card nivel-card grande">${seloNivelHTML(s, true)}${nivelHTML(s)}</div>
-        <div class="sec-cab"><h2 class="sec-t">Coleção</h2><span class="apoio">${s.ganhas.length} de ${s.total}</span></div>
-        <ul class="medalhas">${ord.map(m => { const tem = ganhas.has(m.id), p = m.prog && !tem ? m.prog(s) : null;
-          return `<li><button type="button" class="medalha ${tem ? 'tem' : ''}" data-act="medalha" data-id="${m.id}">${medalhaSVG(m, { apagada: !tem })}<span class="med-nome">${esc(m.nome)}</span>${p ? `<span class="med-prog">${p[0]}/${p[1]}</span>` : ''}<span class="kf-so-leitor">. ${tem ? 'Na coleção' : 'Falta ganhar. ' + esc(m.como)}</span></button></li>`; }).join('')}</ul>`;
-    }
+    const s = jogoEstado(), topo = `${jogoLigado() ? voltaMais() : ''}${cab('Evolução', 'Quanto você já avançou, e por onde seguir.')}`;
     const c = concursoFoco(), T = totais(), S = sequencia(), W = semanas(8), fimSem = w => deISO(maisDias(w, 7)).getTime();
     const hSem = W.map(w => { let m = 0; for (let i = 0; i < 7; i++) m += minutosDoDia(maisDias(w, i)); return Math.round(m / 6) / 10; });
     const aSem = W.map(w => { const a = acertosDe(x => x.ini < fimSem(w), deISO(w).getTime()); return a.tot >= 5 ? a.pct : null; });
@@ -176,11 +182,10 @@ const viewEvolucao = {
         : '<p class="apoio">Marque acertos e erros nas sessões para ver a sua taxa de acertos subir.</p>'}</section>
       <section class="card" aria-labelledby="ev-to"><h2 class="sec-t" id="ev-to">Totais</h2><dl class="resumo">
         <div><dt>Tempo de estudo</dt><dd>${fmtHoras(T.min)}</dd></div><div><dt>Sessões</dt><dd>${T.sessoes.toLocaleString('pt-BR')}</dd></div><div><dt>Questões resolvidas</dt><dd>${T.questoes.toLocaleString('pt-BR')}</dd></div>
-        <div><dt>Assuntos com a teoria concluída</dt><dd>${T.assuntos}</dd></div><div><dt>Revisões feitas</dt><dd>${T.revisoes}</dd></div>${jogoLigado() ? `<div><dt>Pontos</dt><dd>${s.xp.toLocaleString('pt-BR')}</dd></div>` : ''}</dl></section>
+        <div><dt>Assuntos grifados</dt><dd>${T.assuntos}</dd></div><div><dt>Flashcards revistos</dt><dd>${T.flash}</dd></div><div><dt>Revisões feitas</dt><dd>${T.revisoes}</dd></div>${jogoLigado() ? `<div><dt>Pontos</dt><dd>${s.xp.toLocaleString('pt-BR')}</dd></div>` : ''}</dl></section>
       <section aria-labelledby="ev-ul"><div class="sec-cab"><h2 class="sec-t" id="ev-ul">Últimas sessões</h2></div>
         <ul class="card lista">${ult.map(x => { const n = nomeItem(x); return `<li><button type="button" class="lin" data-act="sessao" data-id="${esc(x.id)}"><span class="lin-tx"><b>${esc(n.t)}</b><small>${fmtData(x.dia)} · ${TIPOS[x.tipo] || 'Estudo'} · ${fmtMin(Math.max(1, x.seg / 60))}${x.ac + x.er ? ` · ${x.ac}/${x.ac + x.er}` : ''}</small></span>${I.seta}</button></li>`; }).join('')}</ul></section>`;
   },
-  ligar(v) { $$('[data-evo]', v).forEach(b => b.addEventListener('click', () => { evoAba = b.dataset.evo; render(); })); },
 };
 function sessaoFicha(id) {
   const x = DB.sessoes.find(s => s.id === id); if (!x) return; const n = nomeItem(x);
@@ -190,11 +195,54 @@ function sessaoFicha(id) {
     aoMontar: d => { $('#sf-del', d).onclick = () => confirmar('Excluir a sessão?', 'O tempo e as questões desta sessão saem das suas contas. Medalhas já ganhas continuam.', 'Excluir sessão', () => { DB.sessoes = DB.sessoes.filter(s => s.id !== id); salvar(); fecharJanela(true); avisar('Sessão excluída.'); }); } });
 }
 
+/* ---------- Medalhas: a coleção, por família ---------- */
+const medalhaBotao = (m, s, ganhas) => { const tem = ganhas.has(m.id), p = m.prog && !tem ? m.prog(s) : null;
+  return `<li><button type="button" class="medalha ${tem ? 'tem' : ''}" data-act="medalha" data-id="${m.id}">${medalhaSVG(m, { apagada: !tem })}<span class="med-nome">${esc(m.nome)}</span>${p ? `<span class="med-prog">${nBR(p[0])}/${nBR(p[1])}</span>` : ''}<span class="kf-so-leitor">. ${METAL_NOME[m.metal]}. ${tem ? 'Na coleção' : 'Falta ganhar. ' + esc(m.como)}</span></button></li>`; };
+const viewMedalhas = {
+  html() {
+    if (!jogoLigado()) return `${cab('Medalhas')}${KitFacil.ui.vazio({ titulo: 'Medalhas desligadas', texto: 'Ligue as medalhas, os níveis e as missões nos Ajustes.', acao: `<button type="button" class="kf-btn kf-pri" data-kf-ir="ajustes">Abrir os Ajustes</button>` })}`;
+    const s = jogoEstado(), ganhas = new Set(s.ganhas), L = medalhasDoApp();
+    // as três mais perto de sair, pela parte já cumprida
+    const visto = new Set(), perto = L.filter(m => !ganhas.has(m.id) && m.prog && !(m.serie && visto.has(m.serie)) && (m.serie ? visto.add(m.serie) : true)).map(m => { const p = m.prog(s); return { m, p, k: p[1] ? p[0] / p[1] : 0 }; }).sort((a, b) => b.k - a.k).slice(0, 3);
+    const ult = DB.marcos.filter(x => String(x.id).startsWith('m:')).sort((a, b) => (b.em || 0) - (a.em || 0)).map(x => L.find(m => 'm:' + m.id === x.id)).filter(Boolean)[0];
+    return `${cab('Medalhas', 'Cada conquista do estudo entra na coleção.')}
+      <div class="card nivel-card grande">${seloNivelHTML(s, true)}${nivelHTML(s)}</div>
+      <section class="folha vitrine" aria-label="Coleção">
+        <p class="vit-n"><span class="grifo">${s.ganhas.length}</span><small>de ${s.total} medalhas</small></p>
+        <ul class="vit-metais">${METAL_ORDEM.map(k => { const T = L.filter(m => m.metal === k); return `<li>${medalhaSVG({ metal: k, fam: 'app', ic: 'estrela' })}<b>${METAL_NOME[k]}</b><small>${T.filter(m => ganhas.has(m.id)).length} de ${T.length}</small></li>`; }).join('')}</ul>
+        ${ult ? `<button type="button" class="kf-btn kf-sec bloco" data-act="medalha" data-id="${ult.id}">Girar a última: ${esc(ult.nome)}</button>` : ''}
+      </section>
+      ${perto.length ? `<section aria-labelledby="me-p"><div class="sec-cab"><h2 class="sec-t" id="me-p">Quase lá</h2></div><ul class="card lista">${perto.map(({ m, p }) => `<li><button type="button" class="lin" data-act="medalha" data-id="${m.id}"><span class="med-mini">${medalhaSVG(m, { apagada: true })}</span><span class="lin-tx"><b>${esc(m.nome)}</b><small>${esc(m.como)}</small>${barraHTML(p[0] / p[1] * 100, `${nBR(p[0])} de ${nBR(p[1])}`, 'fina')}</span><span class="ld-n">${nBR(p[0])}/${nBR(p[1])}</span></button></li>`).join('')}</ul></section>` : ''}
+      ${Object.entries(FAMILIAS).map(([f, nome]) => { const T = L.filter(m => m.fam === f); if (!T.length) return '';
+        return `<section aria-labelledby="me-${f}"><div class="sec-cab"><h2 class="sec-t" id="me-${f}">${nome}</h2><span class="apoio">${T.filter(m => ganhas.has(m.id)).length} de ${T.length}</span></div><ul class="medalhas">${T.map(m => medalhaBotao(m, s, ganhas)).join('')}</ul></section>`; }).join('')}`;
+  },
+};
+
+/* ---------- Instrutor: as respostas que o Claude gravou no app ---------- */
+const viewInstrutor = {
+  html() {
+    const R = respostasDoInstrutor();
+    return `${voltaMais()}${cab('Instrutor', 'O Claude acompanha o seu estudo e responde às suas dúvidas.')}
+      <section class="folha instrutor-capa"><ol class="passos">
+          <li><b>Pergunte.</b> O app copia a questão e a sua dúvida.</li>
+          <li><b>Cole no Claude.</b> No Projeto Estudo Fácil, a resposta sai na hora.</li>
+          <li><b>Releia aqui.</b> O instrutor grava a resposta no app, junto da questão.</li></ol>
+        <button type="button" class="kf-btn kf-pri bloco" data-act="perguntar" id="in-novo">Perguntar ao instrutor</button></section>
+      <section aria-labelledby="in-r"><div class="sec-cab"><h2 class="sec-t" id="in-r">Respostas guardadas</h2><span class="apoio">${R.length}</span></div>
+        ${R.length ? `<ul class="card lista respostas">${R.map(x => { const q = QID.get(x.id), t = q && topico(q.t); return `<li class="resp"><span class="rotulo-mini">${esc(x.em || '')}${t ? ' · ' + esc(t.nome) : ''}</span>${x.p ? `<p class="resp-p">${esc(x.p)}</p>` : ''}<p>${esc(x.r || '')}</p></li>`; }).join('')}</ul>`
+          : KitFacil.ui.vazio({ titulo: 'Nenhuma resposta ainda', texto: 'Numa questão, toque em Perguntar ao instrutor. As respostas ficam guardadas aqui.' })}</section>`;
+  },
+};
+
 /* ---------- Mais ---------- */
 const viewMais = {
   html() {
     const rv = revisoesDeHoje().length, T = DB.topicos.length;
+    const fc = flashcardsDeHoje().length, nR = respostasDoInstrutor().length;
     return `${cab('Mais')}${KitFacil.nav.mais({ linhas: [
+      ...(jogoLigado() ? [{ id: 'evolucao', titulo: 'Evolução', texto: 'Prontidão, constância, horas e acertos', icone: I.evolucao }] : []),
+      { id: 'instrutor', titulo: 'Instrutor', texto: nR ? plural(nR, 'resposta guardada', 'respostas guardadas') : 'Leve as suas dúvidas ao Claude', icone: I.balao },
+      { titulo: 'Flashcards', texto: fc ? `${plural(fc, 'item para rever hoje', 'itens para rever hoje')}` : 'Nenhum para hoje', icone: I.cartas, attrs: 'data-act="flashcards" id="ma-flash"' },
       { id: 'concursos', titulo: 'Concursos', texto: DB.concursos.length ? `${plural(concursosAtivos().length, 'em estudo', 'em estudo')} de ${DB.concursos.length}` : 'Adicione o seu concurso', icone: I.concurso },
       { id: 'disciplinas', titulo: 'Disciplinas', texto: `${plural(DB.materias.length, 'disciplina', 'disciplinas')} e ${plural(T, 'assunto', 'assuntos')}`, icone: I.disciplinas },
       { id: 'revisoes', titulo: 'Revisões', texto: rv ? `${plural(rv, 'revisão para hoje', 'revisões para hoje')}` : 'Nenhuma revisão para hoje', icone: I.revisar },

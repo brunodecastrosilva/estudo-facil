@@ -1,7 +1,32 @@
-# Proposta para o Integrador · Estudo Fácil 1.0.0 (15/11/2026)
+# Proposta para o Integrador · Estudo Fácil 1.1.0 (16/11/2026)
 
 O Estudo Fácil foi refeito do zero, na vez dele de seguir o Conta Fácil (Código, Art. 93, § 2º). O que segue precisa de
 decisão no Integrador (Código, Art. 7º). Nada aqui foi alterado na pasta `comum/`.
+
+## 0. Fase de testes fechada do Estudo Fácil (1.1.0, 16/11/2026)
+
+Decisão do Bruno: por enquanto, o Estudo Fácil é de uso exclusivo dele e só do concurso da ANPD. É provisório; no
+futuro o app volta a ser publicado para o público geral.
+
+**a) Exceção a registrar no Painel** (Código, Art. 5º, III): exceção ao Art. 10 do Código e ao Art. 1º das Regras do
+Estudo Fácil. No README e no CHANGELOG do app ela já está registrada.
+
+**b) Kit Fácil: tirar o Estudo Fácil de "Outros apps da família" nos outros apps.** A lista sai de `FAMILIA`, em
+`comum/kit-facil.js`, que também serve para os prefixos de armazenamento e para a chave de sincronização; por isso a
+entrada não pode ser apagada. Proposta: uma marca `fechado: true` na entrada do Estudo Fácil e, na função que monta a
+lista de *Sobre o aplicativo*, `FAMILIA.filter(f => f.app !== C.app && !f.fechado)`. Sobe a versão do Kit e a pasta
+`comum/` é copiada para os quatro repositórios (Art. 30).
+
+**Impacto:** Conta Fácil, Elétrica Fácil e Guitarra Fácil deixam de mostrar o Estudo Fácil em *Sobre o aplicativo*. No
+Estudo Fácil nada muda. Para desfazer no futuro, basta tirar a marca.
+
+**c) Regras do Estudo Fácil** (instruções do Projeto no claude.ai), texto proposto para esta fase:
+
+- **Art. 1º** O Estudo Fácil é, nesta fase de testes fechada, o app de estudos do Bruno para o concurso da ANPD (Especialista em Regulação de Proteção de Dados, banca Cebraspe). **§ 1º** A fase fechada é provisória: no futuro o app volta a ser um controle de estudos geral, para o público. **§ 2º** Enquanto durar, os outros apps da família não o listam.
+- **Art. 6º** A barra de baixo tem Hoje, Plano, Estudar (botão redondo, no centro), Medalhas e "Mais" (Evolução, Instrutor, Flashcards, Concursos, Disciplinas, Revisões, Simulados, Agenda, o guia e os Ajustes). **Parágrafo único.** Com as medalhas desligadas, a Evolução ocupa o lugar de Medalhas.
+- **Art. 8º** O plano da ANPD vem de fábrica; outros concursos entram digitados, com o conteúdo programático colado.
+- **Art. 14 (novo).** O estudo é por questões: o banco do app tem itens inéditos de certo ou errado, escritos a partir da lei, com comentário, fundamento e uma aula curta por assunto. Texto de prova e conteúdo de sites de questões não entram no repositório.
+- **Art. 15 (novo).** O instrutor é o Claude, no Projeto Estudo Fácil: o app copia a dúvida, a resposta sai na conversa e fica gravada em `instrutor/respostas.json`, sem nada pessoal.
 
 ## 1. Anexo I: identidade do Estudo Fácil
 
@@ -11,6 +36,7 @@ decisão no Integrador (Código, Art. 7º). Nada aqui foi alterado na pasta `com
 | Cor de começar (Art. 66, II) | a escolher | **verde-limão do marca-texto `#DFF65C`**, com texto `#131A3A` |
 | Cor do foco | não consta | rosa de marca-texto `#E0368C` (claro) e `#FF6DB1` (escuro), 3:1 sobre o papel e sobre a barra de baixo |
 | Guias próprias nos Ajustes | Rotina e metas · Revisões | Rotina e metas · Revisões · **Medalhas e apresentação** |
+| Navegação (desde a 1.1.0) | Hoje · Editais · Estudar · Agenda · Mais | Hoje · Plano · Estudar · **Medalhas** · Mais |
 | Extras nas guias comuns | Notificações e Privacidade | os mesmos, mais **Conta e perfil: "Você no app"** (o nome) |
 | Estrutura (Anexo II) | `index.html` com vários `.js` | `estilo.css` à parte, como no Conta Fácil |
 
@@ -20,9 +46,9 @@ decisão no Integrador (Código, Art. 7º). Nada aqui foi alterado na pasta `com
 
 Os artigos 6º, 7º, 8º, 10 e 11 descrevem o app antigo. Texto proposto:
 
-- **Art. 6º** A barra de baixo tem Hoje, Plano, Estudar (botão redondo, no centro), Evolução e "Mais" (Concursos, Disciplinas, Revisões, Simulados, Agenda, o guia e os Ajustes). **Parágrafo único.** No computador, o trilho mostra todas as seções.
+- **Art. 6º** (ver o texto novo no item 0, c.)
 - **Art. 7º** Na primeira vez, o app mostra a abertura de quatro telas (Código, Art. 75) e já vem com o plano da ANPD instalado; a rotina começa com o padrão (todos os dias, 1 hora por dia) e se ajusta em *Ajustes → Rotina e metas*.
-- **Art. 8º** Os editais entram de dois jeitos: prontos da biblioteca ou digitados, com o conteúdo programático colado.
+- **Art. 8º** (ver o texto novo no item 0, c.)
 - **Art. 10.** Nos Ajustes, as guias próprias são Rotina e metas · Revisões · Medalhas e apresentação; os extras são o nome (Conta e perfil), o som e a vibração do fim do tempo (Notificações) e apagar todos os dados, inclusive na nuvem (Privacidade e segurança).
 - **Art. 11.** (Revogado: o leitor de PDF saiu na 1.0.0.)
 - **Art. 12 (novo).** O edital da biblioteca marcado como previsto mostra sempre o que é estimativa (banca, itens, pesos e data da prova) e a data em que a situação foi conferida.

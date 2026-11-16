@@ -3,6 +3,25 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.1.0 · 2026-11-16
+
+Começa a **fase de testes fechada**: o app passa a ser de uso exclusivo do Bruno e todo voltado ao concurso da ANPD
+(exceção provisória ao Código, Art. 10, registrada no README).
+
+- **Treino de questões no estilo Cebraspe:** itens de certo ou errado, um por vez, em tela cheia. Depois da resposta vêm o gabarito, o comentário, o fundamento legal e uma aula curta do assunto. No teclado, C e E respondem.
+- **Banco de questões do app:** 57 itens inéditos da LGPD (três por assunto), escritos a partir da lei. Não são questões de prova.
+- **Flashcards:** o item errado volta em 1, 3, 7, 15 e 30 dias. "Lembrei" adia; "Não lembrei" recomeça.
+- **Desafio do dia:** dez itens sorteados, os mesmos em todos os aparelhos, com bônus de pontos. Acertos seguidos viram combo.
+- **Perguntar ao instrutor:** o app copia a questão e a sua dúvida e abre o Claude. A resposta fica gravada junto da questão e na tela Instrutor, em Mais.
+- **Medalhas:** eram 27 e agora são 103, em quatro metais (bronze, prata, ouro e diamante), com desenho novo: cada metal tem o seu contorno. Há séries (Chama, Resolvedor, Mira, Combo, Baralho, Grifo e outras) e uma medalha por disciplina.
+- **Medalhas na barra de baixo:** Hoje, Plano, Estudar, Medalhas e Mais. A Evolução foi para Mais (no computador, continua no trilho). Com as medalhas desligadas, a Evolução volta para a barra.
+- **Estudo por questões:** assunto com questões do app entra no plano do dia como treino. Respondeu todas, o assunto fica grifado e as revisões são marcadas. O cronômetro continua para lei seca, teoria e assuntos sem questões.
+- **Pontos:** o acerto vale 2 (valia 1); há bônus de combo e do desafio do dia, e 2 pontos por flashcard revisto.
+- **Banca do concurso da ANPD: Cebraspe** (despacho de 14/11/2026). A biblioteca ficou só com a ANPD; o edital da ABDI saiu.
+- **Guia:** 25 passos; os novos mostram o treino, a aula, o instrutor, os flashcards, o desafio do dia e a tela Medalhas.
+- **Por dentro:** a página pede para não entrar em buscadores (`noindex`). Os outros apps ainda listam o Estudo Fácil em "Outros apps da família": isso muda no Kit, pelo Integrador (PROPOSTA-PARA-O-INTEGRADOR.md, item 0).
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou). Rodaram a verificação do padrão, os 19 testes do app, o guia inteiro e a varredura de acessibilidade (WCAG 2.2 AA), no claro e no escuro.
+
 ## 1.0.0 · 2026-11-15
 
 O Estudo Fácil foi refeito do zero, na vez dele de seguir o Conta Fácil (Código, Art. 93, § 2º). Nada da versão 0.x foi

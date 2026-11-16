@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.0.0';
+const VERSAO = '1.1.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -70,6 +70,8 @@ const I = {
   raio: svgI('<path d="M13 3 5.500 13.500H11L10 21l8-11h-5.500z"/>'),
   fora: svgI('<path d="M14 5h5v5M19 5l-8 8M11 6H6.500a1.500 1.500 0 0 0-1.500 1.500v10A1.500 1.500 0 0 0 6.500 19h10a1.500 1.500 0 0 0 1.500-1.500V13"/>'),
   marca: svgI('<path d="m14.500 4.500 5 5L11 18H6v-5z"/><path d="M4 21h9"/>'),
+  balao: svgI('<path d="M5 6.500A1.500 1.500 0 0 1 6.500 5h11A1.500 1.500 0 0 1 19 6.500v8a1.500 1.500 0 0 1-1.500 1.500H11l-4 3.500V16h-.500A1.500 1.500 0 0 1 5 14.500z"/><path d="M9 9.500h6M9 12.500h4"/>'),
+  cartas: svgI('<path d="M6.500 6.500h8A1.500 1.500 0 0 1 16 8v10a1.500 1.500 0 0 1-1.500 1.500h-8A1.500 1.500 0 0 1 5 18V8a1.500 1.500 0 0 1 1.500-1.500z"/><path d="M8.500 4h9A1.500 1.500 0 0 1 19 5.500V16"/>'),
 };
 
 /* ---------- armazenamento ---------- */
@@ -86,8 +88,9 @@ const LS = {
    materias    disciplinas (globais)            topicos    assuntos (globais): o que se estuda vale em todos os editais
    sessoes     sessões de estudo                revisoes   revisões marcadas para cada assunto
    dias        dias em que a meta foi batida    marcos     medalhas vistas e marcas do app (guia, abertura)
-   simulados   resultados de simulados          eventos    compromissos da agenda */
-const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'dias', 'marcos', 'simulados', 'eventos'];
+   simulados   resultados de simulados          eventos    compromissos da agenda
+   respostas   uma por questão do app já respondida: vezes, acertos e a caixa do flashcard */
+const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'respostas', 'dias', 'marcos', 'simulados', 'eventos'];
 const CFG_PADRAO = { nome: '', metaMin: 60, dias: [0, 1, 2, 3, 4, 5, 6], bloco: 30, metaQ: 15, revisoes: [1, 7, 30], som: true, vibra: true, jogo: true };
 const CORES = ['#2742D3', '#0E8A7D', '#C2410C', '#7C3AED', '#B4235A', '#0369A1', '#4D7C0F', '#B45309', '#BE185D', '#0F766E', '#6D28D9', '#9A3412'];
 const TIPOS = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão', lei: 'Lei seca' };
@@ -137,7 +140,11 @@ const editalDaBiblioteca = c => (typeof BIBLIOTECA !== 'undefined' ? BIBLIOTECA 
 /* carrega os dados; quem vem do formato antigo (0.x) começa de novo, e a cópia antiga fica guardada no aparelho */
 let DB = (() => {
   const cru = LS.get('db', null), b = arrumarBanco(cru);
-  if (b) return b;
+  if (b) {
+    const c = b.concursos.find(x => x.id === 'anpd-2027');
+    if (c && (!c.banca || c.banca === 'A definir')) { c.banca = 'Cebraspe'; if (!c.datas.some(d => d.id === 'd03b')) c.datas.push({ id: 'd03b', tipo: 'aviso', titulo: 'Cebraspe escolhido como banca do concurso', ini: '2026-11-14' }); LS.set('db', b); }
+    return b;
+  }
   if (cru && !LS.get('db_antigo', null)) LS.set('db_antigo', cru);
   const novo = bancoVazio();
   if (typeof EDITAL_ANPD !== 'undefined') instalarEdital(novo, EDITAL_ANPD); // de fábrica: o plano para a ANPD
@@ -151,7 +158,7 @@ let VER = 0; // muda a cada alteração: os índices derivados são refeitos
 let IDX = { ver: -1 };
 function idx() {
   if (IDX.ver === VER) return IDX;
-  const x = { ver: VER, mat: new Map(DB.materias.map(m => [m.id, m])), top: new Map(DB.topicos.map(t => [t.id, t])), topsDe: new Map(), sessT: new Map(), sessDia: new Map(), revT: new Map(), minDia: new Map(), dias: new Set(DB.dias.map(d => d.id)), marcos: new Map(DB.marcos.map(m => [m.id, m])) };
+  const x = { ver: VER, mat: new Map(DB.materias.map(m => [m.id, m])), top: new Map(DB.topicos.map(t => [t.id, t])), topsDe: new Map(), sessT: new Map(), sessDia: new Map(), revT: new Map(), minDia: new Map(), dias: new Set(DB.dias.map(d => d.id)), marcos: new Map(DB.marcos.map(m => [m.id, m])), resp: new Map(DB.respostas.map(r => [r.id, r])) };
   for (const t of DB.topicos) { if (!x.topsDe.has(t.m)) x.topsDe.set(t.m, []); x.topsDe.get(t.m).push(t); }
   for (const L of x.topsDe.values()) L.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
   for (const s of DB.sessoes) {
@@ -295,6 +302,9 @@ function ordemDasDisciplinas() {
     .filter(x => materia(x.m) && (topicosAtivos(x.m) || topicosDe(x.m)).length)
     .sort((a, b) => b.falta - a.falta || b.w - a.w);
 }
+// assunto com questões no banco do app (questoes.js): o estudo dele é pelo treino de questões
+const temBanco = tId => typeof questoesDe === 'function' && questoesDe(tId).length > 0;
+const tipoDoEstudo = (tId, tipo) => tipo === 'teoria' && temBanco(tId) ? 'questoes' : tipo;
 function planoDoDia() {
   const h = hojeISO(), c = cfg(), S = sessoesDoDia(h);
   const revs = revisoesDeHoje().map(r => ({ tipo: 'revisao', rev: r.id, t: r.t, m: topico(r.t).m, min: 15, atraso: entreDias(r.due, h), feito: false }));
@@ -305,11 +315,12 @@ function planoDoDia() {
     const d = ordem[i % ordem.length], ja = blocos.filter(b => b.m === d.m).length;
     if (i >= ordem.length * 3) break;
     const T = (topicosAtivos(d.m) || topicosDe(d.m).map(t => t.id)).map(topico).filter(Boolean);
-    const pend = T.filter(t => !t.teoria || S.some(s => s.t === t.id && s.tipo === 'teoria'));
+    const pend = T.filter(t => !t.teoria || (iso(new Date(t.teoria)) === h && S.some(s => s.t === t.id && s.tipo !== 'revisao')));
     const alvo = pend[ja] || null, px = alvo ? { t: alvo, tipo: 'teoria' } : (ja === 0 ? proximoAssunto(d.m, T.map(t => t.id)) : null);
     if (!px) continue;
     const minFeito = soma(S.filter(s => s.t === px.t.id && s.tipo !== 'revisao'), s => s.seg / 60);
-    blocos.push({ tipo: px.tipo, t: px.t.id, m: d.m, min: c.bloco, feito: minFeito >= c.bloco * 0.8 || (px.tipo === 'teoria' && !!px.t.teoria && minFeito > 0), minFeito });
+    const tipo = tipoDoEstudo(px.t.id, px.tipo);
+    blocos.push({ tipo, t: px.t.id, m: d.m, min: c.bloco, nq: tipo === 'questoes' && temBanco(px.t.id) ? questoesDe(px.t.id).length : 0, feito: minFeito >= c.bloco * 0.8 || (px.tipo === 'teoria' && !!px.t.teoria && minFeito > 0), minFeito });
   }
   const itens = [...revs.slice(0, 5), ...feitasHoje, ...blocos];
   return { itens, proximo: itens.find(x => !x.feito) || null, minutos: minutosDoDia(h), meta: c.metaMin, revisoesAMais: Math.max(0, revs.length - 5) };
@@ -317,7 +328,7 @@ function planoDoDia() {
 // sugestão para quem já cumpriu o plano: a próxima disciplina da fila
 function sugestaoExtra() {
   const feitos = new Set(planoDoDia().itens.map(i => i.t));
-  for (const d of ordemDasDisciplinas()) { const px = proximoAssunto(d.m, topicosAtivos(d.m) || undefined); if (px && !feitos.has(px.t.id)) return { tipo: px.tipo, t: px.t.id, m: d.m, min: cfg().bloco }; }
+  for (const d of ordemDasDisciplinas()) { const px = proximoAssunto(d.m, topicosAtivos(d.m) || undefined); if (px && !feitos.has(px.t.id)) { const tipo = tipoDoEstudo(px.t.id, px.tipo); return { tipo, t: px.t.id, m: d.m, min: cfg().bloco, nq: tipo === 'questoes' && temBanco(px.t.id) ? questoesDe(px.t.id).length : 0 }; } }
   return null;
 }
 
@@ -334,17 +345,20 @@ function missoes(d = hojeISO()) {
 }
 
 /* ---------- pontos ----------
-   1 por minuto estudado · 1 por questão e mais 1 por acerto · 15 por revisão · 25 por assunto com a teoria concluída ·
-   30 por dia com a meta batida · 50 por medalha. Tudo sai dos dados, então acompanha a sincronização. */
-const PONTOS = { minuto: 1, questao: 1, acerto: 1, revisao: 15, assunto: 25, dia: 30, medalha: 50 };
+   1 por minuto estudado · 1 por questão e mais 2 por acerto · bônus de combo e do desafio do dia · 2 por flashcard
+   revisto · 15 por revisão · 25 por assunto grifado · 30 por dia com a meta batida · 50 por medalha. Tudo sai dos dados,
+   então acompanha a sincronização. */
+const PONTOS = { minuto: 1, questao: 1, acerto: 2, flashcard: 2, revisao: 15, assunto: 25, dia: 30, medalha: 50 };
 function pontosBase() {
   let p = 0;
-  for (const s of DB.sessoes) p += Math.round((s.seg || 0) / 60) * PONTOS.minuto + ((s.ac || 0) + (s.er || 0)) * PONTOS.questao + (s.ac || 0) * PONTOS.acerto;
+  for (const s of DB.sessoes) p += Math.round((s.seg || 0) / 60) * PONTOS.minuto + ((s.ac || 0) + (s.er || 0)) * PONTOS.questao + (s.ac || 0) * PONTOS.acerto + (s.bonus || 0);
+  p += soma(DB.respostas, r => r.rv || 0) * PONTOS.flashcard;
   p += DB.revisoes.filter(r => r.feita).length * PONTOS.revisao + DB.topicos.filter(t => t.teoria).length * PONTOS.assunto + DB.dias.length * PONTOS.dia;
   return p;
 }
 const totais = () => ({ min: soma(DB.sessoes, s => s.seg / 60), sessoes: DB.sessoes.length, questoes: soma(DB.sessoes, s => (s.ac || 0) + (s.er || 0)), acertos: soma(DB.sessoes, s => s.ac || 0),
-  revisoes: DB.revisoes.filter(r => r.feita).length, assuntos: DB.topicos.filter(t => t.teoria).length, dias: DB.dias.length });
+  revisoes: DB.revisoes.filter(r => r.feita).length, assuntos: DB.topicos.filter(t => t.teoria).length, dias: DB.dias.length,
+  flash: soma(DB.respostas, r => r.rv || 0), combo: Math.max(0, ...DB.sessoes.map(s => s.combo || 0)), desafios: DB.marcos.filter(m => String(m.id).startsWith('d:')).length });
 
 /* ---------- sessão em andamento ---------- */
 const ativaSeg = (a = DB.ativa) => a ? (a.acum || 0) + (a.desde ? Math.max(0, (Date.now() - a.desde) / 1000) : 0) : 0;
@@ -356,9 +370,10 @@ function iniciarSessao({ t = null, m = null, tipo = 'teoria', alvo = cfg().bloco
 function pausarSessao(p) { const a = DB.ativa; if (!a) return; if (p && a.desde) { a.acum = ativaSeg(a); a.desde = 0; } else if (!p && !a.desde) a.desde = Date.now(); salvar({ quieto: true }); }
 function descartarSessao() { DB.ativa = null; salvar({ quieto: true }); }
 /* guarda uma sessão (do cronômetro ou lançada à mão) e tudo o que decorre dela: teoria concluída, revisões e a marca do dia */
-function registrarSessao({ t = null, m = null, tipo = 'teoria', seg = 0, ac = 0, er = 0, conf = 2, teoria = false, rev = null, dia = hojeISO(), ini = agora(), manual = false }) {
+function registrarSessao({ t = null, m = null, tipo = 'teoria', seg = 0, ac = 0, er = 0, conf = 2, teoria = false, rev = null, dia = hojeISO(), ini = agora(), manual = false, extra = null }) {
   const top = t && topico(t), s = { id: novoId(), t: top ? top.id : null, m: top ? top.m : m, tipo, ini, seg: Math.max(0, Math.round(seg)), ac: Math.max(0, ac | 0), er: Math.max(0, er | 0), conf, dia };
   if (manual) s.manual = true;
+  if (extra) for (const k in extra) if (extra[k]) s[k] = extra[k];
   DB.sessoes.push(s);
   const fez = { sessao: s, teoria: false, revisoes: 0, revisao: false };
   if (top && teoria && !top.teoria) { top.teoria = ini; fez.teoria = true; fez.revisoes = agendarRevisoes(top.id, dia); }
@@ -387,7 +402,14 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.0.0', itens: [
+const NOVIDADES = [{ versao: '1.1.0', itens: [
+  'Treino de questões no estilo Cebraspe (certo ou errado), com comentário, fundamento e uma aula curta em cada item. O banco começa com 57 itens inéditos da LGPD.',
+  'Flashcards: o item que você erra volta em 1, 3, 7, 15 e 30 dias.',
+  'Desafio do dia: dez questões sorteadas, com bônus de pontos. Acertos seguidos viram combo.',
+  'Perguntar ao instrutor: o app copia a questão e a sua dúvida para levar ao Claude; a resposta fica guardada junto da questão.',
+  'Medalhas redesenhadas, em quatro metais, e muito mais numerosas. Elas ganharam lugar na barra de baixo; a Evolução foi para Mais.',
+  'Banca do concurso da ANPD: Cebraspe.',
+] }, { versao: '1.0.0', itens: [
   'Estudo Fácil de cara nova, refeito do zero: Hoje, Plano, Estudar, Evolução e Mais.',
   'Plano pronto para a ANPD (Especialista em Regulação), com 12 disciplinas, 119 assuntos e três fases até a prova.',
   'Sequência de dias, missões do dia, pontos, níveis e medalhas em 3D que giram com o dedo.',
@@ -396,10 +418,10 @@ const NOVIDADES = [{ versao: '1.0.0', itens: [
   'Os dados da versão anterior não foram trazidos; uma cópia deles ficou guardada neste aparelho.',
 ] }];
 let SY = null;
-const ocupadoApp = () => (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof focoAberto === 'function' && focoAberto()) || (typeof festaAberta !== 'undefined' && festaAberta);
+const ocupadoApp = () => (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof focoAberto === 'function' && focoAberto()) || (typeof treinoAberto === 'function' && treinoAberto()) || (typeof festaAberta !== 'undefined' && festaAberta);
 KitFacil.iniciar({
   app: 'estudo-facil', nome: 'Estudo Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
-  resumo: 'Plano de estudos para concursos: o que estudar hoje, modo foco, revisões, sequência de dias e medalhas.',
+  resumo: 'Plano de estudos para o concurso da ANPD: questões no estilo Cebraspe, flashcards, revisões, sequência de dias e medalhas.',
   tela: () => (typeof tab !== 'undefined' ? tab : 'hoje'), exemploDados: 'os concursos, as disciplinas, as sessões de estudo e as revisões',
   abrirAjustes: secao => { if (secao || tab !== 'ajustes') abrirAjustes(); else fecharAjustes(); },
   emAjustes: () => typeof tab !== 'undefined' && tab === 'ajustes',

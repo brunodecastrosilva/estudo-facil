@@ -3,15 +3,14 @@
 
 /* ---------- navegação ---------- */
 let tab = 'hoje', novoItem = null;
-const TELAS = { hoje: viewHoje, plano: viewPlano, evolucao: viewEvolucao, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
-const TITULOS = { hoje: 'Hoje', plano: 'Plano', evolucao: 'Evolução', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
+const TELAS = { hoje: viewHoje, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
+const TITULOS = { hoje: 'Hoje', plano: 'Plano', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
 const PAI = { concurso: 'concursos', disciplina: 'disciplinas' };
-const DE_MAIS = new Set(['concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda']);
+const DE_MAIS = new Set(['concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'instrutor']);
 function irPara(t, { topo = true } = {}) {
   if (t === 'estudar') { abrirEstudar(); return; }
   if (t === 'ajustes') { abrirAjustes(); return; }
   sairDosAjustes(); fecharJanela(true);
-  if (t === 'evolucao' && tab !== 'evolucao' && evoAba !== 'medalhas') evoAba = 'desempenho';
   tab = t; render();
   if (topo) window.scrollTo({ top: 0 });
 }
@@ -19,10 +18,12 @@ function irPara(t, { topo = true } = {}) {
 function pintarNav() {
   const it = (id, rotulo, icone, extra = []) => ({ id, rotulo, icone, atual: tab === id || extra.includes(tab) });
   const viva = !!DB.ativa, centro = { id: 'estudar', rotulo: 'Estudar', nome: viva ? 'Voltar ao foco' : 'Estudar agora', icone: I.play, atual: false, selo: viva ? '<span class="kf-nav-selo"><span aria-hidden="true">•</span><span class="kf-so-leitor">, sessão em andamento</span></span>' : '' };
-  const html = KitFacil.nav.barra({ itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), it('evolucao', 'Evolução', I.evolucao)], centro, mais: { atual: tab === 'mais' || DE_MAIS.has(tab) } });
+  // com as medalhas ligadas, elas ficam na barra e a Evolução vai para "Mais"; desligadas, a Evolução volta à barra
+  const jogo = jogoLigado(), terceiro = jogo ? it('medalhas', 'Medalhas', I.medalha) : it('evolucao', 'Evolução', I.evolucao);
+  const html = KitFacil.nav.barra({ itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), terceiro], centro, mais: { atual: tab === 'mais' || DE_MAIS.has(tab) || (jogo && tab === 'evolucao') } });
   const nav = $('#tabs'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
   const lado = KitFacil.nav.trilho({ destaque: { ...centro, rotulo: viva ? 'Voltar ao foco' : 'Estudar agora' },
-    itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), it('evolucao', 'Evolução', I.evolucao), it('revisoes', 'Revisões', I.revisar), it('concursos', 'Concursos', I.concurso, ['concurso']), it('disciplinas', 'Disciplinas', I.disciplinas, ['disciplina']), it('simulados', 'Simulados', I.simulado), it('agenda', 'Agenda', I.agenda)], mais: { atual: tab === 'mais' } });
+    itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('evolucao', 'Evolução', I.evolucao), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar), it('concursos', 'Concursos', I.concurso, ['concurso']), it('disciplinas', 'Disciplinas', I.disciplinas, ['disciplina']), it('simulados', 'Simulados', I.simulado), it('agenda', 'Agenda', I.agenda)], mais: { atual: tab === 'mais' } });
   const t = $('#trilho'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
 }
 document.addEventListener('click', e => {
@@ -40,7 +41,11 @@ const ACOES = {
   'assunto': b => assuntoFicha(b.dataset.id),
   'sessao': b => sessaoFicha(b.dataset.id),
   'medalha': b => medalhaFicha(MEDALHAS.find(m => m.id === b.dataset.id)),
-  'ver-medalhas': () => { evoAba = 'medalhas'; irPara('evolucao'); },
+  'ver-medalhas': () => irPara('medalhas'),
+  'desafio': () => { const D = desafioDoDia(); if (D.feito) { avisar('O desafio de hoje já foi. Amanhã tem outro.'); return; } treinoAbrir({ desafio: true }); },
+  'flashcards': () => flashcardsAbrir(),
+  'treino-livre': () => treinoAbrir({ n: 10 }),
+  'perguntar': () => perguntarInstrutor(),
   'sobre-sequencia': () => sobreSequencia(),
   'guia': () => guiaIniciar(),
   'novo-concurso': () => novoConcurso(),
@@ -103,7 +108,7 @@ addEventListener('scroll', () => $('#barra').classList.toggle('rolou', scrollY >
 function marcarChaves() {   $$('#view details[data-kf-secao]').forEach((d, i) => { if (!d.dataset.chave) d.dataset.chave = (d.dataset.disc ? 'disc-' + d.dataset.disc : 's' + i); }); }
 // virou o dia com o app aberto: a tela Hoje se refaz
 let diaVisto = hojeISO();
-setInterval(() => { if (hojeISO() !== diaVisto) { diaVisto = hojeISO(); VER++; if (!KitFacil.dialogo.aberto() && !focoAberto()) render(); } }, 30000);
+setInterval(() => { if (hojeISO() !== diaVisto) { diaVisto = hojeISO(); VER++; if (!KitFacil.dialogo.aberto() && !focoAberto() && !treinoAberto()) render(); } }, 30000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && hojeISO() !== diaVisto) { diaVisto = hojeISO(); VER++; render(); } });
 
 /* ---------- Ajustes (guias do Kit Fácil, mais as do Estudo Fácil) ---------- */
@@ -181,10 +186,10 @@ function aberturaAbrir({ rever = false } = {}) {
   const telas = [
     { arte: `<div class="ab-caderno"><div class="folha ab-folha"><span class="ab-l w70"></span><span class="ab-l w90 grifada"></span><span class="ab-l w60"></span><span class="ab-l w80 grifada"></span><span class="ab-l w50"></span></div><span class="ab-chama">${chamaHTML(true)}</span><span class="ab-anel">${anelHTML(60, 60, { tam: 84, traco: 9, centro: '<b>60</b><small>min</small>' })}</span></div>`,
       titulo: veterano && !rever ? 'O Estudo Fácil está de cara nova' : 'Estudar todo dia, do jeito fácil',
-      texto: veterano && !rever ? 'O app foi refeito do zero. Os dados da versão antiga ficaram guardados neste aparelho, mas não vieram para a nova.' : 'O app diz o que estudar hoje, marca o tempo e lembra das revisões. Você só abre e começa.' },
+      texto: veterano && !rever ? 'O app foi refeito do zero. Os dados da versão antiga ficaram guardados neste aparelho, mas não vieram para a nova.' : 'O app escolhe o assunto, traz questões comentadas e lembra das revisões. Você só abre e começa.' },
     { arte: () => demoHTML(), falada: true, titulo: 'O edital vira caderno', texto: 'Experimente: toque num assunto para grifar. Cada assunto estudado aumenta a sua prontidão para a prova.' },
     { arte: `<div class="ab-seq"><span class="ab-chama g">${chamaHTML(true)}</span><ol class="semana ab-sem" aria-hidden="true">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((l, i) => `<li class="dia ${i < 5 ? 'feito' : i === 5 ? 'hoje atual' : 'futuro'}"><span class="dia-l">${l}</span><span class="dia-m">${i < 5 ? I.check : ''}</span></li>`).join('')}</ol>
-        <div class="ab-meds">${['seq7', 'h10', 'grifo', 'mira', 'ed50'].map((id, k) => `<span class="ab-med" style="--i:${k}">${medalhaSVG(MEDALHAS.find(m => m.id === id))}</span>`).join('')}</div></div>`,
+        <div class="ab-meds">${['seq7', 'q500', 'as50', 'cb20', 'ed90'].map((id, k) => `<span class="ab-med" style="--i:${k}">${medalhaSVG(MEDALHAS.find(m => m.id === id))}</span>`).join('')}</div></div>`,
       titulo: 'Uma hora por dia muda tudo', texto: 'Bata a meta, mantenha a sequência e junte medalhas. Faltou um dia? A folga guardada segura a sequência.' },
     { arte: `<div class="folha ab-capa"><span class="rotulo-mini">${c ? esc(c.orgao || c.sigla) : 'Seu concurso'}</span><b class="capa-t">${c ? esc(c.cargo || c.sigla) : 'Escolha o seu edital'}</b>
         ${c ? `<dl class="resumo"><div><dt>Disciplinas</dt><dd>${c.disc.length}</dd></div><div><dt>Assuntos</dt><dd>${soma(c.disc, d => d.topicos.length)}</dd></div><div><dt>Fases até a prova</dt><dd>3</dd></div></dl>` : ''}</div>`,
@@ -209,9 +214,9 @@ function aberturaAbrir({ rever = false } = {}) {
    roteiro e a troca dos dados reais pelos da demonstração. */
 let dadosReais = null;
 const guiaAtivo = () => KitFacil.guia.emDemonstracao();
-const guiaFoto = () => JSON.stringify({ DB, tab, evoAba, concId, discId, planoConc });
+const guiaFoto = () => JSON.stringify({ DB, tab, concId, discId, planoConc });
 const guiaSemAviso = () => $$('.kf-toast').forEach(e => { e.hidden = true; });
-function guiaLimpar() { $('#festa-ok')?.click(); if (focoAberto()) focoFechar(); fecharJanela(true); guiaSemAviso(); medalhaFila = []; }
+function guiaLimpar() { $('#festa-ok')?.click(); if (treinoAberto()) treinoFechar(); if (focoAberto()) focoFechar(); fecharJanela(true); guiaSemAviso(); medalhaFila = []; }
 function guiaIniciar() {
   if (guiaAtivo() || aberturaAtiva()) return;
   if (DB.ativa) { avisar('Conclua ou descarte a sessão em andamento antes de ver o guia.'); return; }
@@ -220,17 +225,17 @@ function guiaIniciar() {
     comecar: () => {
       sairDosAjustes(); fecharJanela(true);
       // os dados de verdade ficam guardados na memória; a demonstração começa com o plano da ANPD e nada dela é gravado
-      dadosReais = { DB, tab, evoAba, concId, discId, planoConc }; semSalvar = true;
+      dadosReais = { DB, tab, concId, discId, planoConc }; semSalvar = true;
       const demo = bancoVazio(); instalarEdital(demo, EDITAL_ANPD); Object.assign(demo.cfg, { nome: cfg().nome, metaMin: 30, bloco: 30, jogo: true, som: false, vibra: false });
-      DB = demo; VER++; tab = 'hoje'; evoAba = 'desempenho'; planoConc = null; medalhaFila = [];
+      DB = demo; VER++; tab = 'hoje'; planoConc = null; medalhaFila = [];
       render(); window.scrollTo({ top: 0 });
     },
     foto: guiaFoto, limpar: guiaLimpar,
-    restaurar: f => { if (tab === 'ajustes') sairDosAjustes(); const o = JSON.parse(f); DB = o.DB; tab = o.tab; evoAba = o.evoAba; concId = o.concId; discId = o.discId; planoConc = o.planoConc; VER++; $('#view').dataset.telaAtual = ''; render(); window.scrollTo({ top: 0 }); },
+    restaurar: f => { if (tab === 'ajustes') sairDosAjustes(); const o = JSON.parse(f); DB = o.DB; tab = o.tab; concId = o.concId; discId = o.discId; planoConc = o.planoConc; VER++; $('#view').dataset.telaAtual = ''; render(); window.scrollTo({ top: 0 }); },
     terminar: ({ concluiu }) => {
       if (tab === 'ajustes') sairDosAjustes();
       const r = dadosReais; dadosReais = null; semSalvar = false;
-      DB = r.DB; tab = 'hoje'; evoAba = 'desempenho'; concId = r.concId; discId = r.discId; planoConc = r.planoConc; VER++; $('#view').dataset.telaAtual = '';
+      DB = r.DB; tab = 'hoje'; concId = r.concId; discId = r.discId; planoConc = r.planoConc; VER++; $('#view').dataset.telaAtual = '';
       render(); window.scrollTo({ top: 0 });
       if (concluiu) { jogoMarcar('guia'); avisar('Guia concluído. Para rever, toque em Mais e em Ver o guia.'); }
     },
@@ -239,23 +244,37 @@ function guiaIniciar() {
 const navQ = t => `#kf-nav-${t}, #kf-trilho-${t}`;
 async function demoIr(m, t) { if (tab !== t) await m.tocar(navQ(t)); }
 const demoLGPD = n => (topicosDe('anpd-lgpd')[n] || {}).id;
+// o treino da demonstração: o primeiro assunto da LGPD; resp = quantas questões já vêm respondidas
+async function demoTreino(m, resp = 0) {
+  if (!treinoAberto()) { fecharJanela(true); treinoAbrir({ t: demoLGPD(0) }); await m.acha('#treino [data-resp]'); }
+  if (resp && !TR.marcou) { treinoResponder('C'); await m.acha('#tr-prox'); }
+}
 const GUIA = [
   { t: 'A meta de hoje', d: 'A tela Hoje mostra a sua sequência, a meta do dia e o próximo assunto.',
     acao: async m => { await m.apontar('#view .hf-seq', 1500); await m.apontar('#view .hf-meta', 1700); } },
   { t: 'O plano de hoje', d: 'O app escolhe os assuntos pelo peso de cada disciplina na prova.',
     acao: async m => { await m.apontar('#view .plano-hoje', 2200); } },
   { t: 'Comece a estudar', d: 'Toque em Estudar agora. O próximo assunto do plano já vem escolhido.',
-    acao: async m => { await m.tocar('#hoje-estudar'); await m.acha('#es-ok'); await m.apontar('.kf-dlg .sugestao', 1600); } },
-  { t: 'Escolha o tipo e o tempo', d: 'Teoria, questões, revisão ou lei seca. Depois, toque em Começar.', continua: true,
-    acao: async m => { if (!$('#es-ok')) { await m.tocar('#hoje-estudar'); await m.acha('#es-ok'); } await m.tocar('#es-alvo [data-v="25"]', { depois: 500 }); await m.tocar('#es-alvo [data-v="30"]', { depois: 500 }); await m.tocar('#es-ok'); await m.acha('#foco-fim'); await m.espera(900); } },
-  { t: 'Modo foco', d: 'O tempo corre em tela cheia. Resolveu questões? Marque acertos e erros.',
-    acao: async m => { if (!focoAberto()) { iniciarSessao({ t: demoLGPD(0), tipo: 'teoria', alvo: 30 }); focoAbrir(); await m.acha('#foco-fim'); }
-      for (let k = 0; k < 4; k++) await m.tocar('#foco [data-q="ac"][data-d="1"]', { depois: 220 }); await m.tocar('#foco [data-q="er"][data-d="1"]', { depois: 400 });
-      // na demonstração, o relógio anda sozinho até o fim do tempo
+    acao: async m => { await m.tocar('#hoje-estudar'); await m.acha('#es-ok'); await m.apontar('.kf-dlg .sugestao', 1600); await m.apontar('#es-banco', 1400); } },
+  { t: 'Treino de questões', d: 'Os itens são de certo ou errado, como no Cebraspe. Leia e julgue.', continua: true,
+    acao: async m => { if (!treinoAberto()) { if (!$('#es-ok')) { await m.tocar('#hoje-estudar'); await m.acha('#es-ok'); } await m.tocar('#es-ok'); } await m.acha('#treino [data-resp]'); await m.apontar('#treino .tr-folha', 2200); } },
+  { t: 'Certo ou errado', d: 'Respondeu? O app mostra o gabarito, o comentário e a base legal.', continua: true,
+    acao: async m => { await demoTreino(m); await m.tocar('#treino [data-resp="C"]'); await m.acha('#tr-prox'); await m.apontar('#treino .tr-fb', 1400); await m.apontar('#treino .tr-exp', 2000); } },
+  { t: 'Uma aula em cada questão', d: 'Abra a aula do assunto: um resumo curto do que a banca cobra.', continua: true,
+    acao: async m => { await demoTreino(m, 1); const a = await m.acha('#treino .tr-aula summary'); if (!a.parentElement.open) await m.tocar(a); await m.apontar('#treino .tr-aula', 2400); } },
+  { t: 'Pergunte ao instrutor', d: 'Ficou com dúvida? O app copia a questão para você levar ao Claude.', continua: true,
+    acao: async m => { await demoTreino(m, 1); await m.tocar('#tr-perguntar'); await m.acha('#in-ok'); await m.apontar('.kf-dlg #in-d', 1500); await m.apontar('#in-ok', 1300); await m.fechar(); await m.some('#in-ok'); } },
+  { t: 'Errou? Vira flashcard', d: 'O item errado volta em 1, 3, 7, 15 e 30 dias. Acertos seguidos viram combo.',
+    acao: async m => { await demoTreino(m, 1); await m.tocar('#tr-prox'); await m.tocar('#treino [data-resp="C"]'); await m.acha('#tr-prox'); await m.espera(700); await m.tocar('#tr-prox'); await m.tocar('#treino [data-resp="C"]'); await m.acha('#tr-prox'); await m.apontar('#treino .tr-fc', 1900);
+      await m.tocar('#tr-prox'); const ok = await m.acha('#festa-ok', { opcional: true, prazo: 2500 }); if (ok) { await m.espera(3200); await m.tocar('#festa-ok'); await m.some('#festa-ok'); } } },
+  { t: 'Desafio do dia e flashcards', d: 'Na tela Hoje: dez itens sorteados por dia e os flashcards que venceram.',
+    acao: async m => { await demoIr(m, 'hoje'); await m.apontar('#view [data-act="desafio"]', 1500); await m.apontar('#view [data-act="flashcards"]', 1400); await m.apontar('#view [data-act="treino-livre"]', 1400); } },
+  { t: 'Cronômetro para a lei seca', d: 'Para ler a lei ou a teoria, escolha o tipo e o tempo. O relógio corre em tela cheia.', continua: true,
+    acao: async m => { await m.tocar(navQ('estudar')); await m.acha('#es-ok'); await m.tocar('#es-tipo [data-v="lei"]', { depois: 500 }); await m.tocar('#es-alvo [data-v="25"]', { depois: 400 }); await m.tocar('#es-alvo [data-v="30"]', { depois: 400 }); await m.tocar('#es-ok'); await m.acha('#foco-fim');
       DB.ativa.acum = 30 * 60; DB.ativa.tocou = true; focoPintar(); await m.apontar('#foco .foco-relogio', 1800); } },
-  { t: 'Feche a sessão', d: 'Confira o tempo, diga como foi e marque a teoria como concluída.',
-    acao: async m => { if (!focoAberto()) { iniciarSessao({ t: demoLGPD(0), tipo: 'teoria', alvo: 30 }); DB.ativa.acum = 30 * 60; DB.ativa.ac = 4; DB.ativa.er = 1; DB.ativa.tocou = true; focoAbrir(); await m.acha('#foco-fim'); }
-      await m.tocar('#foco-fim'); await m.acha('#fs-ok'); await m.tocar('#fs-teoria', { depois: 500 }); await m.tocar('#fs-conf [data-v="3"]', { depois: 500 }); await m.tocar('#fs-ok');
+  { t: 'Feche a sessão', d: 'Confira o tempo, diga como foi e salve. O tempo conta para a meta do dia.',
+    acao: async m => { if (!focoAberto()) { iniciarSessao({ t: demoLGPD(1), tipo: 'lei', alvo: 30 }); DB.ativa.acum = 30 * 60; DB.ativa.tocou = true; focoAbrir(); await m.acha('#foco-fim'); }
+      await m.tocar('#foco-fim'); await m.acha('#fs-ok'); await m.tocar('#fs-conf [data-v="3"]', { depois: 500 }); await m.tocar('#fs-ok');
       const ok = await m.acha('#festa-ok', { opcional: true, prazo: 2500 }); if (ok) { await m.espera(3200); await m.tocar('#festa-ok'); await m.some('#festa-ok'); } } },
   { t: 'Sequência e missões', d: 'Meta batida, a chama acende. As missões do dia rendem pontos.',
     acao: async m => { await demoIr(m, 'hoje'); await m.apontar('#view .hf-seq', 1600); await m.apontar('#view .missoes', 1800); } },
@@ -266,10 +285,12 @@ const GUIA = [
       await m.tocar(`#view [data-act="assunto"][data-id="${demoLGPD(0)}"]`); await m.acha('#af-estudar'); await m.apontar('.kf-dlg .af-dom', 1500); await m.apontar('.kf-dlg .resumo', 1700); await m.fechar(); await m.some('#af-estudar'); } },
   { t: 'Fases até a prova', d: 'O plano tem três fases. O app mostra em qual você está e as metas dela.',
     acao: async m => { await demoIr(m, 'plano'); await m.apontar('#view .fases', 2400); } },
-  { t: 'A sua evolução', d: 'Prontidão, constância, horas por semana e acertos, tudo num lugar.',
-    acao: async m => { await demoIr(m, 'evolucao'); await m.apontar('#view .nivel-card', 1500); await m.apontar('#view #ev-pr', 1500, { opcional: true, prazo: 800 }); await m.apontar('#view .calor', 1700, { opcional: true, prazo: 800 }); } },
-  { t: 'Medalhas que giram', d: 'Toque numa medalha e deslize o dedo sobre ela: ela gira nas suas mãos.',
-    acao: async m => { await demoIr(m, 'evolucao'); if (!$('#view [data-act="medalha"]')) await m.tocar('#view [data-evo="medalhas"]'); await m.tocar('#view [data-act="medalha"][data-id="primeira"]'); await m.acha('.kf-dlg .med3d'); await m.espera(700); await m.arrastar('.kf-dlg .med3d', 140); await m.arrastar('.kf-dlg .med3d', -220, { dur: 1300 }); await m.fechar(); await m.some('.kf-dlg .med3d'); } },
+  { t: 'Medalhas que giram', d: 'São mais de cem, em quatro metais. Toque numa e deslize o dedo: ela gira.',
+    acao: async m => { await demoIr(m, 'medalhas'); await m.apontar('#view .nivel-card', 1400); await m.apontar('#view .vitrine', 1700); await m.tocar('#view .medalhas [data-act="medalha"][data-id="primeira"]'); await m.acha('.kf-dlg .med3d'); await m.espera(700); await m.arrastar('.kf-dlg .med3d', 140); await m.arrastar('.kf-dlg .med3d', -220, { dur: 1300 }); await m.fechar(); await m.some('.kf-dlg .med3d'); } },
+  { t: 'A sua evolução', d: 'Em Mais: prontidão, constância, horas por semana e acertos.',
+    acao: async m => { if (tab !== 'evolucao') { if ($(navQ('evolucao'))?.getClientRects().length) await m.tocar(navQ('evolucao')); else { await demoIr(m, 'mais'); await m.tocar('#view [data-kf-ir="evolucao"]'); } } await m.apontar('#view #ev-pr', 1500, { opcional: true, prazo: 800 }); await m.apontar('#view .calor', 1700, { opcional: true, prazo: 800 }); } },
+  { t: 'O instrutor', d: 'As respostas do Claude às suas dúvidas ficam guardadas aqui.',
+    acao: async m => { await demoIr(m, 'mais'); if (!$('#view [data-kf-ir="instrutor"]')) await m.tocar(navQ('mais')); await m.tocar('#view [data-kf-ir="instrutor"]'); await m.apontar('#view .instrutor-capa', 2400); } },
   { t: 'Revisões na data certa', d: 'Concluiu a teoria? As revisões entram sozinhas, em 1, 7 e 30 dias.',
     acao: async m => { await demoIr(m, 'mais'); await m.tocar('#view [data-kf-ir="revisoes"]'); await m.apontar('#view .lista', 2200, { opcional: true, prazo: 1200 }); } },
   { t: 'Concursos e disciplinas', d: 'Em Mais, troque de concurso, ajuste os pesos e edite as disciplinas.',
@@ -293,6 +314,7 @@ $('#topo').outerHTML = KitFacil.topo.html({ principal: true });
 const linkSync = SY.tokenDoLink();
 if (linkSync) try { history.replaceState(null, '', location.pathname + location.search); } catch {}
 render();
+instrutorCarregar().then(() => { if (tab === 'instrutor' || tab === 'mais') render(); });
 SY.iniciar({ token: linkSync, silencioso: true, textoConfirmar: 'Os concursos, as sessões e as medalhas deste aparelho se juntam aos da nuvem.' });
 // quem chega à versão 1.0 vê a abertura do app, uma vez; as novidades do Kit ficam para as próximas versões
 if (!KitFacil.abertura.vista()) { try { localStorage.setItem('kitfacil.estudo-facil.visto', JSON.stringify(VERSAO)); } catch {} }

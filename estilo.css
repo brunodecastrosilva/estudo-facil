@@ -452,6 +452,70 @@ body.kf-com-guia .festa{bottom:var(--kf-pe)}
 .ab-nome{margin-top:6px;text-align:left}
 
 /* ---------- 12. ajustes de acessibilidade e de telas estreitas ---------- */
+/* ---------- treino de questões, flashcards, medalhas e instrutor (1.1) ---------- */
+.treino{position:fixed;inset:0;z-index:60;background:var(--bg);color:var(--ink);display:flex;justify-content:center;overflow:auto;opacity:0;transform:translateY(24px);transition:opacity var(--kf-ms) var(--kf-curva),transform var(--kf-ms) var(--kf-curva)}
+.treino.dentro{opacity:1;transform:none}
+.treino-in{width:100%;max-width:560px;min-height:100%;display:flex;flex-direction:column;gap:14px;padding:max(10px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom))}
+.tr-topo{display:flex;align-items:center;gap:10px}
+.tr-topo .barra{flex:1}
+.tr-cont{font-size:13.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.tr-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;min-height:28px}
+.tr-combo{display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:2px 10px 2px 6px;border-radius:99px;background:var(--hl);color:var(--hl-ink);font-size:13px;font-weight:700;box-shadow:inset 0 0 0 1.5px var(--hl-borda);animation:cai var(--kf-ms) var(--mola) both}
+.tr-combo .i{width:16px;height:16px}
+.tr-folha{gap:8px}
+.tr-enun{font-size:18px;line-height:1.5;overflow-wrap:anywhere}
+.tr-botoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto}
+.tr-b{min-height:64px;font-size:17px}
+.tr-dica{text-align:center;font-size:12.5px;color:var(--muted)}
+@media (hover:none){.tr-dica{display:none}}
+.tr-fb{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--kf-r-md);background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--line-2)}
+.tr-fb b{display:block;font-family:var(--f-display);font-size:20px;letter-spacing:-.01em}
+.tr-fb small{display:block;font-size:13.5px;color:var(--muted)}
+.tr-fb-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff}
+.tr-fb.ok{box-shadow:inset 0 0 0 1.5px var(--kf-ok)}
+.tr-fb.ok .tr-fb-ic{background:var(--kf-ok)}
+.tr-fb.no{box-shadow:inset 0 0 0 1.5px var(--kf-bad)}
+.tr-fb.no .tr-fb-ic{background:var(--kf-bad)}
+.tr-exp{display:flex;flex-direction:column;gap:8px;font-size:16px}
+.tr-fund{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--muted)}
+.tr-fund .i{width:16px;height:16px;flex:none}
+.tr-aula{background:var(--pen-soft);border-radius:var(--kf-r-md);padding:0 14px}
+.tr-aula summary{min-height:var(--kf-alvo);display:flex;align-items:center;gap:8px}
+.tr-aula summary::before{content:"";width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;transition:transform .2s}
+.tr-aula[open] summary::before{transform:rotate(90deg)}
+.tr-aula summary::-webkit-details-marker{display:none}
+.tr-aula summary{list-style:none}
+.tr-aula p{padding-bottom:14px;font-size:15.5px}
+.tr-inst{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:var(--kf-r-md);background:var(--surface);box-shadow:inset 3px 0 0 var(--hl-borda),var(--shadow);font-size:15.5px}
+.tr-fc{font-size:13.5px;color:var(--muted)}
+.tr-acoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto;padding-top:6px}
+@media (max-width:379px){.tr-acoes{grid-template-columns:1fr}.tr-acoes #tr-prox{order:-1}}
+.fc-carta{gap:8px}
+.fc-pe{display:flex;gap:10px;width:100%}
+.fc-pe .kf-btn{flex:1}
+.etiqueta.ok{gap:4px;background:var(--hl);color:var(--hl-ink);box-shadow:inset 0 0 0 1.5px var(--hl-borda);flex:none}
+.etiqueta.ok .i{width:14px;height:14px}
+.central-q .etiqueta{flex:none}
+/* medalhas */
+.vitrine{align-items:stretch}
+.vit-n{display:flex;align-items:baseline;gap:10px;font-family:var(--f-display);font-size:44px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.vit-n small{font-family:var(--f-body);font-size:15px;font-weight:600;color:var(--muted);letter-spacing:0}
+.vit-metais{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.vit-metais li{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-width:0}
+.vit-metais .med-svg{width:44px;height:44px;filter:drop-shadow(0 2px 4px rgba(19,26,58,.2))}
+.vit-metais b{font-size:12.5px}
+.vit-metais small{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.medalha.tem{box-shadow:var(--shadow),inset 0 0 0 1.5px var(--hl-borda)}
+.lin .med-mini{width:44px;height:44px}
+.lin-tx .barra{margin-top:4px}
+/* instrutor */
+.passos{display:flex;flex-direction:column;gap:10px;counter-reset:p}
+.passos li{position:relative;padding-left:38px;font-size:15.5px;counter-increment:p}
+.passos li::before{content:counter(p);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--pen-soft);color:var(--ink);font-weight:700;font-size:14px}
+.respostas{padding:4px 16px}
+.resp{display:flex;flex-direction:column;gap:4px;padding:14px 0;font-size:15.5px}
+.resp + .resp{border-top:1px solid var(--line)}
+.resp-p{font-weight:700}
 @media (max-width:359px){
   .marca{gap:7px;padding-right:2px}.marca-ic,.marca-ic img{width:30px;height:30px}.marca-nome{font-size:17.5px}
   .topo-in{padding-left:10px;padding-right:4px;gap:2px}
@@ -463,8 +527,8 @@ body.kf-com-guia .festa{bottom:var(--kf-pe)}
 }
 @media (prefers-reduced-motion:reduce){
   .chama.acesa,.mn-cai,.festa-arte,.festa-med,.ab-med,.ab-l.grifada{animation:none}
-  .barra > i,.anel-arco,.foco,.foco-arco,.festa{transition:none;animation:none}
-  .foco{opacity:1;transform:none}
+  .barra > i,.anel-arco,.foco,.foco-arco,.festa,.treino,.tr-combo{transition:none;animation:none}
+  .foco,.treino{opacity:1;transform:none}
 }
 
 [tabindex="-1"]:focus-visible{outline:none}

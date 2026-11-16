@@ -14,22 +14,30 @@ function abrirEstudar(pre = null) {
   if (DB.ativa) return focoAbrir();
   if (!DB.materias.some(m => topicosDe(m.id).length)) { avisar('Cadastre um concurso ou uma disciplina para começar.'); irPara('concursos'); return; }
   const plano = planoDoDia(), sug = pre || plano.proximo || sugestaoExtra();
-  let m = sug ? sug.m : DB.materias[0].id, t = sug ? sug.t : (topicosDe(m)[0] || {}).id, tipo = sug ? sug.tipo : 'teoria', alvo = sug ? sug.min : cfg().bloco, rev = sug && sug.rev || null;
+  let m = sug ? sug.m : DB.materias[0].id, t = sug ? sug.t : (topicosDe(m)[0] || {}).id, tipo = tipoDoEstudo(t, sug ? sug.tipo : 'teoria'), alvo = sug ? sug.min : cfg().bloco, rev = sug && sug.rev || null;
+  // assunto com questões do app: questões e revisão abrem o treino; teoria e lei seca seguem no cronômetro
+  const comBanco = () => (tipo === 'questoes' || tipo === 'revisao') && temBanco(t);
   const n = sug && nomeItem(sug);
   abrirJanela({ titulo: 'Estudar', sub: pre ? 'Confira e comece.' : 'Siga o plano de hoje ou escolha outro assunto.', alto: true,
-    corpo: `${sug && !pre ? `<div class="sugestao"><span class="rotulo-mini">${plano.proximo ? 'Próximo do plano' : 'Sugestão'}</span><b>${esc(n.t)}</b><small>${esc(n.m)} · ${TIPOS[sug.tipo]} · ${sug.min} min</small></div>` : ''}
+    corpo: `${sug && !pre ? `<div class="sugestao"><span class="rotulo-mini">${plano.proximo ? 'Próximo do plano' : 'Sugestão'}</span><b>${esc(n.t)}</b><small>${esc(n.m)} · ${TIPOS[tipo]} · ${sug.nq ? plural(sug.nq, 'item', 'itens') : sug.min + ' min'}</small></div>` : ''}
       <div class="kf-campo"><label class="kf-rotulo" for="es-m">Disciplina</label><select id="es-m" class="kf-entrada">${opcoesMaterias(m)}</select></div>
       <div class="kf-campo"><label class="kf-rotulo" for="es-t">Assunto</label><select id="es-t" class="kf-entrada">${opcoesTopicos(m, t)}</select></div>
-      <div class="kf-campo"><span class="kf-rotulo" id="es-tipo-r">O que você vai fazer</span>${segHTML('es-tipo', Object.entries(TIPOS), tipo, 'O que você vai fazer')}</div>
-      <div class="kf-campo"><span class="kf-rotulo">Tempo, em minutos</span>${segHTML('es-alvo', [[15, '15'], [25, '25'], [30, '30'], [50, '50'], [0, 'Livre']], [15, 25, 30, 50].includes(alvo) ? alvo : (alvo ? 30 : 0), 'Tempo da sessão')}</div>`,
+      <div class="kf-campo"><span class="kf-rotulo" id="es-tipo-r">O que você vai fazer</span>${segHTML('es-tipo', Object.entries(TIPOS), tipo, 'O que você vai fazer')}<p class="kf-ajuda" id="es-banco" role="status"></p></div>
+      <div class="kf-campo" id="es-alvo-c"><span class="kf-rotulo">Tempo, em minutos</span>${segHTML('es-alvo', [[15, '15'], [25, '25'], [30, '30'], [50, '50'], [0, 'Livre']], [15, 25, 30, 50].includes(alvo) ? alvo : (alvo ? 30 : 0), 'Tempo da sessão')}</div>`,
     pe: `<button type="button" class="kf-btn kf-sec" id="es-lancar">Lançar estudo</button><button type="button" class="kf-btn kf-comecar" id="es-ok">${I.play}Começar</button>`,
     aoMontar: d => {
       const sm = $('#es-m', d), st = $('#es-t', d);
-      sm.addEventListener('change', () => { m = sm.value; rev = null; const px = proximoAssunto(m, topicosAtivos(m) || undefined); st.innerHTML = opcoesTopicos(m, px && px.t.id); t = st.value; });
-      st.addEventListener('change', () => { t = st.value; rev = null; });
-      ligarSeg($('#es-tipo', d), v => { tipo = v; });
+      const banco = () => { const n = questoesDe(t).length, usa = comBanco();
+        $('#es-banco', d).textContent = usa ? `${plural(n, 'questão do app', 'questões do app')} neste assunto, com comentário e aula.` : n ? 'Este assunto tem questões do app: escolha Questões para treinar.' : 'Sem questões do app neste assunto: use o cronômetro.';
+        $('#es-alvo-c', d).hidden = !!usa; };
+      sm.addEventListener('change', () => { m = sm.value; rev = null; const px = proximoAssunto(m, topicosAtivos(m) || undefined); st.innerHTML = opcoesTopicos(m, px && px.t.id); t = st.value; banco(); });
+      st.addEventListener('change', () => { t = st.value; rev = null; banco(); });
+      ligarSeg($('#es-tipo', d), v => { tipo = v; banco(); });
       ligarSeg($('#es-alvo', d), v => { alvo = +v; });
-      $('#es-ok', d).onclick = () => { t = st.value; fecharJanela(true); iniciarSessao({ t, tipo, alvo, rev: tipo === 'revisao' ? rev : null }); focoAbrir(); render(); };
+      banco();
+      $('#es-ok', d).onclick = () => { t = st.value; fecharJanela(true);
+        if (comBanco()) { treinoAbrir({ t, tipo, rev: tipo === 'revisao' ? rev : null }); return; }
+        iniciarSessao({ t, tipo, alvo, rev: tipo === 'revisao' ? rev : null }); focoAbrir(); render(); };
       $('#es-lancar', d).onclick = () => { fecharJanela(true); lancarEstudo({ m: sm.value, t: st.value, tipo }); };
     } });
 }
