@@ -39,7 +39,7 @@ function centralQuestoes() {
   if (!QUESTOES.some(q => topico(q.t))) return '';
   const D = desafioDoDia(), fc = flashcardsDeHoje().length, feitas = DB.respostas.filter(r => QID.has(r.id)).length, and = cadernoEmAndamento(), E = and && cadernoEstado(and);
   const lin = (attrs, ic, t, sub, selo = '') => `<li><button type="button" class="lin" ${attrs}><span class="lin-ic">${ic}</span><span class="lin-tx"><b>${t}</b><small>${sub}</small></span>${selo}${I.seta}</button></li>`;
-  return `<section aria-labelledby="cq-t"><div class="sec-cab"><h2 class="sec-t" id="cq-t">Questões</h2><span class="apoio">${feitas} de ${QUESTOES.length} resolvidas</span></div>
+  return `<section aria-labelledby="cq-t"><div class="sec-cab"><h2 class="sec-t" id="cq-t">Questões</h2><span class="apoio">${feitas} de ${todasAsQuestoes().length} resolvidas</span></div>
     <ul class="card lista central-q">
       ${and ? lin(`data-act="cad-continuar" data-id="${esc(and.id)}"`, I.play, 'Continuar o caderno', `${esc(and.nome)} · ${E.feitas} de ${E.n}`) : lin('data-kf-ir="cadernos"', I.questoes, 'Cadernos de questões', 'Um por disciplina, e os que você montar')}
       ${lin('data-act="desafio"', I.raio, 'Desafio do dia', D.feito ? 'Feito hoje. Amanhã tem outro.' : '10 questões sorteadas · bônus de pontos', D.feito ? `<span class="etiqueta ok">${I.check}Feito</span>` : '')}

@@ -329,6 +329,7 @@ const GUIA = [
 KitFacil.campo.ligar();
 $('#topo').outerHTML = KitFacil.topo.html({ principal: true });
 // link de "Conectar outro aparelho" (a chave vem depois do #, que não sai do aparelho)
+receberProva(); oficiais(); // a prova que chega pela ponte entra antes da primeira pintura
 const linkSync = SY.tokenDoLink();
 if (linkSync) try { history.replaceState(null, '', location.pathname + location.search); } catch {}
 render();

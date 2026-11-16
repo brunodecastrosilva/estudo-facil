@@ -23,7 +23,7 @@ function desafioDoDia(d = hojeISO()) {
   const L = QUESTOES.filter(q => topico(q.t)).map(q => [rnd(), q]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
   return { lista: L.slice(0, 10), feito: temMarco('d:' + d) };
 }
-const flashcardsDeHoje = () => DB.respostas.filter(r => r.cx != null && r.cx < FC_DIAS.length && r.due && r.due <= hojeISO() && QID.has(r.id));
+const flashcardsDeHoje = () => (oficiais(), DB.respostas).filter(r => r.cx != null && r.cx < FC_DIAS.length && r.due && r.due <= hojeISO() && QID.has(r.id));
 
 /* ---------- treino em tela cheia ---------- */
 let TR = null, treinoEl = null;
@@ -62,17 +62,18 @@ function treinoTecla(e) {
   else if (!TR.marcou && (k === 'c' || k === 'e')) { e.preventDefault(); treinoResponder(k.toUpperCase()); }
 }
 function treinoPintar() {
-  const q = TR.lista[TR.i], t = topico(q.t), n = TR.lista.length, fez = TR.marcou, ok = fez && fez === q.g, ult = TR.cad ? proximaDoCaderno() < 0 : TR.i === n - 1;
+  const q = TR.lista[TR.i], t = topico(q.t), O = q.of, n = TR.lista.length, fez = TR.marcou, ok = fez && fez === q.g, ult = TR.cad ? proximaDoCaderno() < 0 : TR.i === n - 1;
   const inst = (INSTRUTOR[q.id] || []).slice(-2);
   treinoEl.innerHTML = `<div class="treino-in">
       <div class="tr-topo"><button type="button" class="btn-ic" id="tr-sair" aria-label="Encerrar o treino">${I.x}</button>${barraHTML((TR.i + (fez ? 1 : 0)) / n * 100, `Questão ${TR.i + 1} de ${n}`)}<span class="tr-cont" aria-hidden="true">${TR.i + 1}/${n}</span></div>
-      <div class="tr-meta"><span class="etiqueta">${esc(t ? t.nome : '')}</span>${TR.combo >= 2 ? `<span class="tr-combo">${I.raio}Combo ${TR.combo}</span>` : ''}</div>
+      <div class="tr-meta"><span class="etiqueta">${esc(O ? q.f : t ? t.nome : '')}</span>${TR.combo >= 2 ? `<span class="tr-combo">${I.raio}Combo ${TR.combo}</span>` : ''}</div>
       <h2 class="kf-so-leitor" id="tr-t" tabindex="-1">${TR.desafio ? 'Desafio do dia. ' : TR.cad ? `Caderno ${esc(TR.nome)}. ` : ''}Questão ${TR.i + 1} de ${n}</h2>
-      <div class="folha tr-folha"><p class="rotulo-mini">Julgue o item</p><p class="tr-enun">${esc(q.e)}</p></div>
+      ${O && O.apoio ? `<details class="tr-aula tr-apoio" data-kf-secao><summary><b>Texto de apoio</b></summary>${O.apoio.split('\n').map(x => `<p>${marcado(x)}</p>`).join('')}</details>` : ''}
+      <div class="folha tr-folha">${O && O.cmd ? `<p class="tr-cmd">${marcado(O.cmd)}</p>` : '<p class="rotulo-mini">Julgue o item</p>'}<p class="tr-enun">${O ? marcado(q.e) : esc(q.e)}</p></div>
       ${!fez ? `<div class="tr-botoes" role="group" aria-label="Sua resposta"><button type="button" class="kf-btn kf-sec tr-b" data-resp="C">${I.check}Certo</button><button type="button" class="kf-btn kf-sec tr-b" data-resp="E">${I.x}Errado</button></div>
         <p class="tr-dica" aria-hidden="true">No teclado: C para certo, E para errado</p>`
       : `<div class="tr-fb ${ok ? 'ok' : 'no'}" role="status"><span class="tr-fb-ic" aria-hidden="true">${ok ? I.check : I.x}</span><span><b>${ok ? 'Você acertou' : 'Você errou'}</b><small>Gabarito: ${GAB[q.g]} · você marcou ${GAB[fez]}</small></span></div>
-        <div class="tr-exp"><p>${esc(q.c)}</p><p class="tr-fund">${I.lei}<span>${esc(q.f)}</span></p></div>
+        <div class="tr-exp">${q.c ? `<p>${esc(q.c)}</p>` : ''}<p class="tr-fund">${I.lei}<span>${esc(O ? 'Gabarito oficial definitivo · ' + q.f : q.f)}</span></p></div>
         ${AULAS[q.t] ? `<details class="tr-aula" data-kf-secao><summary><b>Aula do assunto</b></summary><p>${esc(AULAS[q.t])}</p></details>` : ''}
         ${inst.map(x => `<div class="tr-inst"><span class="rotulo-mini">Instrutor · ${esc(x.em || '')}</span><p>${esc(x.r || '')}</p></div>`).join('')}
         ${ok ? '' : '<p class="tr-fc">Esta questão virou flashcard e volta amanhã.</p>'}
@@ -84,10 +85,10 @@ function treinoResponder(v) {
   const q = TR.lista[TR.i]; if (TR.marcou) return;
   const ok = v === q.g, h = hojeISO(); TR.marcou = v;
   if (ok) { TR.ac++; TR.combo++; TR.maxCombo = Math.max(TR.maxCombo, TR.combo); if (TR.combo >= 3) TR.bonus++; } else { TR.er++; TR.combo = 0; }
-  const p = TR.porT.get(q.t) || { ac: 0, er: 0 }; ok ? p.ac++ : p.er++; TR.porT.set(q.t, p);
+  const kp = q.of ? 'm:' + q.m : q.t, p = TR.porT.get(kp) || { ac: 0, er: 0 }; ok ? p.ac++ : p.er++; TR.porT.set(kp, p);
   // a resposta fica guardada por questão; item errado vira flashcard e volta amanhã
   let r = DB.respostas.find(x => x.id === q.id); if (!r) { r = { id: q.id, n: 0, ac: 0, rv: 0 }; DB.respostas.push(r); }
-  r.n++; if (ok) r.ac++; r.ok = ok; r.v = v; r.em = agora();
+  r.n = (r.n || 0) + 1; r.ac = (r.ac || 0) + (ok ? 1 : 0); r.ok = ok; r.v = v; r.em = agora(); if (q.of) r.cor = 1; // na folha de respostas da prova, o item já conta como corrigido
   if (TR.cad) cadernoMarcar(TR.cad, q, v);
   if (!ok) { r.cx = 0; r.due = maisDias(h, 1); }
   salvar({ quieto: true }); vibrar(ok ? 10 : [30, 40, 30]);
@@ -114,15 +115,15 @@ function treinoEncerrar() {
   if (!feitas) { treinoFechar(); render(); return; }
   const antes = { s: jogoEstado(), perfeito: missoes().perfeito }, seg = Math.min((Date.now() - T.ini) / 1000, feitas * 180), completo = feitas === T.lista.length;
   let bonus = T.bonus; if (T.desafio && completo && !temMarco('d:' + hojeISO())) { marcar('d:' + hojeISO()); bonus += 20 + (T.ac / feitas >= .8 ? 30 : 0); }
-  const fez = { teoria: false, revisoes: 0, revisao: false, dia: false }; let k = 0, unico = T.porT.size === 1 ? [...T.porT.keys()][0] : null;
+  const fez = { teoria: false, revisoes: 0, revisao: false, dia: false }, daProva = c => c.startsWith('m:'), c0 = [...T.porT.keys()][0]; let k = 0, unico = T.porT.size === 1 && !daProva(c0) ? c0 : null;
   for (const [tId, p] of T.porT) {
-    const toda = questoesDe(tId).every(q => respostaDe(q.id) || DB.respostas.some(r => r.id === q.id));
-    const r = registrarSessao({ t: tId, tipo: T.tipo === 'revisao' && k === 0 ? 'revisao' : 'questoes', seg: seg * (p.ac + p.er) / feitas, ac: p.ac, er: p.er, teoria: toda, rev: k === 0 ? T.rev : null, ini: T.ini + k,
+    const toda = !daProva(tId) && questoesDe(tId).every(q => respostaDe(q.id) || DB.respostas.some(r => r.id === q.id));
+    const r = registrarSessao({ t: daProva(tId) ? null : tId, m: daProva(tId) ? tId.slice(2) : null, tipo: T.tipo === 'revisao' && k === 0 ? 'revisao' : 'questoes', seg: seg * (p.ac + p.er) / feitas, ac: p.ac, er: p.er, teoria: toda, rev: k === 0 ? T.rev : null, ini: T.ini + k,
       extra: k === 0 ? { bonus, combo: T.maxCombo, gab: completo && feitas >= 10 && !T.er ? 1 : 0, ...(T.desafio ? { desafio: 1 } : {}) } : null });
     fez.teoria = fez.teoria || r.teoria; fez.revisoes += r.revisoes; fez.revisao = fez.revisao || r.revisao; fez.dia = fez.dia || r.dia; k++;
   }
-  const m = unico ? null : materia(topico([...T.porT.keys()][0]).m);
-  fez.sessao = { t: unico, m: unico ? topico(unico).m : null, seg, ac: T.ac, er: T.er };
+  const m = unico ? null : materia(daProva(c0) ? c0.slice(2) : topico(c0).m);
+  fez.sessao = { t: unico, m: unico ? topico(unico).m : T.porT.size === 1 ? c0.slice(2) : null, seg, ac: T.ac, er: T.er };
   fez.rotulo = T.desafio ? 'Desafio do dia' : T.cad ? `Caderno · ${T.nome}` : unico ? null : `Treino de questões${m ? ' · ' + m.nome : ''}`;
   fez.extra = [T.maxCombo >= 3 ? ['Maior combo', `${T.maxCombo} acertos seguidos`] : null, bonus ? ['Bônus', `+${bonus} pontos`] : null].filter(Boolean);
   salvar({ quieto: true }); treinoFechar();
@@ -134,8 +135,8 @@ function flashcardsAbrir() {
   const fila = flashcardsDeHoje(); if (!fila.length) { avisar('Nenhum flashcard para hoje. Eles nascem das questões que você erra.'); return; }
   let i = 0, virado = false, lembrou = 0;
   const corpo = () => { const r = fila[i], q = QID.get(r.id), t = topico(q.t);
-    return `<p class="apoio" role="status">Flashcard ${i + 1} de ${fila.length}</p><span class="etiqueta">${esc(t ? t.nome : '')}</span>
-      <div class="folha fc-carta"><p class="rotulo-mini">Certo ou errado? Por quê?</p><p class="tr-enun">${esc(q.e)}</p></div>
+    return `<p class="apoio" role="status">Flashcard ${i + 1} de ${fila.length}</p><span class="etiqueta">${esc(q.of ? q.f : t ? t.nome : '')}</span>
+      <div class="folha fc-carta"><p class="rotulo-mini">Certo ou errado? Por quê?</p>${q.of && q.of.cmd ? `<p class="tr-cmd">${marcado(q.of.cmd)}</p>` : ''}<p class="tr-enun">${q.of ? marcado(q.e) : esc(q.e)}</p></div>
       ${virado ? `<div class="tr-exp"><p><b>${GAB[q.g]}.</b> ${esc(q.c)}</p><p class="tr-fund">${I.lei}<span>${esc(q.f)}</span></p></div>` : ''}`; };
   const pe = () => virado ? `<button type="button" class="kf-btn kf-sec" id="fc-nao">Não lembrei</button><button type="button" class="kf-btn kf-pri" id="fc-sim">Lembrei</button>` : `<button type="button" class="kf-btn kf-pri" id="fc-ver">Ver resposta</button>`;
   abrirJanela({ titulo: 'Flashcards', sub: 'Responda de cabeça e confira.', alto: true, corpo: `<div id="fc-corpo" class="pilha">${corpo()}</div>`, pe: `<div id="fc-pe" class="fc-pe">${pe()}</div>`,
@@ -177,7 +178,7 @@ function perguntarInstrutor(q = null, marcou = null, ctx = null) {
     pe: `<button type="button" class="kf-btn kf-pri" id="in-ok">Copiar e abrir o Claude</button>`,
     aoMontar: d => { $('#in-ok', d).onclick = async () => {
       const duvida = $('#in-d', d).value.trim(); if (!duvida && !q && !ctx) { KitFacil.apontar($('#in-d', d)); avisar('Escreva a sua pergunta.'); return; }
-      const txt = ['[Estudo Fácil · pergunta ao instrutor]', q ? `Questão ${q.id} · ${t ? t.nome : ''}\nItem: ${q.e}\nGabarito: ${GAB[q.g]}${marcou ? ` · marquei: ${GAB[marcou]}` : ''}\nComentário do app: ${q.c} (${q.f})` : ctx ? ctx.linhas.join('\n') : '', `Minha dúvida: ${duvida || 'explique este item com outras palavras e um exemplo.'}`, 'Responda como meu instrutor e grave a resposta no app.'].filter(Boolean).join('\n\n');
+      const txt = ['[Estudo Fácil · pergunta ao instrutor]', q ? `Questão ${q.id} · ${q.of ? q.f : t ? t.nome : ''}${q.of && q.of.cmd ? '\nComando: ' + semMarca(q.of.cmd) : ''}\nItem: ${semMarca(q.e)}\nGabarito: ${GAB[q.g]}${marcou ? ` · marquei: ${GAB[marcou]}` : ''}${q.c ? `\nComentário do app: ${q.c}` : ''}${q.of ? '' : ` (${q.f})`}` : ctx ? ctx.linhas.join('\n') : '', `Minha dúvida: ${duvida || 'explique este item com outras palavras e um exemplo.'}`, 'Responda como meu instrutor e grave a resposta no app.'].filter(Boolean).join('\n\n');
       const ok = await copiarTexto(txt); jogoMarcar('instrutor'); fecharJanela(true);
       avisar(ok ? 'Pergunta copiada. Cole no Claude e envie.' : 'Não deu para copiar. Tente de novo.');
       if (ok && !semSalvar) window.open(URL_CLAUDE, '_blank', 'noopener');

@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.3 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas do app, nos temas claro e escuro.
+/* Estudo Fácil 1.4 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas do app, nos temas claro e escuro.
    Usa o axe-core pelo pacote de desenvolvimento @axe-core/playwright (npm install). Sem ele, o teste é pulado com aviso:
    não conta como aprovado. Substitui, neste app, comum/testes/acessibilidade.test.mjs (os Ajustes ficam na tela Mais). */
 import { test, before, after } from 'node:test';
@@ -49,6 +49,10 @@ for (const tema of ['light', 'dark']) {
     await p.click('#kf-nav-cadernos'); await p.waitForTimeout(200); await varrer(p, `Cadernos (${nome})`);
     await p.evaluate(() => { cadernoMarcar('m:anpd-dc', QID.get('dc-001'), 'E'); cadernoMarcar('m:anpd-dc', QID.get('dc-002'), 'E'); salvar(); cadId = 'm:anpd-dc'; irPara('caderno'); }); await p.waitForTimeout(200); await varrer(p, `Caderno (${nome})`);
     await p.click('#kf-nav-cadernos'); await p.click('#cad-novo'); await p.locator('#nc-ok').waitFor(); await varrer(p, `Novo caderno (${nome})`); await p.keyboard.press('Escape');
+    // questão oficial (texto inventado): comando, texto de apoio e a resposta
+    await p.evaluate(() => { const itens = {}; for (let n = 1; n <= 50; n++) itens[n] = 'Item inventado ' + n + ', com \u0001destaque\u0002.'; DB.textos = [{ id: 'anatel24-cb1', itens, grupos: [{ de: 1, cmd: 'Julgue os itens a seguir, relativos ao texto CB1.', apoio: 'Texto CB1\nParágrafo inventado.' }], em: 1 }]; salvar(); treinoAbrir({ caderno: 'p:anatel24-cb1', i: 0 }); });
+    await p.locator('#treino.dentro').waitFor(); await p.click('#treino .tr-apoio summary'); await varrer(p, `Questão oficial (${nome})`);
+    await p.click('#treino [data-resp="C"]'); await p.locator('#tr-prox').waitFor(); await varrer(p, `Questão oficial respondida (${nome})`); await p.evaluate(() => treinoFechar()); await p.waitForTimeout(300);
     for (const tela of ['evolucao', 'instrutor', 'revisoes']) { await p.evaluate(t => { concId = 'anpd-2027'; discId = 'anpd-lgpd'; irPara(t); }, tela); await p.waitForTimeout(200); await varrer(p, `${tela} (${nome})`); }
     // treino de questões: antes e depois da resposta, com a aula aberta e a resposta do instrutor; a pergunta e os flashcards
     await p.evaluate(() => { INSTRUTOR = { 'lgpd-016': [{ em: '16/11/2026', r: 'O art. 11 não traz o legítimo interesse.' }] }; DB.respostas.push({ id: 'lgpd-004', n: 1, ac: 0, ok: false, em: agora(), cx: 0, due: hojeISO(), rv: 0 }); salvar(); irPara('hoje'); treinoAbrir({ lista: [QID.get('lgpd-016'), QID.get('lgpd-017'), QID.get('lgpd-018')] }); });

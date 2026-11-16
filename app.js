@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.3.0';
+const VERSAO = '1.4.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -95,7 +95,7 @@ const LS = {
    respostas   uma por questão do app já respondida (vezes, acertos e a caixa do flashcard) e uma por item de prova
                oficial marcado (pv:<prova>:<item>)       redacoes   textos do treino da discursiva
    cadernos    cadernos de questões: os seus e o andamento dos de fábrica (cadernos.js) */
-const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'respostas', 'cadernos', 'redacoes', 'dias', 'marcos', 'simulados', 'eventos'];
+const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'respostas', 'cadernos', 'textos', 'redacoes', 'dias', 'marcos', 'simulados', 'eventos'];
 const CFG_PADRAO = { nome: '', metaMin: 60, dias: [0, 1, 2, 3, 4, 5, 6], bloco: 30, metaQ: 15, revisoes: [1, 7, 30], som: true, vibra: true, jogo: true };
 const CORES = ['#2742D3', '#0E8A7D', '#C2410C', '#7C3AED', '#B4235A', '#0369A1', '#4D7C0F', '#B45309', '#BE185D', '#0F766E', '#6D28D9', '#9A3412'];
 const TIPOS = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão', lei: 'Lei seca' };
@@ -408,7 +408,13 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.3.0', itens: [
+const NOVIDADES = [{ versao: '1.4.0', itens: [
+  'Questões oficiais do Cebraspe dentro do app: o texto da prova chega ao aparelho e vira caderno, com comando e texto de apoio.',
+  'Em Cadernos, a seção Provas do Cebraspe traz um caderno por prova, só com os itens do seu edital.',
+  'Os cadernos de disciplina ganham as questões de prova daquela disciplina, depois das questões do app.',
+  'Questão oficial errada também vira flashcard, e o comentário do instrutor aparece quando existe.',
+  'O texto das provas fica só nos seus dados (e na sua sincronização criptografada); não vai para o repositório do app.',
+] }, { versao: '1.3.0', itens: [
   'Cadernos de questões: o app agora gira em torno deles. Há um caderno por disciplina, atalhos para as que você errou e para as que nunca viu, e os cadernos que você montar.',
   'Cada caderno guarda o seu andamento: continue de onde parou, refaça só as erradas ou zere as respostas.',
   'Banco de questões: de 63 para 220, agora nas doze disciplinas. Todas escritas no app, com comentário, fundamento e aula curta.',

@@ -5,7 +5,7 @@ e no computador. O app gira em torno de **cadernos de questões** de certo ou er
 comentadas; transforma os erros em flashcards, traz as provas oficiais da banca com correção, treina a discursiva, lembra
 das revisões e mostra a evolução, com sequência de dias, missões e mais de cem medalhas.
 
-Versão **1.3.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.4.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno e todo voltado ao concurso
 > da ANPD. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
@@ -21,10 +21,11 @@ referência do projeto (Art. 93).
 - **Atalhos:** só as que errei, nunca resolvidas e o desafio do dia
 - **Meus cadernos:** cadernos montados por disciplina, filtro (todas, nunca resolvidas ou as que errei) e tamanho
 - **Questões nativas:** 220 questões de certo ou errado no estilo Cebraspe, **escritas dentro do app** (`questoes.js` e `questoes2.js`) a partir da lei e das armadilhas vistas nas provas oficiais. Cada uma tem gabarito, comentário, fundamento e uma aula curta do assunto. Não são questões de prova
+- **Questões oficiais do Cebraspe:** o texto das provas cadastradas chega ao aparelho e cada prova vira caderno, só com os itens do edital, com comando, texto de apoio, gabarito definitivo e comentário do instrutor. As questões de prova também entram no caderno da disciplina, nos atalhos, nos cadernos montados e nos flashcards. **O texto fica só nos dados de quem usa; não entra no repositório** (veja "A ponte das provas")
 - **Hoje:** a sequência de dias, a meta do dia, as três missões, o caderno em andamento e o plano de hoje
 - **Plano do dia:** revisões vencidas primeiro; depois, blocos das disciplinas mais atrasadas em relação ao peso na prova
 - **Edital da ANPD** (em Mais): 12 disciplinas, 119 assuntos, pesos, três fases até a prova e fontes oficiais; cada assunto estudado fica grifado e a prontidão sobe. O edital ainda não saiu: o que é estimativa está marcado como estimativa
-- **Provas do Cebraspe:** quatro cadernos oficiais (ANATEL 2024, ANAC 2024, ANM 2025 e DATAPREV 2023). O caderno abre no site da banca; o app mostra só os blocos do edital da ANPD, com folha de respostas, correção pelo gabarito oficial definitivo (errado desconta um ponto) e comentário do instrutor. O texto das provas não fica no app
+- **Folha de respostas das provas:** quatro cadernos oficiais (ANATEL 2024, ANAC 2024, ANM 2025 e DATAPREV 2023). Sem o texto no aparelho, o caderno abre no site da banca; o app mostra só os blocos do edital da ANPD, com folha de respostas, correção pelo gabarito oficial definitivo (errado desconta um ponto) e comentário do instrutor. O texto das provas não fica no app
 - **Como a banca escreve:** as armadilhas que mais apareceram nessas provas; a versão completa é o `instrutor/caderno-da-banca.md`, que guia as questões e as apostilas
 - **Discursiva:** três temas que o Cebraspe cobrou (com o endereço do enunciado e do padrão de resposta) e três temas inéditos do instrutor para a ANPD; contagem de linhas, rascunho guardado, o que a banca espera e envio do texto para correção
 - **Flashcards** das questões erradas, que voltam em 1, 3, 7, 15 e 30 dias; **combo** de acertos seguidos
@@ -54,7 +55,7 @@ Abra o endereço em qualquer navegador, no celular, no tablet ou no computador. 
 
 | Dado | Onde fica |
 |---|---|
-| Concursos, disciplinas, sessões, respostas das questões (com os flashcards), andamento dos cadernos, marcações das provas oficiais, textos da discursiva, revisões, dias com a meta batida, medalhas, simulados, agenda e ajustes | neste aparelho (armazenamento do navegador, chaves `estudofacil.*`) |
+| Concursos, disciplinas, sessões, respostas das questões (com os flashcards), andamento dos cadernos, texto das provas oficiais trazidas pela ponte, marcações das provas oficiais, textos da discursiva, revisões, dias com a meta batida, medalhas, simulados, agenda e ajustes | neste aparelho (armazenamento do navegador, chaves `estudofacil.*`) |
 | Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
 | Perguntas ao instrutor e discursivas enviadas | o app só copia o texto; quem envia é a pessoa, no Claude. As respostas gravadas ficam no repositório (`instrutor/respostas.json`), que é público: nada pessoal entra nelas |
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
@@ -94,13 +95,14 @@ Ao mudar a versão, atualize também o `?v=` dos arquivos no `index.html`.
 | `treino.js` | treino de questões em tela cheia, flashcards, desafio do dia e a ponte com o instrutor |
 | `provas.js` | provas oficiais do Cebraspe (endereços, gabarito definitivo, blocos por disciplina e comentários; sem o texto das provas), folha de respostas e o treino da discursiva |
 | `instrutor/caderno-da-banca.md` | o que o instrutor aprendeu sobre o jeito de a banca escrever; toda conversa que escreve material lê e melhora |
+| `instrutor/leitor-de-prova.js` | a ferramenta da ponte: lê o PDF oficial no navegador (duas colunas, itens, comandos e textos de apoio) e manda o resultado ao app pelo endereço. Não é carregada pelo app |
 | `instrutor/respostas.json` | respostas do instrutor (Claude), por questão; o app lê ao abrir |
 | `estudar.js` | escolher o que estudar, modo foco, fechar a sessão, lançar estudo feito e a ficha do assunto |
 | `telas.js` | Hoje, Edital, Medalhas, Evolução, Instrutor, Mais e Revisões; e as telas gerais, fora da fase fechada (Concursos, Disciplinas, Simulados e Agenda) |
 | `casca.js` | navegação, Ajustes, abertura e arranque (e o guia, desligado nesta fase) |
 | `comum/` | **Kit Fácil**: sincronização, avaliação, apoio, cópia de segurança, Ajustes, janelas e avisos. Igual nos quatro apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
-| `tests/` | testes do app e de acessibilidade (o do guia fica pulado enquanto o guia estiver desligado) |
+| `tests/` | testes do app, de acessibilidade e do leitor de prova, este com um PDF inventado (o do guia fica pulado enquanto o guia estiver desligado) |
 
 ## Modelo de dados
 
@@ -113,6 +115,7 @@ Tudo fica num objeto só (`estudofacil.db`, formato 3). Cada lista tem registros
 | `sessoes` | sessões de estudo: assunto, tipo (teoria, questões, revisão, lei seca), tempo, acertos, erros e o dia; nos treinos, também o bônus e o maior combo |
 | `respostas` | uma por questão do app já respondida (`id` = o da questão): vezes, acertos, a última resposta e a caixa do flashcard (`cx`, `due`, `rv`); e uma por item de prova oficial marcado (`pv:<prova>:<item>`, com `v` e `cor`) |
 | `cadernos` | andamento dos cadernos: as respostas dadas em cada um (`r`), por questão; o caderno de disciplina tem `id` `m:<disciplina>` e o montado guarda também o nome e a lista de questões (`itens`) |
+| `textos` | texto das provas oficiais que já chegaram ao aparelho (`id` = o da prova): `itens` (número → enunciado) e `grupos` (a partir de qual item valem o comando e o texto de apoio). Só existe nos dados de quem usa |
 | `redacoes` | textos do treino da discursiva (`id` = o do tema), com a data do envio ao instrutor |
 | `revisoes` | revisões marcadas e feitas de cada assunto |
 | `dias` | dias em que a meta foi batida (a sequência sai daqui) |
@@ -132,6 +135,19 @@ Regras:
 - **cadernos:** a resposta vale duas vezes: no caderno (o andamento, que pode ser zerado) e no histórico geral da questão (flashcards, estatísticas e medalhas, que ficam). "Refazer as erradas" tira do caderno as respostas erradas e volta nelas; ao sair, as questões respondidas viram uma sessão por assunto;
 - **flashcards:** item errado entra na caixa 0 e volta no dia seguinte; "Lembrei" sobe de caixa (1, 3, 7, 15 e 30 dias) e "Não lembrei" volta para o começo;
 - **pontos:** 1 por minuto, 1 por questão e mais 2 por acerto, 1 de bônus por acerto a partir do terceiro seguido, 20 pelo desafio do dia (mais 30 com 80% de acertos), 2 por flashcard revisto, 15 por revisão, 25 por assunto grifado, 30 por dia com a meta batida e 50 por medalha. Tudo sai dos dados, então acompanha a sincronização.
+
+### A ponte das provas
+
+O texto das provas não fica no repositório. O site da banca também não deixa o app buscar o PDF sozinho (bloqueio de
+CORS). Por isso existe a ponte, operada pelo Claude no navegador do Bruno (Claude in Chrome), sem trabalho para ele:
+
+1. abre-se uma página de `cdn.cebraspe.org.br` e, nela, carregam-se o pdf.js 3.11.174 e `instrutor/leitor-de-prova.js`;
+2. `enviarProvaAoApp(pdfjsLib, id, endereço do caderno, primeiro item, último item)` lê o PDF e confere se achou todos os itens;
+3. a página segue para o app com a prova no endereço (`#prova=...`, que não vai para servidor nenhum);
+4. o app só aceita se a página anterior for o site da banca e se os itens baterem com o gabarito cadastrado em `provas.js`; então guarda em `textos`. Com a sincronização ligada, os outros aparelhos recebem.
+
+Itens anulados e itens que dependem de figura (sem texto) ficam fora dos cadernos. A leitura é automática: confira no
+caderno oficial quando um item parecer truncado.
 
 ### Como o instrutor grava uma resposta
 

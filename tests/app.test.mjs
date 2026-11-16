@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.3 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.4 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -191,6 +191,47 @@ test('cadernos de questões: por disciplina, andamento próprio, refazer as erra
   assert.equal(await p.evaluate(() => TR.lista.map(q => q.id).join() + ':' + TR.cad), 'eti-001:null');
   assert.deepEqual(a.erros, []);
   await a.fechar();
+});
+
+// a prova chega pela "ponte" no endereço (#prova=...); aqui o texto é inventado: o das provas nunca entra no repositório
+const provaInventada = (o = {}) => { const itens = {}; for (let n = 1; n <= 50; n++) itens[n] = `Item inventado ${n}, só para o teste.`;
+  itens[24] = 'A agência \u0001pode\u0002 decidir <img src=x onerror="window.__xss=1"><b id="inj">oi</b>.';
+  return Buffer.from(JSON.stringify({ v: 1, prova: 'anatel24-cb1', itens, grupos: [{ de: 1, cmd: 'Julgue os itens a seguir, relativos ao texto CB1.', apoio: 'Texto CB1\nParágrafo inventado <i id="inj">x</i>.' }, { de: 16, cmd: 'Judge the following items.', apoio: 'Text CB2\nInvented paragraph.' }, { de: 24, cmd: 'Julgue os itens seguintes, acerca de \u0001regulação\u0002.', apoio: '' }, { de: 34, cmd: 'Julgue os próximos itens.', apoio: '' }], ...o })).toString('base64url'); };
+test('questões oficiais: a prova chega pela ponte, vira caderno e entra no treino, nos flashcards e na disciplina', async () => {
+  const a = await abrir({ caminho: '?hoje=' + HOJE + '#prova=' + provaInventada() }), p = a.page;
+  const fechaMedalhas = async () => { for (let i = 0; i < 4; i++) { const m = p.locator('#mn-ok'); if (await m.count()) { await m.click(); await p.waitForTimeout(700); } else await p.waitForTimeout(250); } };
+  // 46 itens do edital, menos 3 anulados; o endereço fica limpo
+  assert.deepEqual(await p.evaluate(() => [DB.textos.length, location.hash, oficiais().length, oficiais().filter(q => q.c).length > 5, QID.has('pv:anatel24-cb1:1'), QID.has('pv:anatel24-cb1:19'), QID.has('pv:anatel24-cb1:30')]), [1, '', 43, true, true, false, false]);
+  await nav(p, 'cadernos');
+  assert.match(await p.locator('#view [aria-labelledby="cd-p"]').innerText(), /43 questões oficiais[\s\S]*ANATEL 2024[\s\S]*43 questões[\s\S]*ANAC 2024[\s\S]*Folha de respostas/);
+  assert.equal(await p.locator('#view [aria-labelledby="cd-p"] [data-act="abrir-prova"]').count(), 3, 'as provas sem texto no aparelho abrem a folha de respostas');
+  await p.click('#view [data-act="abrir-cad"][data-id="p:anatel24-cb1"]'); await p.locator('#cad-ir').waitFor();
+  assert.equal(await p.locator('#view .cad-q').count(), 43); assert.deepEqual(await p.locator('#view .sub-t').allInnerTexts(), ['Língua Portuguesa', 'Língua Inglesa', 'Regulação e agências reguladoras', 'Direito Administrativo', 'Direito Constitucional']);
+  await p.click('#cad-ir'); await p.locator('#treino.dentro').waitFor();
+  assert.match(await p.locator('#treino .etiqueta').innerText(), /Cebraspe · ANATEL 2024 · item 1/); assert.equal(await p.locator('#treino .tr-cmd').innerText(), 'Julgue os itens a seguir, relativos ao texto CB1.');
+  assert.match(await p.locator('#treino .tr-apoio').innerText(), /Texto de apoio/); assert.equal(await p.locator('#treino .tr-enun').innerText(), 'Item inventado 1, só para o teste.');
+  await p.click('#treino [data-resp="E"]'); assert.match(await p.locator('#treino .tr-fb').innerText(), /Você acertou/); assert.match(await p.locator('#treino .tr-fund').innerText(), /Gabarito oficial definitivo · Cebraspe · ANATEL 2024 · item 1/);
+  await p.keyboard.press('Escape'); await p.locator('#festa-ok').waitFor(); assert.match(await p.locator('.festa').innerText(), /Caderno · ANATEL 2024/); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' }); await fechaMedalhas();
+  assert.deepEqual(await p.evaluate(() => [DB.sessoes.map(s => [s.t, s.m, s.tipo, s.ac, s.er]), DB.respostas.map(r => [r.id, r.v, r.ok, r.cor])]), [[[null, 'anpd-lp', 'questoes', 1, 0]], [['pv:anatel24-cb1:1', 'E', true, 1]]]);
+  // o item 24 (o 23º do caderno): o destaque vira negrito, o HTML de fora não entra, e o erro vira flashcard
+  await p.click('#view .cad-q >> nth=22'); await p.locator('#treino.dentro').waitFor();
+  assert.deepEqual(await p.evaluate(() => [TR.lista[TR.i].id, document.querySelector('#treino .tr-enun b').textContent, document.querySelector('#treino .tr-cmd b').textContent, !!document.querySelector('#inj') || !!window.__xss, !!document.querySelector('#treino .tr-apoio')]), ['pv:anatel24-cb1:24', 'pode', 'regulação', false, false]);
+  await p.click('#treino [data-resp="E"]'); assert.match(await p.locator('#treino .tr-fc').innerText(), /virou flashcard/);
+  await p.click('#tr-perguntar'); await p.locator('#in-ok').waitFor(); await p.keyboard.press('Escape');
+  await p.keyboard.press('Escape'); await p.locator('#festa-ok').waitFor(); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' }); await fechaMedalhas();
+  await p.evaluate(() => { DB.respostas.find(r => r.id === 'pv:anatel24-cb1:24').due = hojeISO(); salvar(); flashcardsAbrir(); }); await p.locator('#fc-ver').waitFor();
+  assert.deepEqual(await p.evaluate(() => [document.querySelector('.fc-carta .tr-cmd').textContent, document.querySelector('.fc-carta .tr-enun b').textContent, !!document.querySelector('#inj') || !!window.__xss]), ['Julgue os itens seguintes, acerca de regulação.', 'pode', false]);
+  await p.keyboard.press('Escape');
+  // o caderno da disciplina ganha as questões de prova; a folha de respostas vê o item como corrigido
+  assert.deepEqual(await p.evaluate(() => { const C = cadernoDe('m:anpd-regul'); return [C.itens.length, C.itens.filter(q => q.of).length, erradasGerais().map(q => q.id), marcaDe(PROVA.get('anatel24-cb1'), 24).v]; }), [28, 6, ['pv:anatel24-cb1:24'], 'E']);
+  await p.evaluate(() => { cadId = 'm:anpd-regul'; irPara('caderno'); }); assert.equal(await p.locator('#view .sub-t').last().innerText(), 'Prova do Cebraspe · ANATEL 2024');
+  await p.evaluate(() => { provaId = 'anatel24-cb1'; irPara('prova'); }); assert.equal(await p.locator('#pv-caderno').count(), 1);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+  // o que não confere com uma prova cadastrada é recusado: prova desconhecida e item faltando
+  for (const ruim of [provaInventada({ prova: 'nao-existe' }), provaInventada({ itens: { 1: 'só um' } }), 'lixo']) {
+    const b = await abrir({ caminho: '?hoje=' + HOJE + '#prova=' + ruim }); assert.deepEqual(await b.page.evaluate(() => [DB.textos.length, location.hash, oficiais().length]), [0, '', 0]); assert.deepEqual(b.erros, []); await b.fechar();
+  }
 });
 
 test('flashcards, desafio do dia e instrutor: o erro volta, o desafio rende bônus e a pergunta é copiada', async () => {

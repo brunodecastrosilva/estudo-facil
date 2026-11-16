@@ -161,6 +161,50 @@ const ESTILO_BANCA = [
 const blocosDoEdital = p => p.blocos.filter(b => b.m && materia(b.m));
 const gabDe = (p, n) => p.gab[n - p.de] || '';
 const idResp = (p, n) => `pv:${p.id}:${n}`;
+
+/* ---------- o texto das provas ----------
+   Fica só nos dados de quem usa (DB.textos, que acompanha a sincronização criptografada); nunca no repositório.
+   Chega pela "ponte": o PDF oficial é lido no navegador, numa página do site da banca, e o resultado vem no endereço
+   (#prova=...). A ferramenta e o passo a passo estão em instrutor/leitor-de-prova.js. */
+const textoDe = id => DB.textos.find(x => x.id === id) || null;
+// \u0001 e \u0002 cercam o destaque (negrito ou itálico) do caderno; o texto é protegido antes de virar tela
+const marcado = s => { let ab = 0; return esc(String(s || '')).replace(/[\u0001\u0002]/g, c => c === '\u0001' ? (ab++ ? '' : '<b>') : (ab ? (ab = 0, '</b>') : '')) + (ab ? '</b>' : ''); };
+const semMarca = s => String(s || '').replace(/[\u0001\u0002]/g, '');
+function receberProva() {
+  const h = /^#prova=([\w-]+)$/.exec(location.hash); if (!h) return;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch {}
+  // só vale quando a página anterior é o site da banca (ou nos testes, em localhost)
+  if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/^https:\/\/cdn\.cebraspe\.org\.br\//.test(document.referrer)) return;
+  try {
+    const bin = atob(h[1].replace(/-/g, '+').replace(/_/g, '/')), o = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+    const p = PROVA.get(o.prova); if (!p || o.v !== 1 || !o.itens) throw 0;
+    const itens = {}; for (let k = 0; k < p.gab.length; k++) { const n = p.de + k, s = o.itens[n]; if (typeof s !== 'string' || s.length > 4000) throw 0; itens[n] = s; }
+    const grupos = (Array.isArray(o.grupos) ? o.grupos : []).filter(g => g && Number.isInteger(g.de)).slice(0, 200).map(g => ({ de: g.de, cmd: String(g.cmd || '').slice(0, 2000), apoio: String(g.apoio || '').slice(0, 12000) })).sort((a, b) => a.de - b.de);
+    DB.textos = DB.textos.filter(x => x.id !== p.id); DB.textos.push({ id: p.id, itens, grupos, em: agora() }); salvar({ quieto: true });
+    setTimeout(() => avisar(`Prova no app: ${p.org} ${p.ano}.`), 700);
+  } catch { setTimeout(() => avisar('Não deu para trazer a prova.'), 700); }
+}
+// as questões oficiais que já têm texto no aparelho, só dos blocos do edital; anuladas e itens com figura ficam de fora
+let ofMemo = { k: null, L: [] };
+function oficiais() {
+  const k = DB.textos.map(x => x.id + ':' + x.em).join() + '|' + DB.materias.length;
+  if (ofMemo.k === k) return ofMemo.L;
+  const L = [];
+  for (const p of PROVAS) {
+    const tx = textoDe(p.id); if (!tx) continue;
+    for (const b of blocosDoEdital(p)) for (let n = b.de; n <= b.ate; n++) {
+      const g = gabDe(p, n), e = tx.itens[n]; if ((g !== 'C' && g !== 'E') || !semMarca(e).trim()) continue;
+      let gi = -1; tx.grupos.forEach((x, i) => { if (x.de <= n) gi = i; });
+      const gr = gi >= 0 ? tx.grupos[gi] : null, cmd = gr ? gr.cmd : '';
+      // texto de apoio: o do próprio grupo; se o comando fala em "texto", o último texto apresentado antes
+      let apoio = gr ? gr.apoio : ''; if (!apoio && /\btext[o]?\b/i.test(cmd)) for (let i = gi - 1; i >= 0 && !apoio; i--) if (tx.grupos[i].de >= b.de) apoio = tx.grupos[i].apoio;
+      L.push({ id: idResp(p, n), m: b.m, g, e, c: p.itens[n] || '', f: `Cebraspe · ${p.org} ${p.ano} · item ${n}`, of: { p: p.id, n, cmd, apoio, rot: `${p.org} ${p.ano}` } });
+    }
+  }
+  for (const id of [...QID.keys()]) if (id.startsWith('pv:')) QID.delete(id);
+  L.forEach(q => QID.set(q.id, q));
+  ofMemo = { k, L }; return L;
+}
 const marcaDe = (p, n) => idx().resp.get(idResp(p, n)) || null;
 const itensDo = b => Array.from({ length: b.ate - b.de + 1 }, (_, i) => b.de + i);
 // situação de um bloco: quantos marcados, se já foi corrigido e a nota no padrão da banca (certo +1, errado -1)
@@ -196,7 +240,8 @@ const viewProva = {
       <section class="folha prova-capa"><dl class="resumo"><div><dt>Aplicação</dt><dd>${esc(p.aplic)}</dd></div><div><dt>Caderno</dt><dd>${esc(p.codigo)}</dd></div><div><dt>Itens do seu edital</dt><dd>${soma(B, b => b.ate - b.de + 1)} de ${p.gab.length}</dd></div></dl>
         <a class="kf-btn kf-pri bloco" href="${esc(p.caderno)}" target="_blank" rel="noopener noreferrer">Abrir o caderno oficial<span class="kf-so-leitor"> (abre em outra aba)</span></a>
         <a class="kf-btn kf-link" href="${esc(p.gabUrl)}" target="_blank" rel="noopener noreferrer">Ver o gabarito no site do Cebraspe<span class="kf-so-leitor"> (abre em outra aba)</span></a>
-        <p class="apoio">Leia o item no caderno, marque aqui e corrija o bloco. Errado desconta um ponto, como na prova.</p></section>
+        ${textoDe(p.id) ? `<button type="button" class="kf-btn kf-comecar bloco" data-act="abrir-cad" data-id="p:${esc(p.id)}" id="pv-caderno">${I.play}Resolver no caderno</button>` : ''}
+        <p class="apoio">${textoDe(p.id) ? 'As questões desta prova já estão no app. Aqui fica a folha de respostas, com a nota líquida por bloco.' : 'Leia o item no caderno, marque aqui e corrija o bloco. Errado desconta um ponto, como na prova.'}</p></section>
       ${B.map((b, k) => blocoHTML(p, b, k)).join('')}
       ${fora.length ? `<section aria-labelledby="pv-fora"><div class="sec-cab"><h2 class="sec-t" id="pv-fora">Fora do seu edital</h2></div><ul class="card lista-simples">${fora.map(b => `<li>Itens ${b.de}${b.ate > b.de ? ' a ' + b.ate : ''}: ${esc(b.tema)}</li>`).join('')}</ul></section>` : ''}`;
   },

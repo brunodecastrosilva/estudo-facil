@@ -3,6 +3,19 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.4.0 · 2026-11-16
+
+As questões oficiais do Cebraspe passam a ser resolvidas dentro do app.
+
+- **Provas viram cadernos:** em Cadernos, a seção Provas do Cebraspe traz um caderno por prova, só com os itens do seu edital.
+- **Como na prova:** cada item aparece com o comando e, quando há, o texto de apoio. Depois da resposta vêm o gabarito definitivo e o comentário do instrutor, quando existe.
+- **Por disciplina também:** o caderno da disciplina ganha as questões de prova, depois das questões do app.
+- **Erros viram flashcard**, e as questões oficiais entram nos atalhos e nos cadernos que você monta.
+- **Onde fica o texto:** só nos seus dados (e na sua sincronização criptografada). Não vai para o repositório do app.
+- **Como chega:** pela ponte. O Claude lê o PDF oficial no seu navegador, numa página do site da banca, e entrega ao app. Você não precisa fazer nada.
+- **Ficam de fora** os itens anulados e os que dependem de figura.
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou) e o do guia (desligado). Rodaram a verificação do padrão, os 23 testes do app, os 2 do leitor de prova e a varredura de acessibilidade.
+
 ## 1.3.0 · 2026-11-16
 
 O app fica mais enxuto e passa a girar em torno de **cadernos de questões**, com todas as questões escritas dentro dele.
