@@ -5,7 +5,7 @@ e no computador. O app gira em torno de **cadernos de questões** de certo ou er
 comentadas; transforma os erros em flashcards, traz as provas oficiais da banca com correção, treina a discursiva, lembra
 das revisões e mostra a evolução, com sequência de dias, missões e mais de cem medalhas.
 
-Versão **1.4.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.5.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno e todo voltado ao concurso
 > da ANPD. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
@@ -145,6 +145,10 @@ CORS). Por isso existe a ponte, operada pelo Claude no navegador do Bruno (Claud
 2. `enviarProvaAoApp(pdfjsLib, id, endereço do caderno, primeiro item, último item)` lê o PDF e confere se achou todos os itens;
 3. a página segue para o app com a prova no endereço (`#prova=...`, que não vai para servidor nenhum);
 4. o app só aceita se a página anterior for o site da banca e se os itens baterem com o gabarito cadastrado em `provas.js`; então guarda em `textos`. Com a sincronização ligada, os outros aparelhos recebem.
+
+**De um aparelho para outro:** com a sincronização ligada, o texto acompanha os dados. Sem ela, usa-se o **arquivo das
+provas** (`estudo-facil-provas.json`): em Cadernos → Provas do Cebraspe, "Baixar arquivo das provas" no aparelho que já
+tem as questões e "Abrir arquivo das provas" no outro. O arquivo fica com quem usa; não entra no repositório.
 
 Itens anulados e itens que dependem de figura (sem texto) ficam fora dos cadernos. A leitura é automática: confira no
 caderno oficial quando um item parecer truncado.

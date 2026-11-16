@@ -1,8 +1,9 @@
-/* Estudo Fácil 1.4 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.5 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { preparar, aparelho, githubFalso, semRolagemLateral, conferirTopo, conferirNavAjustes, guiasAjustes, GUIAS_COMUNS, TOKEN_TESTE, RAIZ, semCampoEmFoco } from '../comum/testes/ambiente.mjs';
 
@@ -226,6 +227,15 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   assert.deepEqual(await p.evaluate(() => { const C = cadernoDe('m:anpd-regul'); return [C.itens.length, C.itens.filter(q => q.of).length, erradasGerais().map(q => q.id), marcaDe(PROVA.get('anatel24-cb1'), 24).v]; }), [28, 6, ['pv:anatel24-cb1:24'], 'E']);
   await p.evaluate(() => { cadId = 'm:anpd-regul'; irPara('caderno'); }); assert.equal(await p.locator('#view .sub-t').last().innerText(), 'Prova do Cebraspe · ANATEL 2024');
   await p.evaluate(() => { provaId = 'anatel24-cb1'; irPara('prova'); }); assert.equal(await p.locator('#pv-caderno').count(), 1);
+  // o arquivo das provas leva o texto para outro aparelho: baixa aqui, abre lá (sem mexer no andamento de lá)
+  await nav(p, 'cadernos'); assert.equal(await p.locator('#pv-abrir').count(), 1, 'ainda faltam três provas neste aparelho');
+  const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#pv-baixar')]); assert.equal(dl.suggestedFilename(), 'estudo-facil-provas.json');
+  const arq = await dl.path(), conteudo = JSON.parse(readFileSync(arq, 'utf8')); assert.deepEqual([conteudo.app, conteudo.tipo, conteudo.provas.length, conteudo.provas[0].prova, Object.keys(conteudo.provas[0].itens).length], ['estudo-facil', 'provas', 1, 'anatel24-cb1', 50]);
+  const c = await abrir(), q = c.page; await estudar(q, { min: 10 }); await nav(q, 'cadernos'); assert.equal(await q.locator('#pv-baixar').count(), 0);
+  await q.setInputFiles('#pv-arquivo', arq); await q.locator('#view [data-act="abrir-cad"][data-id="p:anatel24-cb1"]').waitFor();
+  assert.deepEqual(await q.evaluate(() => [DB.textos.length, oficiais().length, DB.sessoes.length]), [1, 43, 1]); assert.match(await q.locator('.kf-toast').last().innerText(), /1 prova no app: 43 questões oficiais\./);
+  await q.setInputFiles('#pv-arquivo', { name: 'outro.json', mimeType: 'application/json', buffer: Buffer.from('{"app":"outro"}') }); await q.locator('.kf-toast', { hasText: 'não é o das provas' }).waitFor();
+  assert.equal(await q.evaluate(() => DB.textos.length), 1); assert.deepEqual(c.erros, []); await c.fechar();
   assert.deepEqual(a.erros, []);
   await a.fechar();
   // o que não confere com uma prova cadastrada é recusado: prova desconhecida e item faltando

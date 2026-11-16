@@ -51,7 +51,9 @@ const viewCadernos = {
         <ul class="card lista">${M.map(m => lin(cadernoDe('m:' + m.id), pontoCor(m))).join('')}</ul>
         ${sem.length ? `<p class="apoio">Ainda sem questões: ${esc(sem.map(m => m.nome).join(', '))}.</p>` : ''}</section>
       <section aria-labelledby="cd-p"><div class="sec-cab"><h2 class="sec-t" id="cd-p">Provas do Cebraspe</h2>${nOf ? `<span class="apoio">${plural(nOf, 'questão oficial', 'questões oficiais')}</span>` : ''}</div>
-        <ul class="card lista">${provas.map(([p, C]) => C ? lin(C, `<span class="lin-ic">${I.simulado}</span>`) : `<li><button type="button" class="lin" data-act="abrir-prova" data-id="${esc(p.id)}"><span class="lin-ic">${I.simulado}</span><span class="lin-tx"><b>${esc(p.org)} ${p.ano}</b><small>Folha de respostas · o caderno abre no site da banca</small></span>${I.seta}</button></li>`).join('')}</ul></section>
+        <ul class="card lista">${provas.map(([p, C]) => C ? lin(C, `<span class="lin-ic">${I.simulado}</span>`) : `<li><button type="button" class="lin" data-act="abrir-prova" data-id="${esc(p.id)}"><span class="lin-ic">${I.simulado}</span><span class="lin-tx"><b>${esc(p.org)} ${p.ano}</b><small>Folha de respostas · o caderno abre no site da banca</small></span>${I.seta}</button></li>`).join('')}</ul>
+        ${provas.some(x => !x[1]) ? `<p class="apoio">Para resolver aqui as provas que faltam, abra o arquivo das provas.</p><button type="button" class="kf-btn kf-sec bloco" data-act="provas-abrir" id="pv-abrir">Abrir arquivo das provas</button><input type="file" accept=".json,application/json" id="pv-arquivo" hidden aria-label="Arquivo das provas">` : ''}
+        ${DB.textos.length ? `<button type="button" class="kf-btn kf-link" data-act="provas-baixar" id="pv-baixar">Baixar arquivo das provas</button>` : ''}</section>
       <section aria-labelledby="cd-a"><div class="sec-cab"><h2 class="sec-t" id="cd-a">Atalhos</h2></div><ul class="card lista">
         ${atalho('cad-erradas', I.x, 'Só as que errei', er ? 'As questões que você errou por último, em todos os cadernos' : 'Nenhuma no momento', er)}
         ${atalho('cad-novas', I.estrela, 'Nunca resolvidas', nv ? 'Dez questões que você ainda não viu' : 'Você já viu todas', nv)}
@@ -116,4 +118,6 @@ const ACOES_CAD = {
   'cad-erradas': () => { const L = erradasGerais(); if (!L.length) { avisar('Você não tem questões erradas no momento.'); return; } treinoAbrir({ lista: L.slice(0, 20) }); },
   'cad-novas': () => { const L = novasGerais(); if (!L.length) { avisar('Você já resolveu todas as questões do app.'); return; } treinoAbrir({ lista: L.slice(0, 10) }); },
   'novo-cad': () => novoCaderno(),
+  'provas-abrir': () => { const el = $('#pv-arquivo'); el && el.click(); },
+  'provas-baixar': () => baixarProvas(),
 };

@@ -177,13 +177,38 @@ function receberProva() {
   if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/^https:\/\/cdn\.cebraspe\.org\.br\//.test(document.referrer)) return;
   try {
     const bin = atob(h[1].replace(/-/g, '+').replace(/_/g, '/')), o = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
-    const p = PROVA.get(o.prova); if (!p || o.v !== 1 || !o.itens) throw 0;
-    const itens = {}; for (let k = 0; k < p.gab.length; k++) { const n = p.de + k, s = o.itens[n]; if (typeof s !== 'string' || s.length > 4000) throw 0; itens[n] = s; }
-    const grupos = (Array.isArray(o.grupos) ? o.grupos : []).filter(g => g && Number.isInteger(g.de)).slice(0, 200).map(g => ({ de: g.de, cmd: String(g.cmd || '').slice(0, 2000), apoio: String(g.apoio || '').slice(0, 12000) })).sort((a, b) => a.de - b.de);
-    DB.textos = DB.textos.filter(x => x.id !== p.id); DB.textos.push({ id: p.id, itens, grupos, em: agora() }); salvar({ quieto: true });
+    const p = o && o.v === 1 ? guardarProva(o) : null; if (!p) throw 0; salvar({ quieto: true });
     setTimeout(() => avisar(`Prova no app: ${p.org} ${p.ano}.`), 700);
   } catch { setTimeout(() => avisar('Não deu para trazer a prova.'), 700); }
 }
+// confere uma prova que vem de fora (ponte ou arquivo): tem de ser uma prova cadastrada, com todos os itens do gabarito
+function guardarProva(o) {
+  const p = o && typeof o === 'object' ? PROVA.get(o.prova) : null; if (!p || !o.itens || typeof o.itens !== 'object') return null;
+  const itens = {}; for (let k = 0; k < p.gab.length; k++) { const n = p.de + k, s = o.itens[n]; if (typeof s !== 'string' || s.length > 4000) return null; itens[n] = s; }
+  const grupos = (Array.isArray(o.grupos) ? o.grupos : []).filter(g => g && Number.isInteger(g.de)).slice(0, 200).map(g => ({ de: g.de, cmd: String(g.cmd || '').slice(0, 2000), apoio: String(g.apoio || '').slice(0, 12000) })).sort((a, b) => a.de - b.de);
+  DB.textos = DB.textos.filter(x => x.id !== p.id); DB.textos.push({ id: p.id, itens, grupos, em: agora() }); return p;
+}
+/* o arquivo das provas: leva o texto de um aparelho para outro sem passar pelo repositório nem pela sincronização.
+   Baixa-se no aparelho que já tem as provas e abre-se no outro, em Cadernos. */
+const ARQ_PROVAS = 'estudo-facil-provas.json';
+function baixarProvas() {
+  if (!DB.textos.length) { avisar('Ainda não há provas neste aparelho.'); return; }
+  const dados = { app: 'estudo-facil', tipo: 'provas', v: 1, provas: DB.textos.map(t => ({ prova: t.id, itens: t.itens, grupos: t.grupos })) };
+  try {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(dados)], { type: 'application/json' })), a = document.createElement('a');
+    a.href = url; a.download = ARQ_PROVAS; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+    avisar('Arquivo baixado. Abra-o no app do outro aparelho, em Cadernos.');
+  } catch { avisar('Não foi possível baixar o arquivo neste navegador.'); }
+}
+async function abrirArquivoDeProvas(arq) {
+  try {
+    if (!arq || arq.size > 3e6) throw 0; const o = JSON.parse(await arq.text());
+    if (!o || o.app !== 'estudo-facil' || o.tipo !== 'provas' || !Array.isArray(o.provas)) throw 0;
+    const ok = o.provas.slice(0, 60).map(guardarProva).filter(Boolean); if (!ok.length) throw 0;
+    salvar(); avisar(`${plural(ok.length, 'prova no app', 'provas no app')}: ${plural(oficiais().length, 'questão oficial', 'questões oficiais')}.`);
+  } catch { avisar('Este arquivo não é o das provas do Estudo Fácil.'); }
+}
+document.addEventListener('change', e => { const el = e.target; if (el && el.id === 'pv-arquivo') { abrirArquivoDeProvas(el.files && el.files[0]); el.value = ''; } });
 // as questões oficiais que já têm texto no aparelho, só dos blocos do edital; anuladas e itens com figura ficam de fora
 let ofMemo = { k: null, L: [] };
 function oficiais() {

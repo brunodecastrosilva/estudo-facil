@@ -3,6 +3,13 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.5.0 · 2026-11-16
+
+- **Arquivo das provas:** leva as questões oficiais de um aparelho para outro, sem sincronização e sem passar pelo repositório.
+- **Como usar:** em Cadernos → Provas do Cebraspe, toque em "Baixar arquivo das provas" no aparelho que já tem as questões. No outro, toque em "Abrir arquivo das provas" e escolha o arquivo.
+- **Conferência:** o app só aceita prova cadastrada, com todos os itens do gabarito. O seu andamento não muda.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os 23 testes do app, os 2 do leitor de prova e a varredura de acessibilidade.
+
 ## 1.4.0 · 2026-11-16
 
 As questões oficiais do Cebraspe passam a ser resolvidas dentro do app.
