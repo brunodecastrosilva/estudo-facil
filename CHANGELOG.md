@@ -3,6 +3,19 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.12.0 · 2026-11-16
+
+- **Expansão massiva das provas do Cebraspe:** levantamento automático de 623 cadernos de 57 concursos (2023 a 2026). Entraram 234 cadernos de 46 concursos, com cerca de 4,7 mil questões oficiais de certo ou errado nas disciplinas do edital.
+- **Como cada caderno entra:** o gabarito definitivo é lido por dois caminhos, que têm de concordar. Os itens são separados por disciplina pelas palavras do comando. Itens repetidos entre cadernos entram uma vez só.
+- **O que ficou de fora:** provas de múltipla escolha, cadernos sem gabarito definitivo próprio, cadernos com menos de 8 itens do edital e itens de assuntos fora do edital.
+- **Cadastro junto do texto:** gabarito e blocos de cada prova em lote viajam com o texto (ponte e arquivo das provas) e são conferidos pelo app antes de entrar.
+- **Armazenamento:** o texto das provas passou para o IndexedDB do aparelho. Só fica guardado o texto dos itens do edital.
+- **Cadernos:** as provas do Cebraspe foram para o fim da tela. Provas em lote que não estão no aparelho não aparecem na lista.
+- **Atenção:** a separação por disciplina e assunto é automática e pode errar. Os itens das provas novas ainda não têm comentário.
+- **Ferramenta nova:** `instrutor/levantamento.js` (fora do app).
+- **Correção:** o `package-lock.json` trazia a versão de uma dependência trocada pela do app.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os testes do app, a acessibilidade e o leitor de provas.
+
 ## 1.11.0 · 2026-11-16
 
 - **Estudar, opção Lei seca:** inicia a sessão e abre a lei do assunto, já no artigo certo (por exemplo, direitos do titular abre a LGPD no art. 17).

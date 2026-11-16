@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.11.0';
+const VERSAO = '1.12.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -407,17 +407,24 @@ function salvar(opts = {}) {
   VER++;
   if (!semSalvar) {
     const mudou = carimbarTudo();
-    if (!LS.set('db', DB)) KitFacil.avisar('O armazenamento do aparelho está cheio. Baixe uma cópia de segurança nos Ajustes.');
+    const comTx = typeof TX !== 'undefined' && TX.ok; // o texto das provas vai para o IndexedDB (provas.js)
+    if (comTx) txGuardar();
+    if (!LS.set('db', comTx ? { ...DB, textos: [] } : DB)) KitFacil.avisar('O armazenamento do aparelho está cheio. Baixe uma cópia de segurança nos Ajustes.');
     if (mudou && SY && SY.ligada()) SY.agendar(opts.syncMs);
   }
   if (!opts.quieto) agendarPintura();
 }
 function agendarPintura() { if (pintarPendente) return; pintarPendente = true; requestAnimationFrame(() => { pintarPendente = false; if (typeof render === 'function') render(); }); }
 // outra aba (ou o app instalado aberto junto com o navegador) mudou os dados
-window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
+window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { if (typeof TX !== 'undefined' && TX.ok) b.textos = DB.textos; DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.11.0', itens: [
+const NOVIDADES = [{ versao: '1.12.0', itens: [
+  'Expansão das provas do Cebraspe: mais de 230 cadernos e 4,7 mil questões oficiais, de 46 concursos.',
+  'Cada questão entra na disciplina e no assunto do seu edital, automaticamente.',
+  'O texto das provas agora cabe no aparelho sem lotar o armazenamento.',
+  'Em Cadernos, as provas ficam no fim da tela; as disciplinas vêm primeiro.',
+] }, { versao: '1.11.0', itens: [
   'Estudar ficou esperto: Questões abre o caderno no assunto, e Lei seca abre a lei no artigo do assunto, já com a sessão contando.',
   'Só entra no histórico o que é feito em sessão iniciada. Questão aberta pelo número é consulta: guarda a resposta, sem sessão.',
   'Teoria continua no cronômetro até as apostilas chegarem.',

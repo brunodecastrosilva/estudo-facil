@@ -204,6 +204,23 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   const fechaMedalhas = async () => { for (let i = 0; i < 4; i++) { const m = p.locator('#mn-ok'); if (await m.count()) { await m.click(); await p.waitForTimeout(700); } else await p.waitForTimeout(250); } };
   // 46 itens do edital, menos 3 anulados; o endereço fica limpo
   assert.deepEqual(await p.evaluate(() => [DB.textos.length, location.hash, oficiais().length, oficiais().filter(q => q.c).length > 5, QID.has('pv:anatel24-cb1:1'), QID.has('pv:anatel24-cb1:19'), QID.has('pv:anatel24-cb1:30')]), [1, '', 43, true, true, false, false]);
+  // o texto das provas mora no IndexedDB: o localStorage fica sem ele, o que está fora do edital não é guardado, e tudo volta ao reabrir
+  await p.waitForFunction(() => TX.ok && TX.chave === txChave()); await p.waitForTimeout(300);
+  assert.deepEqual(await p.evaluate(() => [JSON.parse(localStorage.getItem('estudofacil.db')).textos.length, DB.textos[0].itens[30], DB.textos[0].itens[1].length > 5]), [0, '', true]);
+  await p.reload(); await p.waitForFunction(() => typeof TX !== 'undefined' && TX.ok && DB.textos.length === 1);
+  assert.equal(await p.evaluate(() => oficiais().length), 43);
+  // prova em lote: o cadastro (gabarito e blocos) vem junto com o texto, é conferido e fica guardado com ele
+  assert.deepEqual(await p.evaluate(() => {
+    const itens = {}; for (let n = 1; n <= 20; n++) itens[n] = 'Item inventado número ' + n + ' sobre a Lei n.º 9.784/1999 e o processo administrativo.';
+    const meta = { org: 'TESTE', ano: 2025, nome: 'Cargo inventado', cad: 'TESTE_25/arquivos/001_TESTE_001_01.pdf', gab: 'TESTE_25/arquivos/GAB_DEFINITIVO_001_TESTE_001_01.pdf', de: 1, g: 'CECECECECEXECECECECE', bl: [[1, 10, 'da'], [11, 14, 0], [15, 20, 'dc']] };
+    const ruim = [{ ...meta, g: 'ABCDEABCDEABCDEABCDE' }, { ...meta, bl: [[1, 10, 'xx'], [11, 20, 0]] }, { ...meta, bl: [[2, 20, 'da']] }, { ...meta, cad: 'https://outro.site/x.pdf' }].map((m, i) => !!guardarProva({ prova: 'ruim-' + i, meta: m, itens, grupos: [] }));
+    const p = guardarProva({ prova: 'teste25-001', meta, itens, grupos: [{ de: 1, cmd: 'Julgue os itens a seguir.', apoio: '' }] }); salvar({ quieto: true });
+    const L = oficiais().filter(q => q.of.p === 'teste25-001');
+    return [ruim, !!p, PROVAS.length, L.length, L[0].m, L[0].t, L[15].m, DB.textos.find(x => x.id === 'teste25-001').itens[12], L[0].f];
+  }), [[false, false, false, false], true, 8, 16, 'anpd-da', 'anpd-da-05', 'anpd-dc', '', 'Cebraspe · TESTE 2025 · item 1']);
+  await p.waitForFunction(() => TX.chave === txChave()); await p.waitForTimeout(300); await p.reload(); await p.waitForFunction(() => typeof TX !== 'undefined' && TX.ok && DB.textos.length === 2);
+  assert.deepEqual(await p.evaluate(() => [PROVA.has('teste25-001'), oficiais().length]), [true, 59]);
+  await p.evaluate(() => { DB.textos = DB.textos.filter(x => x.id !== 'teste25-001'); salvar({ quieto: true }); }); await p.waitForFunction(() => TX.chave === txChave()); await p.waitForTimeout(300); await p.reload(); await p.waitForFunction(() => typeof TX !== 'undefined' && TX.ok && DB.textos.length === 1);
   await nav(p, 'cadernos');
   assert.match(await p.locator('#view [aria-labelledby="cd-p"]').innerText(), /43 questões oficiais[\s\S]*ANATEL 2024[\s\S]*43 questões[\s\S]*ANAC 2024[\s\S]*Folha de respostas/);
   assert.equal(await p.locator('#view [aria-labelledby="cd-p"] [data-act="abrir-prova"]').count(), 6, 'as provas sem texto no aparelho abrem a folha de respostas');

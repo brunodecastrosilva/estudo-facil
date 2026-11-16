@@ -116,6 +116,20 @@ desconfiança, mas não decidem sozinhas: ANATEL 50 traz "sempre" e está certo,
   Civil, crimes cibernéticos, LAI, concorrência e 20 itens de controle da administração; o cargo 1 cobrou 23 itens de
   aprendizado de máquina e IA.
 
+### Levantamento em lote (1.12.0, 16/11/2026)
+
+- Ferramenta: `instrutor/levantamento.js`, numa página de `cdn.cebraspe.org.br`, com o pdf.js e o leitor de prova.
+- Lista de arquivos: as páginas dos concursos, abertas em quadros na página de concursos encerrados; só cadernos
+  com gabarito definitivo de mesmo nome.
+- Resultado: de 623 cadernos de 57 concursos, entraram 234 (46 concursos), com cerca de 4,7 mil itens do edital:
+  Direito Administrativo e Tecnologia (1,2 mil cada), Português (960), Constitucional (570), Regulação (290),
+  Ética (170), Inglês (160), LGPD (160), Direito digital (26) e Economia (15).
+- Ficaram de fora: 80 cadernos de múltipla escolha, 290 com menos de 8 itens novos do edital (quase sempre os
+  básicos repetidos de outro cargo), 10 com gabarito ou itens que não fecharam e 2 PDFs que travam o leitor (CTI).
+- O cadastro dessas provas não fica no repositório: viaja com o texto e é conferido pelo app (`registrarProva`).
+- A separação por disciplina é pelas palavras do comando (`LV_REGRAS`); o assunto, pelas `REGRAS_ASSUNTO` do app.
+  É automático e pode errar; os itens não têm comentário.
+
 ## 7. O que falta levantar
 
 - ANTT 2024: cargos 3 e 4 e as provas do curso de formação (arquivos listados na página do concurso).

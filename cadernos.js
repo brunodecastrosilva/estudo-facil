@@ -39,7 +39,7 @@ const resumoCad = E => E.feitas ? `${E.feitas} de ${plural(E.n, 'questão resolv
 const viewCadernos = {
   html() {
     const and = cadernoEmAndamento(), M = materiasComBanco(), sem = DB.materias.filter(m => topicosDe(m.id).length && !questoesDaMateria(m.id).length);
-    const provas = PROVAS.map(p => [p, cadernoDe('p:' + p.id)]), nOf = oficiais().length;
+    const faltam = PROVAS.filter(p => p.lote && !textoDe(p.id)).length, provas = PROVAS.filter(p => !p.lote || textoDe(p.id)).map(p => [p, cadernoDe('p:' + p.id)]), nOf = oficiais().length;
     const meus = DB.cadernos.filter(r => r.itens).map(r => cadernoDe(r.id)).filter(Boolean), er = erradasGerais().length, nv = novasGerais().length, D = desafioDoDia();
     const lin = (C, ic) => { const E = cadernoEstado(C); return `<li><button type="button" class="lin" data-act="abrir-cad" data-id="${esc(C.id)}">${ic}<span class="lin-tx"><b>${esc(C.nome)}</b><small>${resumoCad(E)}</small>${E.feitas ? barraHTML(E.feitas / E.n * 100, `${E.feitas} de ${E.n} resolvidas`, 'fina') : ''}</span>${I.seta}</button></li>`; };
     const atalho = (act, ic, t, sub, n) => `<li><button type="button" class="lin" data-act="${act}"><span class="lin-ic">${ic}</span><span class="lin-tx"><b>${t}</b><small>${sub}</small></span>${n ? `<span class="etiqueta">${n}</span>` : ''}${I.seta}</button></li>`;
@@ -50,10 +50,6 @@ const viewCadernos = {
       <section aria-labelledby="cd-d"><div class="sec-cab"><h2 class="sec-t" id="cd-d">Por disciplina</h2><span class="apoio">${plural(todasAsQuestoes().length, 'questão', 'questões')}</span></div>
         <ul class="card lista">${M.map(m => lin(cadernoDe('m:' + m.id), pontoCor(m))).join('')}</ul>
         ${sem.length ? `<p class="apoio">Ainda sem questões: ${esc(sem.map(m => m.nome).join(', '))}.</p>` : ''}</section>
-      <section aria-labelledby="cd-p"><div class="sec-cab"><h2 class="sec-t" id="cd-p">Provas do Cebraspe</h2>${nOf ? `<span class="apoio">${plural(nOf, 'questão oficial', 'questões oficiais')}</span>` : ''}</div>
-        <ul class="card lista">${provas.map(([p, C]) => C ? lin(C, `<span class="lin-ic">${I.simulado}</span>`) : `<li><button type="button" class="lin" data-act="abrir-prova" data-id="${esc(p.id)}"><span class="lin-ic">${I.simulado}</span><span class="lin-tx"><b>${esc(p.org)} ${p.ano}</b><small>Folha de respostas · o caderno abre no site da banca</small></span>${I.seta}</button></li>`).join('')}</ul>
-        ${provas.some(x => !x[1]) ? `<p class="apoio">Para resolver aqui as provas que faltam, abra o arquivo das provas.</p><button type="button" class="kf-btn kf-sec bloco" data-act="provas-abrir" id="pv-abrir">Abrir arquivo das provas</button><input type="file" accept=".json,application/json" id="pv-arquivo" hidden aria-label="Arquivo das provas">` : ''}
-        ${DB.textos.length ? `<button type="button" class="kf-btn kf-link" data-act="provas-baixar" id="pv-baixar">Baixar arquivo das provas</button>` : ''}</section>
       <section aria-labelledby="cd-a"><div class="sec-cab"><h2 class="sec-t" id="cd-a">Atalhos</h2></div><ul class="card lista">
         ${atalho('cad-erradas', I.x, 'Só as que errei', er ? 'As questões que você errou por último, em todos os cadernos' : 'Nenhuma no momento', er)}
         ${atalho('cad-novas', I.estrela, 'Nunca resolvidas', nv ? 'Dez questões que você ainda não viu' : 'Você já viu todas', nv)}
@@ -61,6 +57,10 @@ const viewCadernos = {
       <section aria-labelledby="cd-m"><div class="sec-cab"><h2 class="sec-t" id="cd-m">Meus cadernos</h2></div>
         ${meus.length ? `<ul class="card lista">${meus.map(C => lin(C, `<span class="lin-ic">${I.questoes}</span>`)).join('')}</ul>` : '<p class="apoio">Monte um caderno com as disciplinas e o filtro que quiser.</p>'}
         ${KitFacil.ui.adicionar({ rotulo: 'Novo caderno', attrs: 'data-act="novo-cad" id="cad-novo"' })}</section>
+      <section aria-labelledby="cd-p"><div class="sec-cab"><h2 class="sec-t" id="cd-p">Provas do Cebraspe</h2>${nOf ? `<span class="apoio">${plural(nOf, 'questão oficial', 'questões oficiais')}</span>` : ''}</div>
+        <ul class="card lista">${provas.map(([p, C]) => C ? lin(C, `<span class="lin-ic">${I.simulado}</span>`) : `<li><button type="button" class="lin" data-act="abrir-prova" data-id="${esc(p.id)}"><span class="lin-ic">${I.simulado}</span><span class="lin-tx"><b>${esc(p.org)} ${p.ano}</b><small>Folha de respostas · o caderno abre no site da banca</small></span>${I.seta}</button></li>`).join('')}</ul>
+        ${provas.some(x => !x[1]) || faltam ? `<p class="apoio">${faltam ? `Faltam ${plural(faltam, 'prova', 'provas')} neste aparelho. ` : ''}Para resolver aqui as provas que faltam, abra o arquivo das provas.</p><button type="button" class="kf-btn kf-sec bloco" data-act="provas-abrir" id="pv-abrir">Abrir arquivo das provas</button><input type="file" accept=".json,application/json" id="pv-arquivo" hidden aria-label="Arquivo das provas">` : ''}
+        ${DB.textos.length ? `<button type="button" class="kf-btn kf-link" data-act="provas-baixar" id="pv-baixar">Baixar arquivo das provas</button>` : ''}</section>
       <button type="button" class="kf-btn kf-link" data-kf-ir="provas">Ver gabaritos e folhas de respostas</button>`;
   },
 };

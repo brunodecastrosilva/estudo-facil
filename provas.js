@@ -201,6 +201,24 @@ const PROVAS = [
     ],
     itens: {} },
 ];
+/* Provas trazidas em lote pelo levantamento automático (instrutor/levantamento.js): o cadastro (gabarito e blocos por
+   disciplina) viaja junto com o texto, pela ponte ou pelo arquivo das provas, e fica guardado com ele no aparelho.
+   Tudo é conferido antes de entrar: letras do gabarito, intervalos, disciplinas conhecidas e endereços do site da banca. */
+const TEMA_LOTE = { lp: 'Língua Portuguesa', ing: 'Língua Inglesa', lgpd: 'LGPD', regul: 'Regulação e agências', da: 'Direito Administrativo', dc: 'Direito Constitucional', etica: 'Ética e acesso à informação', dig: 'Direito digital', econ: 'Economia e concorrência', ti: 'Tecnologia e segurança da informação' };
+function registrarProva(id, m) {
+  if (PROVA.has(id)) return PROVA.get(id);
+  const txt = (v, n) => typeof v === 'string' && v.length > 0 && v.length <= n, arq = v => txt(v, 200) && /^[\w.\-\/]+\.pdf$/i.test(v) && !v.includes('..');
+  if (!/^[a-z0-9-]{3,70}$/.test(String(id)) || !m || typeof m !== 'object' || !txt(m.org, 40) || !txt(m.nome, 200) || !arq(m.cad) || !arq(m.gab)) return null;
+  if (!Number.isInteger(m.ano) || m.ano < 2000 || m.ano > 2100 || !Number.isInteger(m.de) || m.de < 1 || m.de > 400 || !/^[CEX]{20,300}$/.test(String(m.g)) || !Array.isArray(m.bl) || !m.bl.length || m.bl.length > 300) return null;
+  const ate = m.de + m.g.length - 1; let ant = m.de - 1;
+  for (const b of m.bl) { if (!Array.isArray(b) || !Number.isInteger(b[0]) || !Number.isInteger(b[1]) || b[0] !== ant + 1 || b[1] < b[0] || b[1] > ate || (b[2] !== 0 && !TEMA_LOTE[b[2]])) return null; ant = b[1]; }
+  const p = { id, org: m.org, ano: m.ano, aplic: String(m.ano), codigo: m.cad.split('/').pop().replace(/\.pdf$/i, ''), nome: m.nome, de: m.de, caderno: CDN + m.cad, gabUrl: CDN + m.gab, gab: m.g, lote: 1,
+    meta: { org: m.org, ano: m.ano, nome: m.nome, cad: m.cad, gab: m.gab, de: m.de, g: m.g, bl: m.bl.map(b => [b[0], b[1], b[2]]) },
+    blocos: m.bl.map(b => ({ de: b[0], ate: b[1], m: b[2] ? 'anpd-' + b[2] : null, tema: b[2] ? TEMA_LOTE[b[2]] : 'Outros assuntos' })), itens: {} };
+  PROVAS.push(p); PROVA.set(id, p); return p;
+}
+// as provas em lote que já estão guardadas no aparelho entram no cadastro
+const provasGuardadas = () => { for (const x of DB.textos) if (x && x.meta && !PROVA.has(x.id)) registrarProva(x.id, x.meta); };
 const PROVA = new Map(PROVAS.map(p => [p.id, p]));
 /* o que estas provas ensinaram sobre o jeito de a banca escrever itens; a versão completa fica em instrutor/caderno-da-banca.md */
 const ESTILO_BANCA = [
@@ -231,23 +249,49 @@ function receberProva() {
   if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/^https:\/\/cdn\.cebraspe\.org\.br\//.test(document.referrer)) return;
   try {
     const bin = atob(h[1].replace(/-/g, '+').replace(/_/g, '/')), o = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
-    const p = o && o.v === 1 ? guardarProva(o) : null; if (!p) throw 0; salvar({ quieto: true });
-    setTimeout(() => avisar(`Prova no app: ${p.org} ${p.ano}.`), 700);
+    // a ponte traz uma prova ou um lote; quem grava é txIniciar, logo depois, já no lugar certo
+    const L = o && o.v === 1 ? (Array.isArray(o.provas) ? o.provas.slice(0, 400) : [o]).map(guardarProva).filter(Boolean) : []; if (!L.length) throw 0;
+    setTimeout(() => avisar(L.length > 1 ? `${L.length} provas no app.` : `Prova no app: ${L[0].org} ${L[0].ano}.`), 700);
   } catch { setTimeout(() => avisar('Não deu para trazer a prova.'), 700); }
 }
 // confere uma prova que vem de fora (ponte ou arquivo): tem de ser uma prova cadastrada, com todos os itens do gabarito
 function guardarProva(o) {
-  const p = o && typeof o === 'object' ? PROVA.get(o.prova) : null; if (!p || !o.itens || typeof o.itens !== 'object') return null;
-  const itens = {}; for (let k = 0; k < p.gab.length; k++) { const n = p.de + k, s = o.itens[n]; if (typeof s !== 'string' || s.length > 4000) return null; itens[n] = s; }
-  const grupos = (Array.isArray(o.grupos) ? o.grupos : []).filter(g => g && Number.isInteger(g.de)).slice(0, 200).map(g => ({ de: g.de, cmd: String(g.cmd || '').slice(0, 2000), apoio: String(g.apoio || '').slice(0, 12000) })).sort((a, b) => a.de - b.de);
-  DB.textos = DB.textos.filter(x => x.id !== p.id); DB.textos.push({ id: p.id, itens, grupos, em: agora() }); return p;
+  const p = o && typeof o === 'object' ? PROVA.get(o.prova) || (o.meta ? registrarProva(o.prova, o.meta) : null) : null; if (!p || !o.itens || typeof o.itens !== 'object') return null;
+  // só fica o texto dos blocos do edital (e os comandos e textos de apoio que servem a eles): o resto não é usado
+  const B = blocosDoEdital(p), dentro = n => !B.length || B.some(b => n >= b.de && n <= b.ate);
+  const itens = {}; for (let k = 0; k < p.gab.length; k++) { const n = p.de + k, s = o.itens[n]; if (typeof s !== 'string' || s.length > 4000) return null; itens[n] = dentro(n) ? s : ''; }
+  let grupos = (Array.isArray(o.grupos) ? o.grupos : []).filter(g => g && Number.isInteger(g.de)).slice(0, 200).map(g => ({ de: g.de, cmd: String(g.cmd || '').slice(0, 2000), apoio: String(g.apoio || '').slice(0, 12000) })).sort((a, b) => a.de - b.de);
+  const usa = new Set(); for (let k = 0; k < p.gab.length; k++) { const n = p.de + k; if (!dentro(n)) continue; let gi = -1; grupos.forEach((g, i) => { if (g.de <= n) gi = i; }); if (gi >= 0) usa.add(gi); }
+  grupos = grupos.filter((g, i) => usa.has(i) || dentro(g.de));
+  DB.textos = DB.textos.filter(x => x.id !== p.id); DB.textos.push(p.meta ? { id: p.id, itens, grupos, em: agora(), meta: p.meta } : { id: p.id, itens, grupos, em: agora() }); return p;
 }
+/* O texto das provas mora no IndexedDB do aparelho: o localStorage é pequeno para centenas de provas. Enquanto o
+   IndexedDB não responde (ou onde ele não existe), tudo segue como antes, no localStorage. */
+const TX = { ok: false, chave: null, bd: null };
+const txChave = () => DB.textos.map(x => x.id + ':' + x.em).join();
+const txBanco = () => new Promise((ok, no) => { try { const r = indexedDB.open(KEY + 'provas', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); } catch (e) { no(e); } });
+const txOp = (modo, f) => new Promise((ok, no) => { const t = TX.bd.transaction('kv', modo), r = f(t.objectStore('kv')); t.oncomplete = () => ok(r && r.result); t.onerror = t.onabort = () => no(t.error); });
+async function txIniciar() {
+  let veio = 0;
+  try {
+    TX.bd = await txBanco(); const g = await txOp('readonly', s => s.get('textos')), tem = new Set(DB.textos.map(x => x.id));
+    for (const x of Array.isArray(g) ? g : []) if (x && !tem.has(x.id) && (PROVA.has(x.id) || (x.meta && registrarProva(x.id, x.meta)))) { DB.textos.push(x); veio++; }
+    TX.ok = true;
+  } catch {}
+  salvar({ quieto: true }); if (veio) { oficiais(); render(); }
+  return veio;
+}
+function txGuardar() {
+  if (!TX.ok || semSalvar) return; const k = txChave(); if (k === TX.chave) return; TX.chave = k;
+  txOp('readwrite', s => s.put(DB.textos, 'textos')).catch(() => { TX.ok = false; TX.chave = null; salvar({ quieto: true }); });
+}
+function txApagar() { try { TX.ok = false; if (TX.bd) TX.bd.close(); indexedDB.deleteDatabase(KEY + 'provas'); } catch {} }
 /* o arquivo das provas: leva o texto de um aparelho para outro sem passar pelo repositório nem pela sincronização.
    Baixa-se no aparelho que já tem as provas e abre-se no outro, em Cadernos. */
 const ARQ_PROVAS = 'estudo-facil-provas.json';
 function baixarProvas() {
   if (!DB.textos.length) { avisar('Ainda não há provas neste aparelho.'); return; }
-  const dados = { app: 'estudo-facil', tipo: 'provas', v: 1, provas: DB.textos.map(t => ({ prova: t.id, itens: t.itens, grupos: t.grupos })) };
+  const dados = { app: 'estudo-facil', tipo: 'provas', v: 1, provas: DB.textos.map(t => t.meta ? { prova: t.id, meta: t.meta, itens: t.itens, grupos: t.grupos } : { prova: t.id, itens: t.itens, grupos: t.grupos }) };
   try {
     const url = URL.createObjectURL(new Blob([JSON.stringify(dados)], { type: 'application/json' })), a = document.createElement('a');
     a.href = url; a.download = ARQ_PROVAS; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
@@ -256,9 +300,9 @@ function baixarProvas() {
 }
 async function abrirArquivoDeProvas(arq) {
   try {
-    if (!arq || arq.size > 3e6) throw 0; const o = JSON.parse(await arq.text());
+    if (!arq || arq.size > 8e7) throw 0; const o = JSON.parse(await arq.text());
     if (!o || o.app !== 'estudo-facil' || o.tipo !== 'provas' || !Array.isArray(o.provas)) throw 0;
-    const ok = o.provas.slice(0, 60).map(guardarProva).filter(Boolean); if (!ok.length) throw 0;
+    const ok = o.provas.slice(0, 2000).map(guardarProva).filter(Boolean); if (!ok.length) throw 0;
     salvar(); avisar(`${plural(ok.length, 'prova no app', 'provas no app')}: ${plural(oficiais().length, 'questão oficial', 'questões oficiais')}.`);
   } catch { avisar('Este arquivo não é o das provas do Estudo Fácil.'); }
 }
@@ -332,7 +376,7 @@ let provaId = null, provaIni = 0;
 const viewProvas = {
   html() {
     return `${voltaMais()}${cab('Provas do Cebraspe', 'Cadernos e gabaritos oficiais. Aqui ficam só os itens do seu edital.')}
-      <ul class="card lista">${PROVAS.map(p => { const r = provaResumo(p), tot = r.ac + r.er;
+      <ul class="card lista">${PROVAS.filter(p => !p.lote || textoDe(p.id)).map(p => { const r = provaResumo(p), tot = r.ac + r.er;
         return `<li><button type="button" class="lin" data-act="abrir-prova" data-id="${p.id}"><span class="lin-ic">${I.simulado}</span><span class="lin-tx"><b>${esc(p.org)} ${p.ano}</b><small>${esc(p.nome)}</small><small>${r.itens} itens do seu edital · ${r.feitos ? `${r.feitos} de ${plural(r.blocos, 'bloco corrigido', 'blocos corrigidos')}${tot ? ` · ${pct(r.ac, tot)}% de acertos` : ''}` : 'ainda não resolvida'}</small></span>${I.seta}</button></li>`; }).join('')}</ul>
       <section aria-labelledby="pv-est"><div class="sec-cab"><h2 class="sec-t" id="pv-est">Como a banca escreve</h2></div>
         <div class="card apoio-secoes">${ESTILO_BANCA.map(([t, d]) => `<details data-kf-secao="grupo"><summary><b>${esc(t)}</b></summary><p>${esc(d)}</p></details>`).join('')}</div>

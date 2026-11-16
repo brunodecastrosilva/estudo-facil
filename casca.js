@@ -331,7 +331,8 @@ const GUIA = [
 KitFacil.campo.ligar();
 $('#topo').outerHTML = KitFacil.topo.html({ principal: true });
 // link de "Conectar outro aparelho" (a chave vem depois do #, que não sai do aparelho)
-receberProva(); oficiais(); // a prova que chega pela ponte entra antes da primeira pintura
+provasGuardadas(); receberProva(); oficiais(); // a prova que chega pela ponte entra antes da primeira pintura
+txIniciar(); // o texto das provas guardado no IndexedDB chega logo depois
 // uma vez por aparelho: a meta de questões passa a 50 e os cadernos recebem as respostas que já existiam
 if (!LS.get('integrado', 0)) {
   if (cfg().metaQ === 15) cfg().metaQ = 50;
