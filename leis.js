@@ -30,7 +30,30 @@ const LEIS = [
 ].map(([id, nome, sub, t]) => ({ id, nome, sub, t }));
 const LEI = new Map(LEIS.map(l => [l.id, l]));
 const LEI_TXT = {};          // textos já buscados nesta visita
-let leiId = null;
+let leiId = null, leiAlvo = null;
+/* Qual lei abre para cada assunto, e em que artigo. O que não está na tabela usa a lei ligada ao assunto em LEIS;
+   nos assuntos da LGPD, o artigo sai do próprio nome do assunto ("arts. 17 a 22"). */
+const LEI_DO_ASSUNTO = {
+  'regul-04': ['l13848'], 'regul-05': ['l9986'], 'regul-06': ['d10411'], 'regul-07': ['l13874'], 'regul-08': ['l13848', '9'], 'regul-09': ['lc182', '11'], 'regul-10': ['l13848', '14'], 'regul-11': ['l13848', '25'],
+  'da-01': ['cf', '37'], 'da-05': ['l9784'], 'da-06': ['l14133'], 'da-07': ['l8112'], 'da-08': ['cf', '37'], 'da-09': ['cf', '70'], 'da-10': ['l8429'], 'da-11': ['l12846'], 'da-12': ['l14129'],
+  'dc-01': ['cf', '1'], 'dc-02': ['cf', '5'], 'dc-03': ['cf', '5'], 'dc-04': ['cf', '5'], 'dc-05': ['cf', '21'], 'dc-06': ['cf', '37'], 'dc-07': ['cf', '44'], 'dc-08': ['cf', '102'], 'dc-09': ['cf', '170'],
+  'etica-01': ['d1171'], 'etica-02': ['l12813'], 'etica-03': ['l12527'], 'etica-04': ['l12527', '31'], 'etica-05': ['d9203'],
+  'dig-01': ['l12965'], 'dig-03': ['l8078'], 'dig-08': ['lgpd', '23'], 'econ-03': ['l12529'],
+  'inst-01': ['l15352'], 'inst-02': ['lgpd', '55-A'], 'inst-04': ['lgpd', '58-A'], 'inst-06': ['lgpd', '55-J'], 'inst-07': ['l15211'], 'inst-08': ['l15211'], 'inst-09': ['l15211'],
+};
+function leiDoAssunto(tId) {
+  const t = topico(tId); if (!t) return null; const k = LEI_DO_ASSUNTO[tId.replace(/^anpd-/, '')];
+  if (k && LEI.has(k[0])) return { id: k[0], art: k[1] || '' };
+  if (t.m === 'anpd-lgpd') { const m = /arts?\.\s*(\d+(?:-[A-Z])?)/i.exec(t.nome); return { id: 'lgpd', art: m ? m[1] : '' }; }
+  const L = LEIS.find(l => l.t === tId); return L ? { id: L.id, art: '' } : null;
+}
+function leiAbrirEm(id, art = '') { if (!LEI.has(id)) return; leiId = id; leiAlvo = art || null; irPara('lei'); }
+// depois que o texto está na tela, vai ao artigo pedido (o primeiro não revogado com aquele número)
+function leiIrAoAlvo() {
+  const tx = LEI_TXT[leiId]; if (!leiAlvo || !tx || !tx.p) return; const art = leiAlvo; leiAlvo = null;
+  const re = new RegExp('^Art\\.\\s*' + art.replace(/[-.]/g, '\\$&') + '\\s*(?:º|°|o)?(?![\\d-])', 'i'), i = tx.p.findIndex(p => !p.r && re.test(p.t));
+  if (i >= 0) setTimeout(() => leiRolar(document.getElementById('lei-p' + i)), 350);
+}
 
 /* Abrir uma lei não é estudar: só ler não cria sessão nem conta tempo. O tempo conta dentro de uma sessão de estudo:
    a que já está em andamento (a leitura entra nela, seja qual for a lei) ou a que começa no botão "Estudar esta lei".
@@ -72,6 +95,7 @@ const viewLei = {
     const volta = `<button type="button" class="volta" data-kf-ir="leis">${I.volta}<span>Leis</span></button>`;
     if (!tx) return `${volta}${cab(L.nome, esc(L.sub))}<p class="apoio" role="status">Abrindo o texto…</p>`;
     if (tx.erro) { delete LEI_TXT[L.id]; return `${volta}${cab(L.nome, esc(L.sub))}${KitFacil.ui.vazio({ titulo: 'Não deu para abrir a lei', texto: 'Confira a internet e tente de novo.' })}`; }
+    leiIrAoAlvo();
     const rev = tx.p.filter(p => p.r).length, S = tx.sum || (tx.sum = leiSumario(tx.p));
     const sumario = S.partes.length >= 3 ? `<ol class="lei-sum">${S.partes.map(x => `<li class="n${Math.min(x.n, 3)}"><button type="button" class="lei-ir" data-act="lei-ir" data-i="${x.i}"><b>${esc(x.t)}</b>${x.nome ? `<span>${esc(x.nome)}</span>` : ''}</button></li>`).join('')}</ol>`
       : S.artigos.length ? `<ol class="lei-arts">${S.artigos.map(x => `<li><button type="button" class="lei-ir" data-act="lei-ir" data-i="${x.i}" aria-label="Artigo ${esc(x.t)}">Art. ${esc(x.t)}</button></li>`).join('')}</ol>` : '';

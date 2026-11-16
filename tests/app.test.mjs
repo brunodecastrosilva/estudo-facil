@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.10 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.11 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -225,7 +225,8 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   assert.deepEqual(await p.evaluate(() => [TR.lista[TR.i].id, document.querySelector('#treino .tr-enun b').textContent, document.querySelector('#treino .tr-cmd b').textContent, !!document.querySelector('#inj') || !!window.__xss, !!document.querySelector('#treino .tr-apoio')]), ['pv:anatel24-cb1:24', 'pode', 'regulação', false, false]);
   await p.click('#treino [data-resp="E"]'); assert.match(await p.locator('#treino .tr-fc').innerText(), /virou flashcard/);
   await p.click('#tr-perguntar'); await p.locator('#in-ok').waitFor(); await p.keyboard.press('Escape');
-  await p.keyboard.press('Escape'); await p.locator('#festa-ok').waitFor(); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' }); await fechaMedalhas();
+  await p.keyboard.press('Escape'); await p.locator('#treino').waitFor({ state: 'detached' }); await fechaMedalhas(); // aberta pelo número: sem festa e sem sessão
+  assert.equal(await p.evaluate(() => DB.sessoes.length), 1);
   await p.evaluate(() => { DB.respostas.find(r => r.id === 'pv:anatel24-cb1:24').due = hojeISO(); salvar(); flashcardsAbrir(); }); await p.locator('#fc-ver').waitFor();
   assert.deepEqual(await p.evaluate(() => [document.querySelector('.fc-carta .tr-cmd').textContent, document.querySelector('.fc-carta .tr-enun b').textContent, !!document.querySelector('#inj') || !!window.__xss]), ['Julgue os itens seguintes, acerca de regulação.', 'pode', false]);
   await p.keyboard.press('Escape');
@@ -279,6 +280,17 @@ test('leis na íntegra: lista por disciplina, texto do Planalto sem alteração,
   await p.evaluate(() => { DB.ativa.acum = 600; treinoAbrir({ caderno: 'm:anpd-etica', i: 0 }); }); await p.locator('#treino.dentro').waitFor(); await p.click('#treino [data-resp="E"]'); await p.keyboard.press('Escape'); await p.locator('#festa-ok').waitFor(); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
   assert.deepEqual(await p.evaluate(() => [DB.sessoes.map(x => [x.tipo, x.ac, Math.round(x.seg)]), !!DB.ativa]), [[['questoes', 1, 0]], true]);
   await p.evaluate(() => { descartarSessao(); irPara('lei'); });
+  // Estudar → Lei seca: a sessão começa e a lei abre no artigo do assunto (direitos do titular: LGPD, art. 17)
+  assert.deepEqual(await p.evaluate(() => [leiDoAssunto('anpd-lgpd-10'), leiDoAssunto('anpd-dc-09'), leiDoAssunto('anpd-etica-03'), leiDoAssunto('anpd-ti-07')]), [{ id: 'lgpd', art: '17' }, { id: 'cf', art: '170' }, { id: 'l12527', art: '' }, null]);
+  await nav(p, 'hoje'); await p.click('#kf-nav-estudar'); await p.locator('#es-ok').waitFor();
+  await p.evaluate(() => { const ev = () => new Event('change', { bubbles: true }), m = document.querySelector('#es-m'), t = document.querySelector('#es-t'); m.value = 'anpd-lgpd'; m.dispatchEvent(ev()); t.value = 'anpd-lgpd-10'; t.dispatchEvent(ev()); }); await p.click('#es-tipo [data-v="lei"]');
+  assert.match(await p.locator('#es-banco').innerText(), /Abre a Lei 13\.709\/2018, no art\. 17/); assert.equal((await p.locator('#es-ok').innerText()).trim(), 'Abrir a lei'); await p.click('#es-ok');
+  await p.locator('#view .lei-folha p').first().waitFor(); await p.waitForTimeout(3000);
+  assert.deepEqual(await p.evaluate(() => { const e = document.activeElement, y = e.getBoundingClientRect().top; return [tab, leiId, DB.ativa.t, DB.ativa.tipo, e.textContent.slice(0, 8), y >= 0 && y < innerHeight / 2]; }), ['lei', 'lgpd', 'anpd-lgpd-10', 'lei', 'Art. 17.', true]);
+  await p.evaluate(() => descartarSessao());
+  // questão aberta pelo número é consulta: a resposta fica guardada, mas não há sessão no histórico
+  await p.evaluate(() => { DB.sessoes = []; salvar(); cadId = 'm:anpd-dc'; irPara('caderno'); }); await p.click('#view .cad-q >> nth=0'); await p.locator('#treino.dentro').waitFor(); await p.click('#treino [data-resp="E"]'); await p.keyboard.press('Escape'); await p.locator('#treino').waitFor({ state: 'detached' });
+  assert.deepEqual(await p.evaluate(() => [DB.sessoes.length, respostaDe('dc-001').ok, regCaderno('m:anpd-dc').r['dc-001'], !!document.querySelector('.festa')]), [0, true, 'E', false]);
   // norma sem capítulos: atalho para cada artigo; a Constituição tem títulos
   await p.evaluate(() => { leiId = 'd9203'; irPara('lei'); }); await p.locator('#lei-sumario .lei-arts .lei-ir').first().waitFor(); assert.ok(await p.locator('#lei-sumario .lei-arts .lei-ir').count() >= 15); assert.equal(await p.locator('#lei-sumario .lei-arts .lei-ir').first().innerText(), 'Art. 1');
   for (const [f, min] of [['cf', 60], ['l14133', 40], ['l8112', 30], ['l12527', 6]]) { const j = JSON.parse(readFileSync(new URL('../leis/' + f + '.json', import.meta.url), 'utf8')); const n = await p.evaluate(P => leiSumario(P).partes.length, j.p); assert.ok(n >= min, f + ': ' + n + ' partes no sumário'); }

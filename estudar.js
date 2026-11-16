@@ -28,9 +28,9 @@ function abrirEstudar(pre = null) {
     pe: `<button type="button" class="kf-btn kf-sec" id="es-lancar">Lançar estudo</button><button type="button" class="kf-btn kf-comecar" id="es-ok">${I.play}Começar</button>`,
     aoMontar: d => {
       const sm = $('#es-m', d), st = $('#es-t', d);
-      const banco = () => { const n = questoesDe(t).length, usa = comBanco();
-        $('#es-banco', d).textContent = usa ? `${plural(n, 'questão do app', 'questões do app')} neste assunto, com comentário e aula.` : n ? 'Este assunto tem questões do app: escolha Questões para treinar.' : 'Sem questões do app neste assunto: use o cronômetro.';
-        $('#es-alvo-c', d).hidden = !!usa; };
+      const banco = () => { const n = questoesDoAssunto(t).length, usa = comBanco(), lei = tipo === 'lei' ? leiDoAssunto(t) : null;
+        $('#es-banco', d).textContent = tipo === 'lei' ? (lei ? `Abre a ${LEI.get(lei.id).nome}${lei.art ? ', no art. ' + lei.art : ''}, com a sessão contando.` : 'Sem lei ligada a este assunto: use o cronômetro.') : tipo === 'teoria' && !usa && n ? 'A apostila deste assunto ainda não existe: use o cronômetro.' : usa ? `${plural(n, 'questão do app', 'questões do app')} neste assunto, com comentário e aula.` : n ? 'Este assunto tem questões do app: escolha Questões para treinar.' : 'Sem questões do app neste assunto: use o cronômetro.';
+        $('#es-alvo-c', d).hidden = !!usa; $('#es-ok', d).lastChild.textContent = usa ? 'Abrir o caderno' : lei ? 'Abrir a lei' : 'Começar'; };
       sm.addEventListener('change', () => { m = sm.value; rev = null; const px = proximoAssunto(m, topicosAtivos(m) || undefined); st.innerHTML = opcoesTopicos(m, px && px.t.id); t = st.value; banco(); });
       st.addEventListener('change', () => { t = st.value; rev = null; banco(); });
       ligarSeg($('#es-tipo', d), v => { tipo = v; banco(); });
@@ -38,6 +38,8 @@ function abrirEstudar(pre = null) {
       banco();
       $('#es-ok', d).onclick = () => { t = st.value; fecharJanela(true);
         if (comBanco()) { treinoAbrir({ t, tipo, rev: tipo === 'revisao' ? rev : null }); return; }
+        // lei seca: a sessão começa e a lei abre no ponto do assunto
+        const lei = tipo === 'lei' ? leiDoAssunto(t) : null; if (lei) { iniciarSessao({ t, tipo, alvo }); leiAbrirEm(lei.id, lei.art); return; }
         iniciarSessao({ t, tipo, alvo, rev: tipo === 'revisao' ? rev : null }); focoAbrir(); render(); };
       $('#es-lancar', d).onclick = () => { fecharJanela(true); lancarEstudo({ m: sm.value, t: st.value, tipo }); };
     } });

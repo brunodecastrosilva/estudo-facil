@@ -111,7 +111,7 @@ function novoCaderno() {
 const ACOES_CAD = {
   'abrir-cad': b => { cadId = b.dataset.id; irPara('caderno'); },
   'cad-continuar': b => { const C = cadernoDe(b.dataset.id || cadId); if (!C) return; const E = cadernoEstado(C); if (E.prox < 0) { cadId = C.id; irPara('caderno'); return; } treinoAbrir({ caderno: C.id, i: E.prox }); },
-  'cad-abrir': b => treinoAbrir({ caderno: cadId, i: +b.dataset.i }),
+  'cad-abrir': b => treinoAbrir({ caderno: cadId, i: +b.dataset.i, avulsa: true }), // abrir pelo número é consulta: não inicia sessão
   'cad-refazer': () => { const C = cadernoDe(cadId); if (!C) return; const reg = regCaderno(C.id), r = { ...reg.r }; C.itens.forEach(q => { if (r[q.id] && r[q.id] !== q.g) delete r[q.id]; }); reg.r = r; reg.em = agora(); salvar({ quieto: true }); treinoAbrir({ caderno: C.id, i: cadernoEstado(C).prox }); },
   'cad-zerar': () => confirmar('Zerar o caderno?', 'As respostas deste caderno são apagadas. O histórico das questões e as sessões continuam.', 'Zerar o caderno', () => { const reg = regCaderno(cadId); if (reg) { reg.r = {}; reg.em = agora(); } salvar(); avisar('Caderno zerado.'); }),
   'cad-excluir': () => confirmar('Excluir o caderno?', 'O caderno sai da lista. As questões e o seu histórico continuam.', 'Excluir caderno', () => { DB.cadernos = DB.cadernos.filter(c => c.id !== cadId); salvar({ quieto: true }); irPara('cadernos'); avisar('Caderno excluído.'); }),

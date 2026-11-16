@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.10.0';
+const VERSAO = '1.11.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -417,7 +417,11 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.10.0', itens: [
+const NOVIDADES = [{ versao: '1.11.0', itens: [
+  'Estudar ficou esperto: Questões abre o caderno no assunto, e Lei seca abre a lei no artigo do assunto, já com a sessão contando.',
+  'Só entra no histórico o que é feito em sessão iniciada. Questão aberta pelo número é consulta: guarda a resposta, sem sessão.',
+  'Teoria continua no cronômetro até as apostilas chegarem.',
+] }, { versao: '1.10.0', itens: [
   'Abrir uma lei ou uma questão e sair sem responder não conta mais como sessão de estudo.',
   'Na lei, a sessão começa no botão Estudar esta lei. Com uma sessão em andamento, a leitura entra nela.',
   'Nunca há duas sessões ao mesmo tempo.',

@@ -45,12 +45,12 @@ const flashcardsDeHoje = () => (oficiais(), DB.respostas).filter(r => r.cx != nu
 let TR = null, treinoEl = null;
 const treinoAberto = () => !!treinoEl;
 // caderno: o treino segue as questões de um caderno, guarda as respostas nele e pula as já resolvidas
-function treinoAbrir({ t = null, m = null, n = 10, tipo = 'questoes', rev = null, desafio = false, lista = null, caderno = null, i = 0 } = {}) {
+function treinoAbrir({ t = null, m = null, n = 10, tipo = 'questoes', rev = null, desafio = false, lista = null, caderno = null, i = 0, avulsa = false } = {}) {
   if (treinoEl) return;
   const C = caderno ? cadernoDe(caderno) : null;
   const L = C ? C.itens : lista || (desafio ? desafioDoDia().lista : t ? filaDoAssunto(t) : escolherQuestoes({ t, m, n }));
   if (!L.length) { avisar('Ainda não há questões do app para este assunto. Use o cronômetro.'); return; }
-  TR = { lista: L, i: C ? clamp(i | 0, 0, L.length - 1) : 0, ac: 0, er: 0, combo: 0, maxCombo: 0, bonus: 0, ini: Date.now(), rel: Date.now(), segT: new Map(), porT: new Map(), tipo, rev, desafio, marcou: null, cad: C ? C.id : null, nome: C ? C.nome : '' };
+  TR = { lista: L, i: C ? clamp(i | 0, 0, L.length - 1) : 0, ac: 0, er: 0, combo: 0, maxCombo: 0, bonus: 0, avulsa, ini: Date.now(), rel: Date.now(), segT: new Map(), porT: new Map(), tipo, rev, desafio, marcou: null, cad: C ? C.id : null, nome: C ? C.nome : '' };
   if (C) TR.marcou = cadernoEstado(C).r[L[TR.i].id] || null;
   treinoEl = document.createElement('div'); treinoEl.className = 'treino'; treinoEl.id = 'treino';
   treinoEl.setAttribute('data-kf-tela-cheia', ''); treinoEl.setAttribute('role', 'dialog'); treinoEl.setAttribute('aria-modal', 'true'); treinoEl.setAttribute('aria-labelledby', 'tr-t');
@@ -130,6 +130,8 @@ function treinoEncerrar() {
   const T = TR; if (!T) return; trTempoParar(); const feitas = T.ac + T.er, daM = c => c.startsWith('m:');
   // abrir uma questão e sair sem responder não é sessão de estudo: nada é registrado
   if (!feitas) { treinoFechar(); render(); return; }
+  // questão avulsa (aberta pelo número, fora de uma sessão): a resposta fica na questão e no caderno, mas não entra no histórico
+  if (T.avulsa && !DB.ativa) { salvar({ quieto: true }); treinoFechar(); jogoConferir(); render(); avisar('Questão avulsa: a resposta foi guardada, sem sessão no histórico.'); return; }
   // com outra sessão em andamento (o cronômetro), o tempo já está sendo contado nela: aqui entram só as respostas
   if (DB.ativa) T.segT.clear();
   for (const [c, sg] of T.segT) if (sg >= 1 && !T.porT.has(c)) T.porT.set(c, { ac: 0, er: 0 });

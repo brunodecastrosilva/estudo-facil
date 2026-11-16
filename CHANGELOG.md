@@ -3,6 +3,14 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.11.0 · 2026-11-16
+
+- **Estudar, opção Lei seca:** inicia a sessão e abre a lei do assunto, já no artigo certo (por exemplo, direitos do titular abre a LGPD no art. 17).
+- **Estudar, opção Questões:** abre o caderno de questões no assunto escolhido.
+- **Histórico só com sessão iniciada:** questão aberta pelo número, no caderno, é consulta. A resposta fica guardada na questão e no caderno, mas não cria sessão.
+- **Ainda não entrou:** a opção Teoria abrir a apostila do assunto. As apostilas ainda não foram escritas; até lá, Teoria usa o cronômetro.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os testes do app e a varredura de acessibilidade.
+
 ## 1.10.0 · 2026-11-16
 
 - **Abrir não é estudar:** abrir uma lei, ou abrir uma questão e sair sem responder, não cria sessão nem conta tempo.
