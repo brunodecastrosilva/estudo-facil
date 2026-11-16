@@ -52,11 +52,27 @@ const viewLeis = {
         <ul class="card lista">${g.L.map(L => `<li><button type="button" class="lin" data-act="abrir-lei" data-id="${esc(L.id)}"><span class="lin-ic">${I.lei}</span><span class="lin-tx"><b>${esc(L.nome)}</b><small>${esc(L.sub)}</small></span>${I.seta}</button></li>`).join('')}</ul></section>`).join('')}`;
   },
 };
+/* sumário: as partes da lei (livro, título, capítulo, seção, subseção, anexo) saem dos títulos centralizados, com o nome
+   que vem na linha seguinte; lei sem partes ganha atalhos para os artigos. Só aponta para o texto: não muda nada nele. */
+const LEI_PARTE = /^(PARTE|LIVRO|T[ÍI]TULO|CAP[ÍI]TULO|SE[ÇC][ÃA]O|SUBSE[ÇC][ÃA]O|ANEXO|ATO DAS DISPOSI[ÇC][ÕO]ES|PRE[ÂA]MBULO)\b/i;
+function leiSumario(P) {
+  const S = [], nivel = t => /^(PARTE|LIVRO|ATO DAS|ANEXO|PRE)/i.test(t) ? 0 : /^T/i.test(t) ? 1 : /^C/i.test(t) ? 2 : /^SE/i.test(t) ? 3 : 4;
+  P.forEach((p, i) => {
+    if (!p.c || p.r || !LEI_PARTE.test(p.t) || p.t.length > 260) return;
+    // "CAPÍTULO I DISPOSIÇÕES PRELIMINARES": o rótulo vai até o número; o resto é o nome (que também pode vir na linha de baixo)
+    const m = /^(\S+\s+(?:[IVXLCDM]+|[ÚU]NIC[OA]|\d+)(?:-[A-Z])?)(?=$|[\s.–-])[\s.–-]*(.*)$/i.exec(p.t), n = P[i + 1];
+    const t = m ? m[1] : p.t, nome = m && m[2] ? m[2] : n && n.c && !n.r && !LEI_PARTE.test(n.t) && n.t.length <= 160 && !/^Art\./.test(n.t) ? n.t : '';
+    S.push({ i, t, nome, n: nivel(p.t) });
+  });
+  if (S.length >= 3) { const base = Math.min(...S.map(x => x.n)); S.forEach(x => { x.n -= base; }); return { partes: S, artigos: [] }; }
+  const A = []; P.forEach((p, i) => { const m = !p.r && /^Art\.\s*(\d[\d.]*)\s*(?:º|°|o)?(-[A-Z])?/.exec(p.t); if (m) A.push({ i, t: m[1] + (m[2] || '') }); });
+  return { partes: S, artigos: A };
+}
 // o começo de cada dispositivo ganha destaque; o texto não muda
-const leiParagrafo = p => {
+const leiParagrafo = (p, i) => {
   const t = p.t, m = /^(Art\.\s*\d[\d.]*\s*(?:º|°|o)?(?:-[A-Z])?\.?|§\s*\d+\s*(?:º|°|o)?\.?|Parágrafo único\.?)(\s.*)?$/.exec(t);
   const corpo = m ? `<b>${esc(m[1])}</b>${esc(m[2] || '')}` : esc(t), art = m && /^Art/.test(m[1]);
-  return `<p class="${p.c ? 'lei-c' : art ? 'lei-art' : 'lei-p'}${p.r ? ' lei-r' : ''}">${p.r ? `<s>${corpo}</s>` : corpo}</p>`;
+  return `<p id="lei-p${i}" tabindex="-1" class="${p.c ? 'lei-c' : art ? 'lei-art' : 'lei-p'}${p.r ? ' lei-r' : ''}">${p.r ? `<s>${corpo}</s>` : corpo}</p>`;
 };
 const viewLei = {
   html() {
@@ -65,13 +81,24 @@ const viewLei = {
     const volta = `<button type="button" class="volta" data-kf-ir="leis">${I.volta}<span>Leis</span></button>`;
     if (!tx) return `${volta}${cab(L.nome, esc(L.sub))}<p class="apoio" role="status">Abrindo o texto…</p>`;
     if (tx.erro) { delete LEI_TXT[L.id]; return `${volta}${cab(L.nome, esc(L.sub))}${KitFacil.ui.vazio({ titulo: 'Não deu para abrir a lei', texto: 'Confira a internet e tente de novo.' })}`; }
-    const rev = tx.p.filter(p => p.r).length;
+    const rev = tx.p.filter(p => p.r).length, S = tx.sum || (tx.sum = leiSumario(tx.p));
+    const sumario = S.partes.length >= 3 ? `<ol class="lei-sum">${S.partes.map(x => `<li class="n${Math.min(x.n, 3)}"><button type="button" class="lei-ir" data-act="lei-ir" data-i="${x.i}"><b>${esc(x.t)}</b>${x.nome ? `<span>${esc(x.nome)}</span>` : ''}</button></li>`).join('')}</ol>`
+      : S.artigos.length ? `<ol class="lei-arts">${S.artigos.map(x => `<li><button type="button" class="lei-ir" data-act="lei-ir" data-i="${x.i}" aria-label="Artigo ${esc(x.t)}">Art. ${esc(x.t)}</button></li>`).join('')}</ol>` : '';
     return `${volta}${cab(L.nome, esc(L.sub))}
       <div class="lei-barra"><span class="etiqueta">${esc(t ? t.nome : '')}</span><span class="lei-tempo" aria-label="Tempo de leitura">${I.relogio || ''}<b id="lei-relogio">${fmtRelogio(leiSeg())}</b></span></div>
       ${rev ? linhaChave('lei-rev', !semRev, 'Mostrar o texto revogado', `${plural(rev, 'trecho riscado', 'trechos riscados')}, como no Planalto`) : ''}
-      <article class="folha lei-folha${semRev ? ' sem-rev' : ''}" lang="pt-BR">${tx.p.map(leiParagrafo).join('')}</article>
+      ${sumario ? `<details class="tr-aula lei-sumario" id="lei-sumario" data-kf-secao open><summary><b>Sumário</b></summary>${sumario}</details>` : ''}
+      <article class="folha lei-folha${semRev ? ' sem-rev' : ''}" lang="pt-BR">${tx.p.map((p, i) => leiParagrafo(p, i)).join('')}</article>
+      ${sumario ? `<button type="button" class="kf-btn lei-topo" data-act="lei-sumario" id="lei-topo">${I.plano || ''}Sumário</button>` : ''}
       <p class="apoio">Texto compilado do Planalto, copiado em ${esc(tx.lido.split('-').reverse().join('/'))}, sem alteração. <a href="${esc(tx.fonte)}" target="_blank" rel="noopener noreferrer">Conferir no site oficial</a></p>`;
   },
 };
+// o botão Sumário só aparece depois que a leitura desce
+addEventListener('scroll', () => { const b = document.getElementById('lei-topo'); if (b) b.classList.toggle('visivel', scrollY > 600); }, { passive: true });
 document.addEventListener('change', e => { if (e.target && e.target.id === 'lei-rev') { LS.set('leiSemRev', e.target.checked ? 0 : 1); const f = document.querySelector('.lei-folha'); if (f) f.classList.toggle('sem-rev', !e.target.checked); } });
-const ACOES_LEI = { 'abrir-lei': b => { if (LEI.has(b.dataset.id)) { leiId = b.dataset.id; irPara('lei'); } } };
+const leiRolar = el => { if (!el) return; el.scrollIntoView({ block: 'start', behavior: KitFacil.movimento && KitFacil.movimento.reduzido && KitFacil.movimento.reduzido() ? 'auto' : 'smooth' }); try { el.focus({ preventScroll: true }); } catch {} };
+const ACOES_LEI = {
+  'abrir-lei': b => { if (LEI.has(b.dataset.id)) { leiId = b.dataset.id; irPara('lei'); } },
+  'lei-ir': b => leiRolar(document.getElementById('lei-p' + b.dataset.i)),
+  'lei-sumario': () => { const d = document.getElementById('lei-sumario'); if (d) { d.open = true; leiRolar(d.querySelector('summary')); } },
+};

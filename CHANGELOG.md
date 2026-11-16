@@ -3,6 +3,14 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.9.0 · 2026-11-16
+
+- **Sumário em cada lei:** no alto do texto, com link rápido para livros, títulos, capítulos, seções e anexos, com o nome de cada parte.
+- **Normas sem capítulos:** o sumário traz um atalho para cada artigo.
+- **Botão Sumário:** aparece durante a leitura e leva de volta ao sumário.
+- **O texto da lei não muda:** o sumário só aponta para ele.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os testes do app e a varredura de acessibilidade.
+
 ## 1.8.0 · 2026-11-16
 
 - **Leis na íntegra:** 24 normas do edital dentro do app, em Mais → Leis, por disciplina: LGPD, Lei 15.352/2026, ECA Digital, Marco Civil, CDC, leis das agências, AIR, Liberdade Econômica, concorrência, processo administrativo, licitações, Lei 8.112, improbidade, Anticorrupção, Governo Digital, LAI, ética, governança e a Constituição.

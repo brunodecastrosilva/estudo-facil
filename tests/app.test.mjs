@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.8 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.9 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -261,10 +261,20 @@ test('leis na íntegra: lista por disciplina, texto do Planalto sem alteração,
   const lgpd = JSON.parse(readFileSync(new URL('../leis/lgpd.json', import.meta.url), 'utf8'));
   const tela = await p.evaluate(() => ({ n: document.querySelectorAll('.lei-folha p').length, txt: [...document.querySelectorAll('.lei-folha p')].map(e => e.textContent), risc: document.querySelectorAll('.lei-folha .lei-r s').length, art: document.querySelector('.lei-folha .lei-art b').textContent, link: document.querySelector('#view .apoio a').href }));
   assert.equal(tela.n, lgpd.p.length); assert.deepEqual(tela.txt, lgpd.p.map(x => x.t), 'o texto da tela é o do arquivo, sem alteração'); assert.equal(tela.risc, lgpd.p.filter(x => x.r).length); assert.equal(tela.art, 'Art. 1º'); assert.equal(tela.link, lgpd.fonte);
+  // sumário: as partes da lei, com link rápido; o botão Sumário leva de volta
+  const sum = await p.locator('#lei-sumario .lei-ir b').allInnerTexts(); assert.ok(sum.length >= 10 && sum[0] === 'CAPÍTULO I' && sum.includes('CAPÍTULO IX'), 'capítulos e seções da LGPD');
+  assert.match(await p.locator('#lei-sumario .lei-ir').first().innerText(), /CAPÍTULO I\s+DISPOSIÇÕES PRELIMINARES/);
+  await p.locator('#lei-sumario .lei-ir', { hasText: 'CAPÍTULO VIII' }).first().click(); await p.waitForTimeout(3000); // a rolagem é suave e a lei é longa
+  const ir = await p.evaluate(() => { const e = document.activeElement, y = e.getBoundingClientRect().top; return [e.textContent, y >= 0 && y < innerHeight / 2 || Math.round(y) + '/' + innerHeight, scrollY > 2000, document.querySelector('#lei-topo').classList.contains('visivel')]; }); assert.deepEqual(ir, ['CAPÍTULO VIII DA FISCALIZAÇÃO', true, true, true]);
+  await p.click('#lei-topo'); await p.waitForFunction(() => { const y = scrollY; return new Promise(r => setTimeout(() => r(scrollY === y), 300)); }, null, { timeout: 8000 }); assert.ok(await p.evaluate(() => document.querySelector('#lei-sumario summary').getBoundingClientRect().top < innerHeight));
+  assert.deepEqual(await p.evaluate(() => [leiSumario(LEI_TXT.lgpd.p).artigos.length, LEI_TXT.lgpd.p.length]), [0, lgpd.p.length]);
   assert.ok(await p.locator('.lei-folha .lei-r').first().isVisible()); await p.click('label[for="lei-rev"], #lei-rev >> xpath=..'); assert.equal(await p.locator('.lei-folha .lei-r').first().isVisible(), false, 'dá para ocultar o revogado');
   // o tempo de leitura vira sessão de lei seca no assunto da lei e entra na meta do dia
   await p.evaluate(() => { leiRel.acc += 125000; }); await nav(p, 'hoje');
   const s = await p.evaluate(() => DB.sessoes.map(x => [x.t, x.tipo, Math.round(x.seg), x.ac || 0])); assert.deepEqual(s.map(x => [x[0], x[1], x[3]]), [['anpd-lgpd-01', 'lei', 0]]); assert.ok(s[0][2] >= 125 && s[0][2] < 140); assert.ok(await p.evaluate(() => minutosDoDia(hojeISO()) >= 2));
+  // norma sem capítulos: atalho para cada artigo; a Constituição tem títulos
+  await p.evaluate(() => { leiId = 'd9203'; irPara('lei'); }); await p.locator('#lei-sumario .lei-arts .lei-ir').first().waitFor(); assert.ok(await p.locator('#lei-sumario .lei-arts .lei-ir').count() >= 15); assert.equal(await p.locator('#lei-sumario .lei-arts .lei-ir').first().innerText(), 'Art. 1');
+  for (const [f, min] of [['cf', 60], ['l14133', 40], ['l8112', 30], ['l12527', 6]]) { const j = JSON.parse(readFileSync(new URL('../leis/' + f + '.json', import.meta.url), 'utf8')); const n = await p.evaluate(P => leiSumario(P).partes.length, j.p); assert.ok(n >= min, f + ': ' + n + ' partes no sumário'); }
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
