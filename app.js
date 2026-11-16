@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.2.0';
+const VERSAO = '1.3.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -19,6 +19,9 @@ const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')
 const deISO = s => { const [a, m, d] = String(s).split('-').map(Number); return new Date(a, (m || 1) - 1, d || 1); };
 // nos testes, ?hoje=AAAA-MM-DD fixa o dia (só em endereço local)
 const HOJE_FIXO = (() => { try { const m = /[?&]hoje=(\d{4}-\d{2}-\d{2})/.exec(location.search); return m && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? m[1] : null; } catch { return null; } })();
+/* Funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia): ficam fora da fase de testes
+   fechada, em que o app é só da ANPD. O código continua aqui; nos testes, ?geral=1 as liga (só em localhost). */
+const GERAL = (() => { try { return /[?&]geral=1/.test(location.search) && /^(localhost|127\.0\.0\.1)$/.test(location.hostname); } catch { return false; } })();
 const agora = () => HOJE_FIXO ? deISO(HOJE_FIXO).getTime() + (Date.now() % DIA) : Date.now();
 const hojeISO = () => HOJE_FIXO || iso(new Date());
 const maisDias = (s, n) => { const d = deISO(s); d.setDate(d.getDate() + n); return iso(d); };
@@ -90,8 +93,9 @@ const LS = {
    dias        dias em que a meta foi batida    marcos     medalhas vistas e marcas do app (guia, abertura)
    simulados   resultados de simulados          eventos    compromissos da agenda
    respostas   uma por questão do app já respondida (vezes, acertos e a caixa do flashcard) e uma por item de prova
-               oficial marcado (pv:<prova>:<item>)       redacoes   textos do treino da discursiva */
-const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'respostas', 'redacoes', 'dias', 'marcos', 'simulados', 'eventos'];
+               oficial marcado (pv:<prova>:<item>)       redacoes   textos do treino da discursiva
+   cadernos    cadernos de questões: os seus e o andamento dos de fábrica (cadernos.js) */
+const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'respostas', 'cadernos', 'redacoes', 'dias', 'marcos', 'simulados', 'eventos'];
 const CFG_PADRAO = { nome: '', metaMin: 60, dias: [0, 1, 2, 3, 4, 5, 6], bloco: 30, metaQ: 15, revisoes: [1, 7, 30], som: true, vibra: true, jogo: true };
 const CORES = ['#2742D3', '#0E8A7D', '#C2410C', '#7C3AED', '#B4235A', '#0369A1', '#4D7C0F', '#B45309', '#BE185D', '#0F766E', '#6D28D9', '#9A3412'];
 const TIPOS = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão', lei: 'Lei seca' };
@@ -404,7 +408,13 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.2.0', itens: [
+const NOVIDADES = [{ versao: '1.3.0', itens: [
+  'Cadernos de questões: o app agora gira em torno deles. Há um caderno por disciplina, atalhos para as que você errou e para as que nunca viu, e os cadernos que você montar.',
+  'Cada caderno guarda o seu andamento: continue de onde parou, refaça só as erradas ou zere as respostas.',
+  'Banco de questões: de 63 para 220, agora nas doze disciplinas. Todas escritas no app, com comentário, fundamento e aula curta.',
+  'App mais enxuto, só para a ANPD: saíram da tela Concursos, Disciplinas, Simulados, Agenda e o guia. Voltam quando o app for aberto ao público.',
+  'Nova barra de baixo: Hoje, Cadernos, Estudar, Medalhas e Mais. O edital foi para Mais.',
+] }, { versao: '1.2.0', itens: [
   'Provas do Cebraspe: quatro cadernos oficiais (ANATEL, ANAC, ANM e DATAPREV), com folha de respostas, correção pelo gabarito definitivo e comentário do instrutor. O caderno abre no site da banca.',
   'Só os itens do seu edital: cada prova mostra os blocos que servem para a ANPD e deixa o resto de fora.',
   'Como a banca escreve: as sete armadilhas que mais apareceram nessas provas.',

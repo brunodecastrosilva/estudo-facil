@@ -29,22 +29,21 @@ function tiraSemana() {
   }).join('')}</ol>`;
 }
 const linhaPlano = (it, i) => {
-  const n = nomeItem(it), rot = it.tipo === 'revisao' ? `Revisão${it.atraso > 0 ? ` · ${plural(it.atraso, 'dia', 'dias')} de atraso` : ''}` : `${TIPOS[it.tipo]} · ${it.nq ? plural(it.nq, 'item', 'itens') : it.min + ' min'}`;
+  const n = nomeItem(it), rot = it.tipo === 'revisao' ? `Revisão${it.atraso > 0 ? ` · ${plural(it.atraso, 'dia', 'dias')} de atraso` : ''}` : `${TIPOS[it.tipo]} · ${it.nq ? plural(it.nq, 'questão', 'questões') : it.min + ' min'}`;
   return `<li class="pl-item ${it.feito ? 'feito' : ''}"><span class="pl-marca" aria-hidden="true">${it.feito ? I.check : it.tipo === 'revisao' ? I.revisar : I.livro}</span>
     <span class="pl-tx"><b>${it.feito ? `<span class="grifo">${esc(n.t)}</span>` : esc(n.t)}</b><small>${esc(n.m)} · ${rot}${it.feito ? ' · feito' : ''}</small></span>
     ${it.feito ? '' : `<button type="button" class="btn-ic comecar" data-act="estudar-item" data-i="${i}" aria-label="Estudar ${esc(n.t)}">${I.play}</button>`}</li>`;
 };
-// Hoje: o desafio do dia, os flashcards que venceram e o treino livre
+// Hoje: o caderno em que você parou, o desafio do dia e os flashcards que venceram
 function centralQuestoes() {
   if (!QUESTOES.some(q => topico(q.t))) return '';
-  const D = desafioDoDia(), fc = flashcardsDeHoje().length, feitas = DB.respostas.filter(r => QID.has(r.id)).length;
-  const lin = (act, ic, t, sub, selo = '') => `<li><button type="button" class="lin" data-act="${act}"><span class="lin-ic">${ic}</span><span class="lin-tx"><b>${t}</b><small>${sub}</small></span>${selo}${I.seta}</button></li>`;
-  return `<section aria-labelledby="cq-t"><div class="sec-cab"><h2 class="sec-t" id="cq-t">Questões</h2><span class="apoio">${feitas} de ${QUESTOES.length} respondidas</span></div>
+  const D = desafioDoDia(), fc = flashcardsDeHoje().length, feitas = DB.respostas.filter(r => QID.has(r.id)).length, and = cadernoEmAndamento(), E = and && cadernoEstado(and);
+  const lin = (attrs, ic, t, sub, selo = '') => `<li><button type="button" class="lin" ${attrs}><span class="lin-ic">${ic}</span><span class="lin-tx"><b>${t}</b><small>${sub}</small></span>${selo}${I.seta}</button></li>`;
+  return `<section aria-labelledby="cq-t"><div class="sec-cab"><h2 class="sec-t" id="cq-t">Questões</h2><span class="apoio">${feitas} de ${QUESTOES.length} resolvidas</span></div>
     <ul class="card lista central-q">
-      ${lin('desafio', I.raio, 'Desafio do dia', D.feito ? 'Feito hoje. Amanhã tem outro.' : '10 itens sorteados · bônus de pontos', D.feito ? `<span class="etiqueta ok">${I.check}Feito</span>` : '')}
-      ${lin('flashcards', I.revisar, 'Flashcards', fc ? `${plural(fc, 'item que você errou volta', 'itens que você errou voltam')} hoje` : 'Nenhum para hoje. Eles nascem dos seus erros.', fc ? `<span class="etiqueta">${fc}</span>` : '')}
-      ${lin('treino-livre', I.questoes, 'Treino livre', '10 itens: primeiro os que você errou, depois os novos')}
-      <li><button type="button" class="lin" data-kf-ir="provas"><span class="lin-ic">${I.simulado}</span><span class="lin-tx"><b>Provas do Cebraspe</b><small>${PROVAS.length} cadernos oficiais, com gabarito e comentário</small></span>${I.seta}</button></li>
+      ${and ? lin(`data-act="cad-continuar" data-id="${esc(and.id)}"`, I.play, 'Continuar o caderno', `${esc(and.nome)} · ${E.feitas} de ${E.n}`) : lin('data-kf-ir="cadernos"', I.questoes, 'Cadernos de questões', 'Um por disciplina, e os que você montar')}
+      ${lin('data-act="desafio"', I.raio, 'Desafio do dia', D.feito ? 'Feito hoje. Amanhã tem outro.' : '10 questões sorteadas · bônus de pontos', D.feito ? `<span class="etiqueta ok">${I.check}Feito</span>` : '')}
+      ${lin('data-act="flashcards"', I.revisar, 'Flashcards', fc ? `${plural(fc, 'questão que você errou volta', 'questões que você errou voltam')} hoje` : 'Nenhum para hoje. Eles nascem dos seus erros.', fc ? `<span class="etiqueta">${fc}</span>` : '')}
     </ul></section>`;
 }
 const viewHoje = {
@@ -57,7 +56,7 @@ const viewHoje = {
     const proxima = jogoLigado() ? medalhasDoApp().find(m => !s.ganhas.includes(m.id)) : null;
     const vazio = !DB.materias.some(m => topicosDe(m.id).length);
     return `${cab('Hoje', `${saudacao()}.${ct && ct.n >= 0 ? ` ${ct.texto} para a prova${c ? ' da ' + esc(c.sigla) : ''}${ct.estimada ? ' (data estimada)' : ''}.` : ''}`)}
-      ${c && c.previsto && c.dataEdital && hojeISO() > c.dataEdital ? KitFacil.ui.faixa({ tipo: 'alerta', html: `<b>O edital da ${esc(c.sigla)} já saiu?</b> O prazo previsto passou. Atualize a banca, as datas e as disciplinas.`, acao: `<button type="button" class="kf-btn kf-sec" data-act="abrir-concurso" data-id="${esc(c.id)}">Atualizar o concurso</button>` }) : ''}
+      ${c && c.previsto && c.dataEdital && hojeISO() > c.dataEdital ? KitFacil.ui.faixa({ tipo: 'alerta', html: `<b>O edital da ${esc(c.sigla)} já saiu?</b> O prazo previsto passou. Atualize a banca, as datas e as disciplinas.`, acao: GERAL ? `<button type="button" class="kf-btn kf-sec" data-act="abrir-concurso" data-id="${esc(c.id)}">Atualizar o concurso</button>` : '' }) : ''}
       ${vazio ? KitFacil.ui.vazio({ titulo: 'Nenhum concurso ainda', texto: 'Adicione um concurso da biblioteca ou cadastre as suas disciplinas. O plano de cada dia aparece aqui.', acao: `<button type="button" class="kf-btn kf-pri" data-kf-ir="concursos">Adicionar concurso</button>` }) : `
       <section class="folha hoje-folha" aria-label="Meta e sequência">
         <div class="hf-seq"><span class="hf-chama">${chamaHTML(S.hojeFeito)}</span><span class="hf-seq-tx"><b><span class="hf-n">${S.n}</span> ${S.n === 1 ? 'dia seguido' : 'dias seguidos'}</b><small>${S.folgas ? `${plural(S.folgas, 'folga guardada', 'folgas guardadas')}` : 'Sem folga guardada'} · recorde ${S.recorde}</small></span>
@@ -75,13 +74,13 @@ const viewHoje = {
         <ul class="missoes">${M.lista.map(m => `<li class="missao ${m.ok ? 'ok' : ''}"><span class="mi-ic" aria-hidden="true">${m.ok ? I.check : I[m.ic]}</span><span class="mi-tx"><b>${esc(m.nome)}</b>${barraHTML(m.v / m.de * 100, `${Math.floor(m.v)} de ${m.de}`)}</span><span class="mi-n" aria-hidden="true">${Math.floor(m.v)}/${m.de}</span></li>`).join('')}</ul>
         ${M.perfeito ? `<p class="mis-perfeito"><span class="grifo">Dia perfeito.</span> As missões de hoje estão cumpridas.</p>` : ''}</section>
 
-      <section aria-labelledby="pl-t"><div class="sec-cab"><h2 class="sec-t" id="pl-t">Plano de hoje</h2><button type="button" class="kf-btn kf-link" data-kf-ir="plano">Ver o plano</button></div>
+      <section aria-labelledby="pl-t"><div class="sec-cab"><h2 class="sec-t" id="pl-t">Plano de hoje</h2><button type="button" class="kf-btn kf-link" data-kf-ir="plano">Ver o edital</button></div>
         <ul class="card lista plano-hoje" data-kf-morf="plano">${P.itens.length ? P.itens.map(linhaPlano).join('') : '<li class="pl-vazio">Nada marcado para hoje. Escolha um assunto em Estudar.</li>'}</ul>
         ${P.revisoesAMais ? `<button type="button" class="kf-btn kf-link" data-kf-ir="revisoes">Ver mais ${plural(P.revisoesAMais, 'revisão vencida', 'revisões vencidas')}</button>` : ''}</section>
 
       ${c ? `<button type="button" class="card conc-card" data-kf-ir="plano"><span class="cc-topo"><b>${esc(c.sigla)}</b>${fase ? `<span class="etiqueta">${esc(fase.nome)}</span>` : ''}</span><span class="cc-cargo">${esc(c.cargo || '')}</span>
         <span class="cc-pront"><span>Prontidão para a prova</span><b>${prontidao(c)}%</b></span>${barraHTML(prontidao(c), `Prontidão: ${prontidao(c)}%`, 'grifada')}
-        <span class="kf-so-leitor">. Ver o plano</span></button>` : ''}
+        <span class="kf-so-leitor">. Ver o edital</span></button>` : ''}
       ${DB.sessoes.length ? `<button type="button" class="kf-btn kf-link" data-kf-ir="evolucao">Ver a sua evolução</button>` : ''}
 
       ${jogoLigado() ? `<button type="button" class="card nivel-card" data-act="ver-medalhas"><span class="kf-so-leitor">Nível ${s.nivel}: </span>${seloNivelHTML(s)}${nivelHTML(s)}
@@ -94,11 +93,11 @@ let planoConc = null;
 const viewPlano = {
   html() {
     const A = concursosAtivos(), c = A.find(x => x.id === planoConc) || concursoFoco();
-    if (!c) return `${cab('Plano', 'O edital vira caderno: cada assunto estudado fica grifado.')}${KitFacil.ui.vazio({ titulo: 'Nenhum concurso em estudo', texto: 'Adicione um concurso para ver o edital, as fases e o que falta estudar.', acao: `<button type="button" class="kf-btn kf-pri" data-kf-ir="concursos">Adicionar concurso</button>` })}`;
+    if (!c) return `${voltaMais()}${cab('Edital', 'Cada assunto estudado fica grifado, e a prontidão sobe.')}${KitFacil.ui.vazio({ titulo: 'Nenhum concurso em estudo', texto: 'Adicione um concurso para ver o edital, as fases e o que falta estudar.', acao: `<button type="button" class="kf-btn kf-pri" data-kf-ir="concursos">Adicionar concurso</button>` })}`;
     const ed = editalDaBiblioteca(c), ct = contagem(c), fase = faseAtual(c), F = fatias(c, { fase: false }), pr = prontidao(c);
     const discs = c.disc.filter(d => materia(d.m)).slice().sort((a, b) => (a.fora ? 1 : 0) - (b.fora ? 1 : 0) || (F.get(b.m) || 0) - (F.get(a.m) || 0));
     const nT = soma(discs.filter(d => !d.fora), d => d.topicos.length), nV = soma(discs.filter(d => !d.fora), d => progressoDisc(d).vistos);
-    return `${cab('Plano', 'O edital vira caderno: cada assunto estudado fica grifado.')}
+    return `${voltaMais()}${cab('Edital', 'Cada assunto estudado fica grifado, e a prontidão sobe.')}
       ${A.length > 1 ? `<div class="kf-campo"><label class="kf-rotulo" for="pl-conc">Concurso</label><select id="pl-conc" class="kf-entrada">${A.map(x => `<option value="${esc(x.id)}" ${x.id === c.id ? 'selected' : ''}>${esc(x.sigla)}</option>`).join('')}</select></div>` : ''}
       <section class="folha plano-capa" aria-label="${esc(c.sigla)}">
         <span class="rotulo-mini">${esc(c.orgao || c.sigla)}</span><h2 class="capa-t">${esc(c.cargo || c.sigla)}</h2>
@@ -111,7 +110,7 @@ const viewPlano = {
           ${fase ? `<div><dt>Fase do plano</dt><dd>${esc(fase.nome)}</dd></div>` : ''}
         </dl>
       </section>
-      ${c.previsto ? KitFacil.ui.faixa({ tipo: 'alerta', html: `<b>Edital ainda não publicado.</b> ${ed && ed.resumoPrevisto ? esc(ed.resumoPrevisto.replace('Edital ainda não publicado. ', '')) : 'As disciplinas e os pesos são estimativas.'}`, acao: `<button type="button" class="kf-btn kf-sec" data-act="abrir-concurso" data-id="${esc(c.id)}">Atualizar pelo edital</button>` }) : ''}
+      ${c.previsto ? KitFacil.ui.faixa({ tipo: 'alerta', html: `<b>Edital ainda não publicado.</b> ${ed && ed.resumoPrevisto ? esc(ed.resumoPrevisto.replace('Edital ainda não publicado. ', '')) : 'As disciplinas e os pesos são estimativas.'}`, acao: GERAL ? `<button type="button" class="kf-btn kf-sec" data-act="abrir-concurso" data-id="${esc(c.id)}">Atualizar pelo edital</button>` : '' }) : ''}
 
       ${ed && ed.fases ? `<section aria-labelledby="fa-t"><div class="sec-cab"><h2 class="sec-t" id="fa-t">Fases até a prova</h2></div>
         <div class="card fases">${ed.fases.map((f, i) => { const at = fase && fase.id === f.id, ja = fase && fase.i > i;
@@ -239,19 +238,21 @@ const viewInstrutor = {
 const viewMais = {
   html() {
     const rv = revisoesDeHoje().length, T = DB.topicos.length;
-    const fc = flashcardsDeHoje().length, nR = respostasDoInstrutor().length;
+    const fc = flashcardsDeHoje().length, nR = respostasDoInstrutor().length, c = concursoFoco();
     return `${cab('Mais')}${KitFacil.nav.mais({ linhas: [
+      { id: 'plano', titulo: 'Edital', texto: c ? `${prontidao(c)}% de prontidão · ${plural(DB.topicos.length, 'assunto', 'assuntos')}` : 'O edital, assunto por assunto', icone: I.plano },
       ...(jogoLigado() ? [{ id: 'evolucao', titulo: 'Evolução', texto: 'Prontidão, constância, horas e acertos', icone: I.evolucao }] : []),
       { id: 'provas', titulo: 'Provas do Cebraspe', texto: `${PROVAS.length} cadernos oficiais, com gabarito e comentário`, icone: I.simulado },
       { id: 'discursivas', titulo: 'Discursiva', texto: `${DISCURSIVAS.length} temas, com o que a banca espera`, icone: I.lapis },
-      { id: 'instrutor', titulo: 'Instrutor', texto: nR ? plural(nR, 'resposta guardada', 'respostas guardadas') : 'Leve as suas dúvidas ao Claude', icone: I.balao },
-      { titulo: 'Flashcards', texto: fc ? `${plural(fc, 'item para rever hoje', 'itens para rever hoje')}` : 'Nenhum para hoje', icone: I.cartas, attrs: 'data-act="flashcards" id="ma-flash"' },
-      { id: 'concursos', titulo: 'Concursos', texto: DB.concursos.length ? `${plural(concursosAtivos().length, 'em estudo', 'em estudo')} de ${DB.concursos.length}` : 'Adicione o seu concurso', icone: I.concurso },
-      { id: 'disciplinas', titulo: 'Disciplinas', texto: `${plural(DB.materias.length, 'disciplina', 'disciplinas')} e ${plural(T, 'assunto', 'assuntos')}`, icone: I.disciplinas },
+      { titulo: 'Flashcards', texto: fc ? `${plural(fc, 'questão para rever hoje', 'questões para rever hoje')}` : 'Nenhum para hoje', icone: I.cartas, attrs: 'data-act="flashcards" id="ma-flash"' },
       { id: 'revisoes', titulo: 'Revisões', texto: rv ? `${plural(rv, 'revisão para hoje', 'revisões para hoje')}` : 'Nenhuma revisão para hoje', icone: I.revisar },
-      { id: 'simulados', titulo: 'Simulados', texto: DB.simulados.length ? plural(DB.simulados.length, 'simulado registrado', 'simulados registrados') : 'Registre o resultado e veja a nota', icone: I.simulado },
-      { id: 'agenda', titulo: 'Agenda', texto: 'As datas do concurso e os seus compromissos', icone: I.agenda },
-      { titulo: 'Ver o guia', texto: 'O app faz cada passo na tela e explica', icone: I.livro, attrs: 'id="ma-guia" data-act="guia"' },
+      { id: 'instrutor', titulo: 'Instrutor', texto: nR ? plural(nR, 'resposta guardada', 'respostas guardadas') : 'Leve as suas dúvidas ao Claude', icone: I.balao },
+      ...(GERAL ? [
+        { id: 'concursos', titulo: 'Concursos', texto: DB.concursos.length ? `${plural(concursosAtivos().length, 'em estudo', 'em estudo')} de ${DB.concursos.length}` : 'Adicione o seu concurso', icone: I.concurso },
+        { id: 'disciplinas', titulo: 'Disciplinas', texto: `${plural(DB.materias.length, 'disciplina', 'disciplinas')} e ${plural(T, 'assunto', 'assuntos')}`, icone: I.disciplinas },
+        { id: 'simulados', titulo: 'Simulados', texto: DB.simulados.length ? plural(DB.simulados.length, 'simulado registrado', 'simulados registrados') : 'Registre o resultado e veja a nota', icone: I.simulado },
+        { id: 'agenda', titulo: 'Agenda', texto: 'As datas do concurso e os seus compromissos', icone: I.agenda },
+        { titulo: 'Ver o guia', texto: 'O app faz cada passo na tela e explica', icone: I.livro, attrs: 'id="ma-guia" data-act="guia"' }] : []),
     ] })}`;
   },
 };

@@ -28,11 +28,14 @@ const flashcardsDeHoje = () => DB.respostas.filter(r => r.cx != null && r.cx < F
 /* ---------- treino em tela cheia ---------- */
 let TR = null, treinoEl = null;
 const treinoAberto = () => !!treinoEl;
-function treinoAbrir({ t = null, m = null, n = 10, tipo = 'questoes', rev = null, desafio = false, lista = null } = {}) {
+// caderno: o treino segue as questões de um caderno, guarda as respostas nele e pula as já resolvidas
+function treinoAbrir({ t = null, m = null, n = 10, tipo = 'questoes', rev = null, desafio = false, lista = null, caderno = null, i = 0 } = {}) {
   if (treinoEl) return;
-  const L = lista || (desafio ? desafioDoDia().lista : escolherQuestoes({ t, m, n }));
+  const C = caderno ? cadernoDe(caderno) : null;
+  const L = C ? C.itens : lista || (desafio ? desafioDoDia().lista : escolherQuestoes({ t, m, n }));
   if (!L.length) { avisar('Ainda não há questões do app para este assunto. Use o cronômetro.'); return; }
-  TR = { lista: L, i: 0, ac: 0, er: 0, combo: 0, maxCombo: 0, bonus: 0, ini: Date.now(), porT: new Map(), tipo, rev, desafio, marcou: null };
+  TR = { lista: L, i: C ? clamp(i | 0, 0, L.length - 1) : 0, ac: 0, er: 0, combo: 0, maxCombo: 0, bonus: 0, ini: Date.now(), porT: new Map(), tipo, rev, desafio, marcou: null, cad: C ? C.id : null, nome: C ? C.nome : '' };
+  if (C) TR.marcou = cadernoEstado(C).r[L[TR.i].id] || null;
   treinoEl = document.createElement('div'); treinoEl.className = 'treino'; treinoEl.id = 'treino';
   treinoEl.setAttribute('data-kf-tela-cheia', ''); treinoEl.setAttribute('role', 'dialog'); treinoEl.setAttribute('aria-modal', 'true'); treinoEl.setAttribute('aria-labelledby', 'tr-t');
   document.body.appendChild(treinoEl); document.body.classList.add('com-foco');
@@ -59,12 +62,12 @@ function treinoTecla(e) {
   else if (!TR.marcou && (k === 'c' || k === 'e')) { e.preventDefault(); treinoResponder(k.toUpperCase()); }
 }
 function treinoPintar() {
-  const q = TR.lista[TR.i], t = topico(q.t), n = TR.lista.length, fez = TR.marcou, ok = fez && fez === q.g, ult = TR.i === n - 1;
+  const q = TR.lista[TR.i], t = topico(q.t), n = TR.lista.length, fez = TR.marcou, ok = fez && fez === q.g, ult = TR.cad ? proximaDoCaderno() < 0 : TR.i === n - 1;
   const inst = (INSTRUTOR[q.id] || []).slice(-2);
   treinoEl.innerHTML = `<div class="treino-in">
       <div class="tr-topo"><button type="button" class="btn-ic" id="tr-sair" aria-label="Encerrar o treino">${I.x}</button>${barraHTML((TR.i + (fez ? 1 : 0)) / n * 100, `Questão ${TR.i + 1} de ${n}`)}<span class="tr-cont" aria-hidden="true">${TR.i + 1}/${n}</span></div>
       <div class="tr-meta"><span class="etiqueta">${esc(t ? t.nome : '')}</span>${TR.combo >= 2 ? `<span class="tr-combo">${I.raio}Combo ${TR.combo}</span>` : ''}</div>
-      <h2 class="kf-so-leitor" id="tr-t" tabindex="-1">${TR.desafio ? 'Desafio do dia. ' : ''}Questão ${TR.i + 1} de ${n}</h2>
+      <h2 class="kf-so-leitor" id="tr-t" tabindex="-1">${TR.desafio ? 'Desafio do dia. ' : TR.cad ? `Caderno ${esc(TR.nome)}. ` : ''}Questão ${TR.i + 1} de ${n}</h2>
       <div class="folha tr-folha"><p class="rotulo-mini">Julgue o item</p><p class="tr-enun">${esc(q.e)}</p></div>
       ${!fez ? `<div class="tr-botoes" role="group" aria-label="Sua resposta"><button type="button" class="kf-btn kf-sec tr-b" data-resp="C">${I.check}Certo</button><button type="button" class="kf-btn kf-sec tr-b" data-resp="E">${I.x}Errado</button></div>
         <p class="tr-dica" aria-hidden="true">No teclado: C para certo, E para errado</p>`
@@ -72,8 +75,8 @@ function treinoPintar() {
         <div class="tr-exp"><p>${esc(q.c)}</p><p class="tr-fund">${I.lei}<span>${esc(q.f)}</span></p></div>
         ${AULAS[q.t] ? `<details class="tr-aula" data-kf-secao><summary><b>Aula do assunto</b></summary><p>${esc(AULAS[q.t])}</p></details>` : ''}
         ${inst.map(x => `<div class="tr-inst"><span class="rotulo-mini">Instrutor · ${esc(x.em || '')}</span><p>${esc(x.r || '')}</p></div>`).join('')}
-        ${ok ? '' : '<p class="tr-fc">Este item virou flashcard e volta amanhã.</p>'}
-        <div class="tr-acoes"><button type="button" class="kf-btn kf-sec" id="tr-perguntar">Perguntar ao instrutor</button><button type="button" class="kf-btn kf-comecar" id="tr-prox">${ult ? 'Concluir treino' : 'Próxima questão'}</button></div>`}
+        ${ok ? '' : '<p class="tr-fc">Esta questão virou flashcard e volta amanhã.</p>'}
+        <div class="tr-acoes"><button type="button" class="kf-btn kf-sec" id="tr-perguntar">Perguntar ao instrutor</button><button type="button" class="kf-btn kf-comecar" id="tr-prox">${ult ? (TR.cad ? 'Fechar o caderno' : 'Concluir treino') : 'Próxima questão'}</button></div>`}
     </div>`;
   requestAnimationFrame(() => { if (!treinoEl) return; const alvo = fez ? $('#tr-prox', treinoEl) : $('#tr-t', treinoEl); alvo && alvo.focus({ preventScroll: true }); if (!fez && treinoEl) treinoEl.scrollTop = 0; });
 }
@@ -84,12 +87,22 @@ function treinoResponder(v) {
   const p = TR.porT.get(q.t) || { ac: 0, er: 0 }; ok ? p.ac++ : p.er++; TR.porT.set(q.t, p);
   // a resposta fica guardada por questão; item errado vira flashcard e volta amanhã
   let r = DB.respostas.find(x => x.id === q.id); if (!r) { r = { id: q.id, n: 0, ac: 0, rv: 0 }; DB.respostas.push(r); }
-  r.n++; if (ok) r.ac++; r.ok = ok; r.em = agora();
+  r.n++; if (ok) r.ac++; r.ok = ok; r.v = v; r.em = agora();
+  if (TR.cad) cadernoMarcar(TR.cad, q, v);
   if (!ok) { r.cx = 0; r.due = maisDias(h, 1); }
   salvar({ quieto: true }); vibrar(ok ? 10 : [30, 40, 30]);
   treinoPintar();
 }
-function treinoSeguir() { if (TR.i >= TR.lista.length - 1) return treinoEncerrar(); TR.i++; TR.marcou = null; treinoPintar(); }
+// no caderno, a próxima é a primeira ainda sem resposta depois desta (ou, se não houver, antes desta)
+function proximaDoCaderno() {
+  const C = cadernoDe(TR.cad); if (!C) return -1; const r = cadernoEstado(C).r, n = TR.lista.length;
+  for (let k = 1; k <= n; k++) { const j = (TR.i + k) % n; if (j !== TR.i && !r[TR.lista[j].id]) return j; }
+  return -1;
+}
+function treinoSeguir() {
+  if (TR.cad) { const j = proximaDoCaderno(); if (j < 0) return treinoEncerrar(); TR.i = j; TR.marcou = null; return treinoPintar(); }
+  if (TR.i >= TR.lista.length - 1) return treinoEncerrar(); TR.i++; TR.marcou = null; treinoPintar();
+}
 function treinoFechar() {
   if (!treinoEl) return; const el = treinoEl; treinoEl = null; TR = null; document.body.classList.remove('com-foco'); document.removeEventListener('keydown', treinoTecla, true);
   el.removeAttribute('id'); $$('[id]', el).forEach(x => x.removeAttribute('id')); el.classList.remove('dentro'); el.style.pointerEvents = 'none';
@@ -110,7 +123,7 @@ function treinoEncerrar() {
   }
   const m = unico ? null : materia(topico([...T.porT.keys()][0]).m);
   fez.sessao = { t: unico, m: unico ? topico(unico).m : null, seg, ac: T.ac, er: T.er };
-  fez.rotulo = T.desafio ? 'Desafio do dia' : unico ? null : `Treino de questões${m ? ' · ' + m.nome : ''}`;
+  fez.rotulo = T.desafio ? 'Desafio do dia' : T.cad ? `Caderno · ${T.nome}` : unico ? null : `Treino de questões${m ? ' · ' + m.nome : ''}`;
   fez.extra = [T.maxCombo >= 3 ? ['Maior combo', `${T.maxCombo} acertos seguidos`] : null, bonus ? ['Bônus', `+${bonus} pontos`] : null].filter(Boolean);
   salvar({ quieto: true }); treinoFechar();
   if (!festa(fez, antes, { aoFechar: () => { render(); setTimeout(medalhaFilaMostrar, 500); } })) { jogoConferir(); render(); }

@@ -3,13 +3,16 @@
 
 /* ---------- navegação ---------- */
 let tab = 'hoje', novoItem = null;
-const TELAS = { hoje: viewHoje, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, provas: viewProvas, prova: viewProva, discursivas: viewDiscursivas, discursiva: viewDiscursiva, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
-const TITULOS = { hoje: 'Hoje', plano: 'Plano', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', provas: 'Provas do Cebraspe', prova: 'Prova', discursivas: 'Discursiva', discursiva: 'Discursiva', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
-const PAI = { concurso: 'concursos', disciplina: 'disciplinas', prova: 'provas', discursiva: 'discursivas' };
-const DE_MAIS = new Set(['concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva']);
+const TELAS = { hoje: viewHoje, cadernos: viewCadernos, caderno: viewCaderno, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, provas: viewProvas, prova: viewProva, discursivas: viewDiscursivas, discursiva: viewDiscursiva, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
+const TITULOS = { hoje: 'Hoje', cadernos: 'Cadernos', caderno: 'Caderno', plano: 'Edital', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', provas: 'Provas do Cebraspe', prova: 'Prova', discursivas: 'Discursiva', discursiva: 'Discursiva', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
+const PAI = { concurso: 'concursos', disciplina: 'disciplinas', prova: 'provas', discursiva: 'discursivas', caderno: 'cadernos' };
+// telas das funções gerais, fora da fase fechada (GERAL, em app.js)
+const TELAS_GERAIS = new Set(['concursos', 'concurso', 'disciplinas', 'disciplina', 'simulados', 'agenda']);
+const DE_MAIS = new Set(['plano', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva']);
 function irPara(t, { topo = true } = {}) {
   if (t === 'estudar') { abrirEstudar(); return; }
   if (t === 'ajustes') { abrirAjustes(); return; }
+  if (!GERAL && TELAS_GERAIS.has(t)) t = 'hoje';
   sairDosAjustes(); fecharJanela(true);
   tab = t; render();
   if (topo) window.scrollTo({ top: 0 });
@@ -20,10 +23,11 @@ function pintarNav() {
   const viva = !!DB.ativa, centro = { id: 'estudar', rotulo: 'Estudar', nome: viva ? 'Voltar ao foco' : 'Estudar agora', icone: I.play, atual: false, selo: viva ? '<span class="kf-nav-selo"><span aria-hidden="true">•</span><span class="kf-so-leitor">, sessão em andamento</span></span>' : '' };
   // com as medalhas ligadas, elas ficam na barra e a Evolução vai para "Mais"; desligadas, a Evolução volta à barra
   const jogo = jogoLigado(), terceiro = jogo ? it('medalhas', 'Medalhas', I.medalha) : it('evolucao', 'Evolução', I.evolucao);
-  const html = KitFacil.nav.barra({ itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), terceiro], centro, mais: { atual: tab === 'mais' || DE_MAIS.has(tab) || (jogo && tab === 'evolucao') } });
+  const html = KitFacil.nav.barra({ itens: [it('hoje', 'Hoje', I.hoje), it('cadernos', 'Cadernos', I.questoes, ['caderno']), terceiro], centro, mais: { atual: tab === 'mais' || DE_MAIS.has(tab) || (jogo && tab === 'evolucao') } });
   const nav = $('#tabs'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
   const lado = KitFacil.nav.trilho({ destaque: { ...centro, rotulo: viva ? 'Voltar ao foco' : 'Estudar agora' },
-    itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('evolucao', 'Evolução', I.evolucao), it('provas', 'Provas', I.simulado, ['prova']), it('discursivas', 'Discursiva', I.lapis, ['discursiva']), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar), it('concursos', 'Concursos', I.concurso, ['concurso']), it('disciplinas', 'Disciplinas', I.disciplinas, ['disciplina']), it('simulados', 'Simulados', I.simulado), it('agenda', 'Agenda', I.agenda)], mais: { atual: tab === 'mais' } });
+    itens: [it('hoje', 'Hoje', I.hoje), it('cadernos', 'Cadernos', I.questoes, ['caderno']), ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('plano', 'Edital', I.plano), it('evolucao', 'Evolução', I.evolucao), it('provas', 'Provas', I.simulado, ['prova']), it('discursivas', 'Discursiva', I.lapis, ['discursiva']), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar),
+      ...(GERAL ? [it('concursos', 'Concursos', I.concurso, ['concurso']), it('disciplinas', 'Disciplinas', I.disciplinas, ['disciplina']), it('simulados', 'Simulados', I.simulado), it('agenda', 'Agenda', I.agenda)] : [])], mais: { atual: tab === 'mais' } });
   const t = $('#trilho'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
 }
 document.addEventListener('click', e => {
@@ -35,6 +39,7 @@ $('#marca').addEventListener('click', () => irPara('hoje'));
 
 /* ---------- ações das telas ---------- */
 const ACOES = {
+  ...ACOES_CAD,
   'estudar-proximo': () => abrirEstudar(),
   'estudar-item': b => { const it = planoDoDia().itens[+b.dataset.i]; if (it) abrirEstudar(it); },
   'revisar': b => { const r = DB.revisoes.find(x => x.id === b.dataset.id); if (r) abrirEstudar({ t: r.t, m: topico(r.t).m, tipo: 'revisao', min: 15, rev: r.id }); },
@@ -49,7 +54,7 @@ const ACOES = {
   'abrir-prova': b => { provaId = b.dataset.id; provaIni = 0; irPara('prova'); },
   'abrir-red': b => { redId = b.dataset.id; irPara('discursiva'); },
   'sobre-sequencia': () => sobreSequencia(),
-  'guia': () => guiaIniciar(),
+  'guia': () => { if (GERAL) guiaIniciar(); },
   'novo-concurso': () => novoConcurso(),
   'abrir-concurso': b => { concId = b.dataset.id; irPara('concurso'); },
   'editar-concurso': () => editarConcurso(),
@@ -83,12 +88,14 @@ function render() {
   if (tab === 'concurso' && !DB.concursos.some(c => c.id === concId)) tab = 'concursos';
   if (tab === 'disciplina' && !materia(discId)) tab = 'disciplinas';
   if (tab === 'prova' && !PROVA.has(provaId)) tab = 'provas';
+  if (tab === 'caderno' && !cadernoDe(cadId)) tab = 'cadernos';
+  if (!GERAL && TELAS_GERAIS.has(tab)) tab = 'hoje';
   if (tab === 'discursiva' && !DISC.has(redId)) tab = 'discursivas';
   if (!TELAS[tab] && tab !== 'ajustes') tab = 'hoje';
   pintarNav();
   const v = $('#view'), tela = tab === 'ajustes' ? viewAjustes : TELAS[tab];
   $('.wrap').classList.toggle('largo', tab === 'ajustes');
-  const chaveTela = tab + (tab === 'concurso' ? concId : tab === 'disciplina' ? discId : tab === 'prova' ? provaId : tab === 'discursiva' ? redId : '');
+  const chaveTela = tab + (tab === 'concurso' ? concId : tab === 'disciplina' ? discId : tab === 'prova' ? provaId : tab === 'discursiva' ? redId : tab === 'caderno' ? cadId : '');
   const trocou = v.dataset.telaAtual !== chaveTela; v.dataset.telaAtual = chaveTela;
   // as seções abertas continuam abertas depois de redesenhar
   const abertas = trocou ? null : new Set($$('details[data-chave]', v).filter(d => d.open).map(d => d.dataset.chave)), fechadas = trocou ? null : new Set($$('details[data-chave]', v).filter(d => !d.open).map(d => d.dataset.chave));
@@ -155,7 +162,7 @@ const viewAjustes = {
           html: `<div class="kf-bloco"><h3>Quando revisar</h3><form id="aj-rev-f" class="kf-campo" autocomplete="off"><label class="kf-rotulo" for="aj-rev">Dias depois de concluir a teoria</label><div class="kf-linha"><input id="aj-rev" class="kf-entrada" type="text" inputmode="numeric" maxlength="30" value="${c.revisoes.join(', ')}" enterkeyhint="done"><button type="submit" class="kf-btn kf-pri">Salvar</button></div><p class="kf-ajuda">Separe por vírgula. O padrão é 1, 7, 30. Vale para os assuntos que você concluir de agora em diante.</p></form></div>` },
         { id: 'medalhas', titulo: 'Medalhas e apresentação', icone: '<circle cx="12" cy="14.500" r="5.500"/><path d="M8.500 3.500 12 9l3.500-5.500M9.200 10 6.500 3.500M14.800 10l2.700-6.500"/>', resumo: resumoJogo(),
           html: `<div class="kf-bloco"><h3>Pontos, níveis e medalhas</h3>${linhaChave('aj-jogo', jogoLigado(), 'Mostrar pontos, níveis e medalhas', 'Desligado, o app fica só com o plano e as contas. Nada é apagado.')}</div>
-            <div class="kf-bloco"><h3>Apresentação</h3><p class="kf-ajuda">As telas que aparecem na primeira vez que o app abre. O guia fica em Mais.</p><button type="button" class="kf-btn kf-sec" id="aj-abertura">Rever a apresentação</button></div>` },
+            <div class="kf-bloco"><h3>Apresentação</h3><p class="kf-ajuda">As telas que aparecem na primeira vez que o app abre.${GERAL ? ' O guia fica em Mais.' : ''}</p><button type="button" class="kf-btn kf-sec" id="aj-abertura">Rever a apresentação</button></div>` },
       ],
     });
   },
@@ -198,7 +205,7 @@ function aberturaAbrir({ rever = false } = {}) {
     { arte: `<div class="folha ab-capa"><span class="rotulo-mini">${c ? esc(c.orgao || c.sigla) : 'Seu concurso'}</span><b class="capa-t">${c ? esc(c.cargo || c.sigla) : 'Escolha o seu edital'}</b>
         ${c ? `<dl class="resumo"><div><dt>Disciplinas</dt><dd>${c.disc.length}</dd></div><div><dt>Assuntos</dt><dd>${soma(c.disc, d => d.topicos.length)}</dd></div><div><dt>Fases até a prova</dt><dd>3</dd></div></dl>` : ''}</div>`,
       titulo: c && c.base === 'anpd' ? 'Seu plano para a ANPD está pronto' : 'Seu plano começa hoje',
-      texto: c && c.base === 'anpd' ? 'Especialista em Regulação: disciplinas, pesos e fases até a prova. Dá para trocar de concurso quando quiser.' : 'Adicione o seu concurso e o app monta o plano de cada dia.',
+      texto: c && c.base === 'anpd' ? 'Especialista em Regulação: doze cadernos de questões, o edital para grifar e as fases até a prova.' : 'Adicione o seu concurso e o app monta o plano de cada dia.',
       extra: cfg().nome ? '' : `<div class="kf-campo ab-nome"><label class="kf-rotulo" for="ab-eu">Como chamam você? <span class="kf-opcional">(opcional)</span></label><input id="ab-eu" class="kf-entrada" type="text" autocapitalize="words" autocomplete="off" maxlength="40" placeholder="Seu nome ou apelido"></div>` },
   ];
   KitFacil.abertura.abrir({ telas, rever, rotulo: 'Apresentação do Estudo Fácil', fim: () => rever ? 'Concluir' : 'Começar a estudar',
@@ -241,7 +248,7 @@ function guiaIniciar() {
       const r = dadosReais; dadosReais = null; semSalvar = false;
       DB = r.DB; tab = 'hoje'; concId = r.concId; discId = r.discId; planoConc = r.planoConc; VER++; $('#view').dataset.telaAtual = '';
       render(); window.scrollTo({ top: 0 });
-      if (concluiu) { jogoMarcar('guia'); avisar('Guia concluído. Para rever, toque em Mais e em Ver o guia.'); }
+      if (concluiu) { jogoMarcar('guia'); avisar('Guia concluído.'); }
     },
   });
 }

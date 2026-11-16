@@ -8,7 +8,9 @@ let amb;
 before(async () => { amb = await preparar(); });
 after(async () => { await amb?.encerrar(); });
 
-test('guia: faz todos os passos na tela, numa demonstração que não grava nada, e devolve os dados', { timeout: 720000 }, async () => {
+// O guia está fora da fase de testes fechada (decisão do Bruno, 16/11/2026) e o roteiro ficou para trás da tela
+// atual (cadernos). Quando o app voltar a ser público, o roteiro é refeito e este teste volta.
+test('guia: faz todos os passos na tela, numa demonstração que não grava nada, e devolve os dados', { timeout: 720000, skip: 'guia desligado na fase fechada' }, async () => {
   const a = await aparelho(amb, { caminho: '?hoje=2026-11-16' }), p = a.page;
   await p.evaluate(() => { registrarSessao({ t: topicosDe('anpd-lgpd')[3].id, seg: 1800, ac: 3, er: 1, teoria: true }); cfg().metaMin = 90; salvar(); });
   const antes = await p.evaluate(() => [JSON.stringify(DB.sessoes), localStorage.getItem('estudofacil.db')]);

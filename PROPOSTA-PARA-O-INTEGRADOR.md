@@ -1,4 +1,4 @@
-# Proposta para o Integrador · Estudo Fácil 1.2.0 (16/11/2026)
+# Proposta para o Integrador · Estudo Fácil 1.3.0 (16/11/2026)
 
 O Estudo Fácil foi refeito do zero, na vez dele de seguir o Conta Fácil (Código, Art. 93, § 2º). O que segue precisa de
 decisão no Integrador (Código, Art. 7º). Nada aqui foi alterado na pasta `comum/`.
@@ -8,8 +8,13 @@ decisão no Integrador (Código, Art. 7º). Nada aqui foi alterado na pasta `com
 Decisão do Bruno: por enquanto, o Estudo Fácil é de uso exclusivo dele e só do concurso da ANPD. É provisório; no
 futuro o app volta a ser publicado para o público geral.
 
-**a) Exceção a registrar no Painel** (Código, Art. 5º, III): exceção ao Art. 10 do Código e ao Art. 1º das Regras do
-Estudo Fácil. No README e no CHANGELOG do app ela já está registrada.
+**a) Exceções a registrar no Painel** (Código, Art. 5º, III), todas provisórias e já registradas no README e no
+CHANGELOG do app:
+
+- exceção ao Art. 10 do Código e ao Art. 1º das Regras do Estudo Fácil (app de uso exclusivo, só da ANPD), desde a 1.1.0;
+- **app sem guia**, exceção aos Arts. 77 a 80 do Código, desde a 1.3.0;
+- **funções gerais fora da tela** (Concursos, Disciplinas, Simulados e Agenda), desde a 1.3.0; diverge das Regras do
+  Estudo Fácil, Arts. 6º a 9º.
 
 **b) Kit Fácil: tirar o Estudo Fácil de "Outros apps da família" nos outros apps.** A lista sai de `FAMILIA`, em
 `comum/kit-facil.js`, que também serve para os prefixos de armazenamento e para a chave de sincronização; por isso a
@@ -23,10 +28,11 @@ Estudo Fácil nada muda. Para desfazer no futuro, basta tirar a marca.
 **c) Regras do Estudo Fácil** (instruções do Projeto no claude.ai), texto proposto para esta fase:
 
 - **Art. 1º** O Estudo Fácil é, nesta fase de testes fechada, o app de estudos do Bruno para o concurso da ANPD (Especialista em Regulação de Proteção de Dados, banca Cebraspe). **§ 1º** A fase fechada é provisória: no futuro o app volta a ser um controle de estudos geral, para o público. **§ 2º** Enquanto durar, os outros apps da família não o listam.
-- **Art. 6º** A barra de baixo tem Hoje, Plano, Estudar (botão redondo, no centro), Medalhas e "Mais" (Evolução, Instrutor, Flashcards, Concursos, Disciplinas, Revisões, Simulados, Agenda, o guia e os Ajustes). **Parágrafo único.** Com as medalhas desligadas, a Evolução ocupa o lugar de Medalhas.
-- **Art. 8º** O plano da ANPD vem de fábrica; outros concursos entram digitados, com o conteúdo programático colado.
+- **Art. 6º** A barra de baixo tem Hoje, Cadernos, Estudar (botão redondo, no centro), Medalhas e "Mais" (Edital, Evolução, Provas do Cebraspe, Discursiva, Flashcards, Revisões, Instrutor e os Ajustes). **§ 1º** Com as medalhas desligadas, a Evolução ocupa o lugar de Medalhas. **§ 2º** Na fase fechada ficam fora da tela Concursos, Disciplinas, Simulados, Agenda e o guia.
+- **Art. 7º** Não há tela de primeiro uso: quem chega vê a tela Hoje, com o plano da ANPD pronto. A rotina se ajusta em *Ajustes → Rotina e metas*.
+- **Art. 8º** O plano da ANPD vem de fábrica. Na fase fechada não se cadastram outros concursos.
+- **Art. 13-A (novo).** O app se organiza em cadernos de questões: um por disciplina, os atalhos e os cadernos montados. Todas as questões são nativas, escritas dentro do app, com comentário e fundamento; questão de prova oficial não é copiada.
 - **Art. 14 (novo).** O estudo é por questões, e o material nasce das provas oficiais: primeiro se levantam as provas da banca no site do Cebraspe, depois se escrevem as questões, os comentários e as apostilas, seguindo o `instrutor/caderno-da-banca.md`. **§ 1º** Das provas oficiais ficam no repositório o endereço, o gabarito definitivo, os blocos por disciplina e o comentário do instrutor; o texto da prova, não. **§ 2º** Conteúdo de sites de questões não entra.
-- **Art. 6º, complemento.** Em "Mais" entram também Provas do Cebraspe e Discursiva.
 - **Art. 15 (novo).** O instrutor é o Claude, no Projeto Estudo Fácil: o app copia a dúvida, a resposta sai na conversa e fica gravada em `instrutor/respostas.json`, sem nada pessoal.
 
 ## 1. Anexo I: identidade do Estudo Fácil

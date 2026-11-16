@@ -3,6 +3,23 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.3.0 · 2026-11-16
+
+O app fica mais enxuto e passa a girar em torno de **cadernos de questões**, com todas as questões escritas dentro dele.
+
+- **Cadernos de questões:** a tela nova, na barra de baixo. Há um caderno por disciplina, com as questões agrupadas por assunto.
+- **Andamento próprio:** cada caderno lembra onde você parou. Dá para abrir qualquer questão pelo número, refazer só as erradas ou zerar as respostas.
+- **Atalhos:** só as que errei, nunca resolvidas e o desafio do dia.
+- **Meus cadernos:** monte o seu, escolhendo as disciplinas, o filtro e o tamanho.
+- **Banco de questões:** de 63 para 220, agora nas doze disciplinas do plano. Todas escritas no app, com gabarito, comentário, fundamento e aula curta do assunto. Não são questões de prova.
+- **App mais enxuto:** saíram da tela Concursos, Disciplinas, Simulados, Agenda e o guia. Voltam quando o app for aberto ao público.
+- **Barra de baixo:** Hoje, Cadernos, Estudar, Medalhas e Mais. O edital foi para Mais.
+- **Tela Hoje:** mostra o caderno em andamento, para continuar com um toque.
+- **Medalhas:** duas novas, Caderno fechado e Caderno sob medida. A do guia fica guardada. São 111.
+- **Correção:** a janela de medalha nova não abre mais por cima do treino; espera você sair.
+- **Exceções registradas** (provisórias, no README): app sem guia (Código, Arts. 77 a 80) e funções gerais fora da tela.
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou) e o teste do guia (o guia está desligado). Rodaram a verificação do padrão, os 22 testes do app e a varredura de acessibilidade (WCAG 2.2 AA), no claro e no escuro.
+
 ## 1.2.0 · 2026-11-16
 
 O material do app passa a nascer das provas oficiais da banca: primeiro as provas, depois as questões e as apostilas.

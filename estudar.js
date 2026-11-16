@@ -20,7 +20,7 @@ function abrirEstudar(pre = null) {
   const comBanco = () => (tipo === 'questoes' || tipo === 'revisao') && temBanco(t);
   const n = sug && nomeItem(sug);
   abrirJanela({ titulo: 'Estudar', sub: pre ? 'Confira e comece.' : 'Siga o plano de hoje ou escolha outro assunto.', alto: true,
-    corpo: `${sug && !pre ? `<div class="sugestao"><span class="rotulo-mini">${plano.proximo ? 'Próximo do plano' : 'Sugestão'}</span><b>${esc(n.t)}</b><small>${esc(n.m)} · ${TIPOS[tipo]} · ${sug.nq ? plural(sug.nq, 'item', 'itens') : sug.min + ' min'}</small></div>` : ''}
+    corpo: `${sug && !pre ? `<div class="sugestao"><span class="rotulo-mini">${plano.proximo ? 'Próximo do plano' : 'Sugestão'}</span><b>${esc(n.t)}</b><small>${esc(n.m)} · ${TIPOS[tipo]} · ${sug.nq ? plural(sug.nq, 'questão', 'questões') : sug.min + ' min'}</small></div>` : ''}
       <div class="kf-campo"><label class="kf-rotulo" for="es-m">Disciplina</label><select id="es-m" class="kf-entrada">${opcoesMaterias(m)}</select></div>
       <div class="kf-campo"><label class="kf-rotulo" for="es-t">Assunto</label><select id="es-t" class="kf-entrada">${opcoesTopicos(m, t)}</select></div>
       <div class="kf-campo"><span class="kf-rotulo" id="es-tipo-r">O que você vai fazer</span>${segHTML('es-tipo', Object.entries(TIPOS), tipo, 'O que você vai fazer')}<p class="kf-ajuda" id="es-banco" role="status"></p></div>

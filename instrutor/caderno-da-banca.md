@@ -83,6 +83,25 @@ desconfiança, mas não decidem sozinhas: ANATEL 50 traz "sempre" e está certo,
 5. Nunca reescrever um item de prova: usar a armadilha, não o enunciado.
 6. Conferir cada número, prazo e artigo na fonte oficial antes de publicar.
 
+7. O "só", o "apenas" e o "sempre" são armadilha própria: o resto do item pode estar certo e a restrição derruba.
+8. Nada de norma recente de memória: Lei 15.352/2026, ECA Digital e resoluções da ANPD só entram depois de conferidas
+   em fonte oficial ou em mais de uma fonte; o que não foi confirmado fica de fora.
+
+### Estado do banco (1.3.0, 16/11/2026)
+
+- 220 questões nativas: 63 de LGPD (`questoes.js`) e 157 das outras onze disciplinas (`questoes2.js`); 109 certas e
+  111 erradas.
+- Nenhum assunto com três ou mais questões tem um gabarito só.
+- Assuntos ainda sem questão nativa (o app mostra "Sem questões do app" e oferece o cronômetro):
+  - Regulamentos da ANPD: Resoluções 30/2025 e 32/2026, agenda regulatória, os três grupos de guias e os enunciados
+    do Conselho Diretor;
+  - ANPD como agência: Decreto 12.881/2026, CNPD, art. 55-J e planejamento estratégico;
+  - Tecnologia: big data e perfilamento; Direito digital: CDC no ambiente digital e Cadastro Positivo;
+  - Português: interpretação, tipologia e coordenação e subordinação (dependem de texto de apoio);
+  - Inglês: inferência e ideia principal (depende de texto de apoio).
+- Português e Inglês da banca são presos a um texto. No app, por ora, as questões são de frase solta; falta criar o
+  formato "texto de apoio + itens" com textos próprios.
+
 ## 7. O que falta levantar
 
 - Gabarito da ANTT 2024 (CB1) e os específicos de Direito e de formação geral da ANATEL 2024.

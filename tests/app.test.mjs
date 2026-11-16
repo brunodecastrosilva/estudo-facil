@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.2 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.3 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -12,6 +12,8 @@ after(async () => { await amb?.encerrar(); });
 const esperar = async (cond, ms = 8000) => { const fim = Date.now() + ms; while (Date.now() < fim) { if (await cond()) return true; await new Promise(r => setTimeout(r, 50)); } return false; };
 const HOJE = '2026-11-16'; // uma segunda-feira
 const abrir = (o = {}) => aparelho(amb, { caminho: '?hoje=' + HOJE, ...o });
+// as funções gerais (Concursos, Disciplinas, Simulados e Agenda) estão fora da fase fechada; ?geral=1 as liga nos testes
+const abrirGeral = (o = {}) => abrir({ caminho: '?hoje=' + HOJE + '&geral=1', ...o });
 const TELAS = [[{ width: 320, height: 568 }, 'celular mínimo (zoom 400%)'], [{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
 const nav = (p, id) => p.locator(`#kf-nav-${id}:visible, #kf-trilho-${id}:visible`).first().click();
 const semJanela = p => p.locator('.kf-dlg').first().waitFor({ state: 'detached' }).catch(() => {});
@@ -27,8 +29,8 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral, com o
     assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${nome}`);
     const topo = await conferirTopo(a.page); assert.deepEqual(topo.erros, [], `barra de cima em ${nome}`);
     const navAj = await conferirNavAjustes(a.page); assert.deepEqual(navAj.erros, [], `navegação em ${nome}`);
-    for (const t of ['plano', 'medalhas', 'mais']) { await nav(a.page, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
-    for (const t of ['evolucao', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva']) { await a.page.evaluate(t => { provaId = 'dataprev23-seg'; redId = 'antt24-sandbox'; irPara(t); }, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
+    for (const t of ['cadernos', 'medalhas', 'mais']) { await nav(a.page, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
+    for (const t of ['plano', 'caderno', 'evolucao', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva']) { await a.page.evaluate(t => { provaId = 'dataprev23-seg'; redId = 'antt24-sandbox'; cadId = 'm:anpd-lgpd'; irPara(t); }, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
     await a.page.evaluate(() => treinoAbrir({ t: 'anpd-lgpd-01' })); await a.page.locator('#treino.dentro').waitFor(); await a.page.click('#treino [data-resp="E"]'); await a.page.locator('#tr-prox').waitFor();
     assert.ok(await a.page.evaluate(() => { const e = document.querySelector('#treino'); return e.scrollWidth <= e.clientWidth + 1; }), `rolagem lateral no treino, ${nome}`); await a.page.keyboard.press('Escape'); await a.page.locator('#festa-ok').click();
     assert.deepEqual(a.erros, [], `erros no console em ${nome}`);
@@ -40,6 +42,10 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral, com o
   // quem já tinha o plano de fábrica com a banca a definir recebe a banca nova
   await a.page.evaluate(() => { const c = DB.concursos[0]; c.banca = 'A definir'; c.datas = c.datas.filter(x => x.id !== 'd03b'); salvar(); });
   await a.page.reload(); await a.page.locator('#view .hoje-folha').waitFor();
+  // fase fechada: as funções gerais e o guia ficam fora da tela
+  const f = await a.page.evaluate(() => { const r = []; for (const t of ['concursos', 'concurso', 'disciplinas', 'disciplina', 'simulados', 'agenda']) { irPara(t); r.push(tab); } irPara('mais'); return { r, mais: [...document.querySelectorAll('#view .kf-mais-lin')].map(e => e.dataset.kfIr || e.dataset.kf || e.dataset.act), guia: !!document.querySelector('#ma-guia'), medGuia: medalhasDoApp().some(m => m.id === 'guia'), nav: [...document.querySelectorAll('#tabs [id^="kf-nav-"]')].map(e => e.id.slice(7)) }; });
+  assert.deepEqual(f.r, Array(6).fill('hoje'), 'telas gerais não abrem'); assert.deepEqual(f.mais, ['plano', 'evolucao', 'provas', 'discursivas', 'flashcards', 'revisoes', 'instrutor', 'ajustes']); assert.deepEqual([f.guia, f.medGuia], [false, false]);
+  assert.deepEqual(f.nav, ['hoje', 'cadernos', 'estudar', 'medalhas', 'mais']);
   assert.deepEqual(await a.page.evaluate(() => [DB.concursos[0].banca, DB.concursos[0].datas.filter(x => x.id === 'd03b').length]), ['Cebraspe', 1]);
   await a.fechar();
 });
@@ -75,8 +81,8 @@ test('sessão no cronômetro (assunto sem questões do app): foco, acertos, teor
   assert.ok(await semCampoEmFoco(p), 'a janela de Estudar abriu com um campo em foco');
   assert.match(await p.locator('.kf-dlg .sugestao').innerText(), /Aplicação da lei/);
   assert.equal(await p.locator('#es-alvo-c').isVisible(), false, 'no treino de questões não se escolhe o tempo');
-  await p.evaluate(() => { const e = document.querySelector('#es-m'); e.value = 'anpd-da'; e.dispatchEvent(new Event('change', { bubbles: true })); }); await p.click('#es-tipo [data-v="teoria"]');
-  assert.match(await p.locator('#es-banco').innerText(), /Sem questões do app/); assert.equal(await p.locator('#es-alvo-c').isVisible(), true);
+  await p.evaluate(() => { const ev = () => new Event('change', { bubbles: true }), m = document.querySelector('#es-m'), t = document.querySelector('#es-t'); m.value = 'anpd-reg'; m.dispatchEvent(ev()); t.value = 'anpd-reg-07'; t.dispatchEvent(ev()); });
+  assert.match(await p.locator('#es-banco').innerText(), /Sem questões do app/); await p.click('#es-tipo [data-v="teoria"]'); assert.equal(await p.locator('#es-alvo-c').isVisible(), true);
   await p.click('#es-ok'); await p.locator('#foco.dentro').waitFor();
   assert.equal(await p.evaluate(() => !!DB.ativa && focoAberto()), true);
   for (let i = 0; i < 4; i++) await p.click('#foco [data-q="ac"][data-d="1"]');
@@ -93,8 +99,8 @@ test('sessão no cronômetro (assunto sem questões do app): foco, acertos, teor
   await p.locator('#festa-ok').waitFor();
   assert.match(await p.locator('#festa-t').innerText(), /Meta do dia batida/);
   await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
-  const r = await p.evaluate(() => ({ s: DB.sessoes.map(s => [s.t, s.tipo, Math.round(s.seg / 60), s.ac, s.er]), teoria: !!topico('anpd-da-01').teoria, rev: DB.revisoes.map(r => r.due), dia: DB.dias.map(d => d.id), seq: sequencia().n, ativa: DB.ativa, dom: dominio(topico('anpd-da-01')), pts: pontosBase(), ganhas: jogoEstado().ganhas }));
-  assert.deepEqual(r.s, [['anpd-da-01', 'teoria', 61, 4, 1]]);
+  const r = await p.evaluate(() => ({ s: DB.sessoes.map(s => [s.t, s.tipo, Math.round(s.seg / 60), s.ac, s.er]), teoria: !!topico('anpd-reg-07').teoria, rev: DB.revisoes.map(r => r.due), dia: DB.dias.map(d => d.id), seq: sequencia().n, ativa: DB.ativa, dom: dominio(topico('anpd-reg-07')), pts: pontosBase(), ganhas: jogoEstado().ganhas }));
+  assert.deepEqual(r.s, [['anpd-reg-07', 'teoria', 61, 4, 1]]);
   assert.ok(r.teoria); assert.deepEqual(r.rev, ['2026-11-17', '2026-11-23', '2026-12-16']);
   assert.deepEqual(r.dia, [HOJE]); assert.equal(r.seq, 1); assert.equal(r.ativa, null); assert.equal(r.dom, 2);
   assert.equal(r.pts, 61 + 5 + 4 * 2 + 25 + 30, 'minutos, questões, acertos (em dobro), assunto e dia');
@@ -137,11 +143,61 @@ test('treino de questões pela tela: certo ou errado, comentário, aula, combo, 
   await a.fechar();
 });
 
+test('cadernos de questões: por disciplina, andamento próprio, refazer as erradas, zerar e caderno montado', async () => {
+  const a = await abrir(), p = a.page;
+  const b = await p.evaluate(() => ({ n: QUESTOES.length, ids: new Set(QUESTOES.map(q => q.id)).size, ok: QUESTOES.every(q => topico(q.t) && AULAS[q.t] && q.e && q.c && q.f && 'CE'.includes(q.g) && q.e.split(' ').length <= 40), disc: materiasComBanco().length, c: QUESTOES.filter(q => q.g === 'C').length }));
+  assert.ok(b.n >= 220 && b.ids === b.n && b.ok, 'toda questão tem assunto, aula, comentário e fundamento'); assert.equal(b.disc, 12, 'as doze disciplinas têm caderno'); assert.ok(b.c / b.n > 0.4 && b.c / b.n < 0.6, 'certos e errados equilibrados');
+  await nav(p, 'cadernos'); assert.equal(await p.locator('#view [aria-labelledby="cd-d"] [data-act="abrir-cad"]').count(), 12);
+  await p.click('#view [data-act="abrir-cad"][data-id="m:anpd-etica"]'); await p.locator('#cad-ir').waitFor();
+  assert.equal(await p.locator('#view .cad-q').count(), 12); assert.equal(await p.locator('#cad-ir').innerText(), 'Começar o caderno');
+  await p.click('#cad-ir'); await p.locator('#treino.dentro').waitFor();
+  assert.match(await p.locator('#tr-t').innerText(), /Caderno Ética, integridade e acesso à informação\. Questão 1 de 12/);
+  await p.click('#treino [data-resp="E"]'); await p.click('#tr-prox'); await p.click('#treino [data-resp="E"]'); await p.locator('#tr-prox').waitFor();
+  await p.keyboard.press('Escape'); await p.locator('#festa-ok').waitFor(); assert.match(await p.locator('.festa').innerText(), /Caderno · Ética/); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
+  const fechaMedalhas = async () => { for (let i = 0; i < 4; i++) { const m = p.locator('#mn-ok'); if (await m.count()) { await m.click(); await p.waitForTimeout(700); } else await p.waitForTimeout(250); } };
+  await fechaMedalhas();
+  assert.deepEqual(await p.evaluate(() => [tab, regCaderno('m:anpd-etica').r, cadernoEstado(cadernoDe('m:anpd-etica')).prox, DB.respostas.map(r => [r.id, r.v, r.ok])]), ['caderno', { 'eti-001': 'E', 'eti-002': 'E' }, 2, [['eti-001', 'E', true], ['eti-002', 'E', false]]]);
+  assert.match(await p.locator('#view .cad-capa').innerText(), /2[\s\S]*de 12 questões resolvidas[\s\S]*Certas[\s\S]*1[\s\S]*Erradas[\s\S]*1[\s\S]*50%/);
+  assert.deepEqual(await p.locator('#view .cad-q').evaluateAll(L => L.slice(0, 3).map(e => e.className.replace('cad-q', '').trim())), ['ok', 'no', '']);
+  assert.match(await p.getAttribute('#view .cad-q.no', 'aria-label'), /Questão 2: resolvida, você errou/);
+  // refazer as erradas: a resposta errada sai do caderno e o treino volta nela
+  await p.click('#cad-refazer'); await p.locator('#treino.dentro').waitFor(); assert.equal(await p.evaluate(() => TR.i + ':' + TR.lista[TR.i].id), '1:eti-002');
+  await p.click('#treino [data-resp="C"]'); await p.click('#tr-prox'); assert.equal(await p.evaluate(() => TR.i), 2, 'a próxima é a primeira ainda sem resposta');
+  await p.keyboard.press('Escape'); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' }); await fechaMedalhas();
+  // abrir pelo número: questão já resolvida aparece respondida, com o comentário
+  await p.click('#view .cad-q >> nth=0'); await p.locator('#tr-prox').waitFor(); assert.match(await p.locator('#treino .tr-fb').innerText(), /Você acertou/); assert.equal(await p.locator('#treino [data-resp]').count(), 0);
+  await p.keyboard.press('Escape'); await p.locator('#treino').waitFor({ state: 'detached' });
+  assert.equal(await p.evaluate(() => DB.sessoes.length), 2, 'rever uma questão não cria sessão');
+  // a tela Hoje leva de volta ao caderno em andamento
+  await nav(p, 'hoje'); assert.match(await p.locator('#view [data-act="cad-continuar"]').innerText(), /Continuar o caderno[\s\S]*Ética[\s\S]*2 de 12/);
+  await p.click('#view [data-act="cad-continuar"]'); await p.locator('#treino.dentro').waitFor(); assert.equal(await p.evaluate(() => TR.cad + ':' + TR.i), 'm:anpd-etica:2'); await p.keyboard.press('Escape'); await p.locator('#treino').waitFor({ state: 'detached' });
+  await p.evaluate(() => { cadId = 'm:anpd-etica'; irPara('caderno'); }); await p.click('#cad-zerar'); await p.locator('.kf-dlg [data-kf-ok]').click();
+  assert.deepEqual(await p.evaluate(() => [regCaderno('m:anpd-etica').r, DB.respostas.length]), [{}, 2], 'zerar apaga só as respostas do caderno');
+  // caderno montado: disciplina, filtro e tamanho; ao fechar todas as questões, vem a medalha
+  await nav(p, 'cadernos'); await p.click('#cad-novo'); await p.locator('#nc-ok').waitFor(); assert.ok(await semCampoEmFoco(p));
+  await p.click('#nc-ok'); assert.equal(await p.evaluate(() => DB.cadernos.filter(c => c.itens).length), 0, 'sem disciplina, não cria');
+  await p.evaluate(() => { const M = materiasComBanco(); document.querySelector('#nc-m' + M.findIndex(m => m.id === 'anpd-ing')).click(); }); await p.fill('#nc-nome', 'Inglês inteiro'); await p.click('#nc-qtd [data-v="0"]'); await p.click('#nc-ok');
+  await p.locator('#view .tela-t', { hasText: 'Inglês inteiro' }).waitFor(); assert.equal(await p.locator('#view .cad-q').count(), 8);
+  await p.click('#cad-ir'); await p.locator('#treino.dentro').waitFor();
+  for (let i = 0; i < 8; i++) { await p.click(`#treino [data-resp="${await p.evaluate(() => TR.lista[TR.i].g)}"]`); await p.locator('#tr-prox').waitFor(); if (i === 7) assert.equal(await p.locator('#tr-prox').innerText(), 'Fechar o caderno'); await p.click('#tr-prox'); }
+  await p.locator('#festa-ok').waitFor(); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' }); await fechaMedalhas();
+  assert.match(await p.locator('#view .cad-capa').innerText(), /Caderno concluído/);
+  const g = await p.evaluate(() => jogoEstado().ganhas); for (const m of ['cad1', 'cadm']) assert.ok(g.includes(m), 'medalha ' + m);
+  await p.click('#cad-excluir'); await p.locator('.kf-dlg [data-kf-ok]').click(); await p.locator('#view [aria-labelledby="cd-d"]').waitFor();
+  assert.equal(await p.evaluate(() => DB.cadernos.filter(c => c.itens).length), 0);
+  // atalho: só as que errei
+  assert.equal(await p.evaluate(() => erradasGerais().map(q => q.id).join()), '', 'eti-002 foi acertada depois'); await p.click('#view [data-act="cad-erradas"]'); assert.equal(await p.evaluate(() => treinoAberto()), false);
+  await p.evaluate(() => { DB.respostas.find(r => r.id === 'eti-001').ok = false; salvar(); }); await p.click('#view [data-act="cad-erradas"]'); await p.locator('#treino.dentro').waitFor();
+  assert.equal(await p.evaluate(() => TR.lista.map(q => q.id).join() + ':' + TR.cad), 'eti-001:null');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
 test('flashcards, desafio do dia e instrutor: o erro volta, o desafio rende bônus e a pergunta é copiada', async () => {
   const a = await abrir(), p = a.page;
   // um erro de ontem: o flashcard vence hoje
   await p.evaluate(() => { DB.respostas.push({ id: 'lgpd-004', n: 1, ac: 0, ok: false, em: agora() - 864e5, cx: 0, due: hojeISO(), rv: 0 }); salvar(); });
-  assert.match(await p.locator('#view [data-act="flashcards"]').innerText(), /1 item que você errou volta hoje/);
+  assert.match(await p.locator('#view [data-act="flashcards"]').innerText(), /1 questão que você errou volta hoje/);
   await p.click('#view [data-act="flashcards"]'); await p.locator('#fc-ver').waitFor();
   assert.equal(await p.locator('.kf-dlg .tr-exp').count(), 0, 'a resposta fica escondida até a pessoa pedir');
   await p.click('#fc-ver'); assert.match(await p.locator('.kf-dlg .tr-exp').innerText(), /Errado\.[\s\S]*art\. 5º, II/);
@@ -158,7 +214,7 @@ test('flashcards, desafio do dia e instrutor: o erro volta, o desafio rende bôn
     await p.click(`#treino [data-resp="${await p.evaluate(() => TR.lista[TR.i].g)}"]`); await p.locator('#tr-prox').waitFor();
     if (i === 0) { await p.click('#tr-perguntar'); await p.locator('#in-ok').waitFor(); assert.ok(await semCampoEmFoco(p)); await p.fill('#in-d', 'Não entendi a exceção.'); await p.click('#in-ok'); await semJanela(p);
       const c = await p.evaluate(() => [window.__copiado, window.__abriu[0], temMarco('f:instrutor')]);
-      assert.match(c[0], /Questão lgpd-\d{3}[\s\S]*Gabarito: (Certo|Errado) · marquei: (Certo|Errado)[\s\S]*Minha dúvida: Não entendi a exceção\./); assert.match(c[1], /^https:\/\/claude\.ai\//); assert.equal(c[2], true); }
+      assert.match(c[0], /Questão [a-z]+-\d{3}[\s\S]*Gabarito: (Certo|Errado) · marquei: (Certo|Errado)[\s\S]*Minha dúvida: Não entendi a exceção\./); assert.match(c[1], /^https:\/\/claude\.ai\//); assert.equal(c[2], true); }
     await p.click('#tr-prox');
   }
   await p.locator('#festa-ok').waitFor(); assert.match(await p.locator('.festa').innerText(), /Desafio do dia[\s\S]*Maior combo[\s\S]*10 acertos seguidos[\s\S]*Bônus/);
@@ -185,7 +241,7 @@ test('provas do Cebraspe: só fonte oficial, sem texto de prova; folha de respos
   assert.equal(d.length, 4);
   for (const x of d) assert.deepEqual([x.urls, x.gab, x.cobre, x.disc, x.com, x.curto], [true, true, true, true, true, true], x.id);
   assert.deepEqual(d.map(x => x.doEdital), [46, 30, 28, 36], 'itens do edital da ANPD em cada prova');
-  await p.click('#view [data-kf-ir="provas"]'); await p.locator('#view [data-act="abrir-prova"]').first().waitFor();
+  await p.evaluate(() => irPara('provas')); await p.locator('#view [data-act="abrir-prova"]').first().waitFor();
   assert.equal(await p.locator('#view details[data-kf-secao]').count(), 7, 'as sete armadilhas da banca');
   await p.click('#view [data-act="abrir-prova"][data-id="anatel24-cb1"]'); await p.locator('#view .prova-capa').waitFor();
   assert.match(await p.getAttribute('#view .prova-capa a.kf-pri', 'href'), /cdn\.cebraspe\.org\.br.*961_ANATEL_CB1_01\.PDF$/);
@@ -243,8 +299,8 @@ test('discursiva: temas oficiais e do instrutor, contagem de linhas, rascunho gu
 
 test('medalhas: mais de cem, com ids únicos, em quatro metais e cinco famílias; a tela mostra a coleção', async () => {
   const a = await abrir(), p = a.page;
-  const m = await p.evaluate(() => ({ n: medalhasDoApp().length, ids: new Set(MEDALHAS.map(x => x.id)).size, metais: [...new Set(MEDALHAS.map(x => x.metal))].sort(), fam: [...new Set(MEDALHAS.map(x => x.fam))].sort(), ic: MEDALHAS.every(x => MED_IC[x.ic]), como: MEDALHAS.every(x => x.como && x.como.split(' ').length <= 14), formas: new Set(['bronze', 'prata', 'ouro', 'diamante'].map(formaMetal)).size, antigas: ['seq3', 'seq7', 'seq14', 'seq30', 'seq100', 'h10', 'h50', 'h100', 'q100', 'q500', 'q1000', 'rev10', 'ed25', 'ed50', 'ed90', 'dia1', 'primeira', 'nome', 'cedo', 'guia', 'nuvem'].filter(i => !MEDALHAS.some(x => x.id === i)) }));
-  assert.ok(m.n > 100, `são ${m.n} medalhas`); assert.equal(m.ids, m.n, 'ids repetidos');
+  const m = await p.evaluate(() => ({ n: medalhasDoApp().length, ids: new Set(MEDALHAS.map(x => x.id)).size, todas: MEDALHAS.length, metais: [...new Set(MEDALHAS.map(x => x.metal))].sort(), fam: [...new Set(MEDALHAS.map(x => x.fam))].sort(), ic: MEDALHAS.every(x => MED_IC[x.ic]), como: MEDALHAS.every(x => x.como && x.como.split(' ').length <= 14), formas: new Set(['bronze', 'prata', 'ouro', 'diamante'].map(formaMetal)).size, antigas: ['seq3', 'seq7', 'seq14', 'seq30', 'seq100', 'h10', 'h50', 'h100', 'q100', 'q500', 'q1000', 'rev10', 'ed25', 'ed50', 'ed90', 'dia1', 'primeira', 'nome', 'cedo', 'guia', 'nuvem'].filter(i => !MEDALHAS.some(x => x.id === i)) }));
+  assert.ok(m.n > 100, `são ${m.n} medalhas`); assert.equal(m.ids, m.todas, 'ids repetidos'); assert.equal(m.todas - m.n, 1, 'só a medalha do guia fica fora da fase fechada');
   assert.deepEqual(m.metais, ['bronze', 'diamante', 'ouro', 'prata']); assert.deepEqual(m.fam, ['app', 'constancia', 'disciplinas', 'edital', 'questoes']);
   assert.ok(m.ic && m.como, 'toda medalha tem ícone e um jeito curto de ganhar'); assert.equal(m.formas, 4, 'cada metal tem o seu contorno (não é só a cor)');
   assert.deepEqual(m.antigas, [], 'as medalhas da 1.0 que continuam mantêm o id');
@@ -308,7 +364,7 @@ test('revisão difícil volta em 2 dias; lançar estudo feito em dia passado; de
   const s = await p.evaluate(() => DB.sessoes.filter(x => x.manual).map(x => [x.dia, x.seg, x.ac, x.er]));
   assert.deepEqual(s, [['2026-11-14', 2700, 7, 3]]);
   // ficha do assunto: desmarcar a teoria e desfazer
-  await nav(p, 'plano'); await p.click('[data-disc="anpd-lgpd"] summary'); await p.click('[data-act="assunto"][data-id="anpd-lgpd-01"]');
+  await p.evaluate(() => irPara('plano')); await p.click('[data-disc="anpd-lgpd"] summary'); await p.click('[data-act="assunto"][data-id="anpd-lgpd-01"]');
   await p.locator('#af-teoria').waitFor(); assert.match(await p.locator('#af-teoria').innerText(), /Desmarcar/);
   await p.click('#af-teoria'); await semJanela(p);
   assert.equal(await p.evaluate(() => !!topico('anpd-lgpd-01').teoria), false);
@@ -318,8 +374,8 @@ test('revisão difícil volta em 2 dias; lançar estudo feito em dia passado; de
   await a.fechar();
 });
 
-test('concursos: concurso digitado com o conteúdo colado, edital publicado e exclusão', async () => {
-  const a = await abrir(), p = a.page;
+test('funções gerais (fora da fase fechada): concurso digitado com o conteúdo colado, edital publicado e exclusão', async () => {
+  const a = await abrirGeral(), p = a.page;
   // digitado
   await p.evaluate(() => irPara('concursos')); await p.click('#conc-novo'); await p.locator('.kf-dlg [data-bib=""]').click(); await p.locator('#dc-ok').waitFor();
   assert.ok(await semCampoEmFoco(p));
@@ -337,8 +393,8 @@ test('concursos: concurso digitado com o conteúdo colado, edital publicado e ex
   await a.fechar();
 });
 
-test('disciplinas, simulados e agenda: criar, ordenar e excluir', async () => {
-  const a = await abrir(), p = a.page;
+test('funções gerais (fora da fase fechada): disciplinas, simulados e agenda', async () => {
+  const a = await abrirGeral(), p = a.page;
   await p.evaluate(() => irPara('disciplinas')); await p.click('[data-act="nova-disc"]'); await p.locator('#nj').waitFor(); assert.ok(await semCampoEmFoco(p));
   await p.fill('#nj', 'Raciocínio lógico'); await p.click('#nj-ok'); await p.locator('#view .tela-t', { hasText: 'Raciocínio lógico' }).waitFor();
   for (const n of ['Proposições', 'Conjuntos']) { await p.click('[data-act="novo-assunto"]'); await p.fill('#nj', n); await p.click('#nj-ok'); await semJanela(p); }
@@ -377,10 +433,10 @@ test('Ajustes: as oito guias comuns, as três do app, meta e nome (com a primeir
 });
 
 test('segurança: texto de fora é protegido antes de ir para a tela', async () => {
-  const a = await abrir(), p = a.page;
-  await p.evaluate(() => { const x = '<img src=x onerror="window.__xss=1"><b id="inj">oi</b>'; cfg().nome = x; DB.materias[0].nome = x; DB.topicos[0].nome = x; DB.concursos[0].sigla = x; DB.concursos[0].cargo = x; DB.eventos.push({ id: 'e1', titulo: x, data: hojeISO(), hora: '' }); DB.simulados.push({ id: 's1', c: DB.concursos[0].id, nome: x, data: hojeISO(), r: {} }); registrarSessao({ t: DB.topicos[0].id, seg: 600, teoria: true }); salvar(); jogoConferir({ silencioso: true }); });
-  for (const t of ['hoje', 'plano', 'medalhas', 'evolucao', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva', 'mais', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'ajustes']) {
-    await p.evaluate(t => { concId = DB.concursos[0].id; discId = DB.materias[0].id; provaId = 'anatel24-cb1'; redId = 'anm24-lgpd'; INSTRUTOR = { 'pv:anatel24-cb1:1': [{ em: '<i id="inj">x</i>', r: '<b id="inj">r</b>' }], 'disc:anm24-lgpd': [{ em: 'x', r: '<img src=x onerror="window.__xss=1">' }] }; if (!DB.respostas.some(r => r.id === 'pv:anatel24-cb1:1')) DB.respostas.push({ id: 'pv:anatel24-cb1:1', v: 'C', cor: 1, ok: false }); if (!DB.redacoes.length) DB.redacoes.push({ id: 'anm24-lgpd', txt: '</textarea><b id="inj">t</b>', env: 0 }); VER++; irPara(t); }, t); await p.waitForTimeout(120);
+  const a = await abrirGeral(), p = a.page;
+  await p.evaluate(() => { const x = '<img src=x onerror="window.__xss=1"><b id="inj">oi</b>'; cfg().nome = x; DB.materias[0].nome = x; DB.topicos[0].nome = x; DB.concursos[0].sigla = x; DB.concursos[0].cargo = x; DB.eventos.push({ id: 'e1', titulo: x, data: hojeISO(), hora: '' }); DB.simulados.push({ id: 's1', c: DB.concursos[0].id, nome: x, data: hojeISO(), r: {} }); DB.cadernos.push({ id: 'cx', nome: x, itens: ['lgpd-001', 'lgpd-004'], r: { 'lgpd-001': 'C' }, em: 1 }); registrarSessao({ t: DB.topicos[0].id, seg: 600, teoria: true }); salvar(); jogoConferir({ silencioso: true }); });
+  for (const t of ['hoje', 'cadernos', 'caderno', 'plano', 'medalhas', 'evolucao', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva', 'mais', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'ajustes']) {
+    await p.evaluate(t => { concId = DB.concursos[0].id; discId = DB.materias[0].id; provaId = 'anatel24-cb1'; redId = 'anm24-lgpd'; cadId = 'cx'; INSTRUTOR = { 'pv:anatel24-cb1:1': [{ em: '<i id="inj">x</i>', r: '<b id="inj">r</b>' }], 'disc:anm24-lgpd': [{ em: 'x', r: '<img src=x onerror="window.__xss=1">' }] }; if (!DB.respostas.some(r => r.id === 'pv:anatel24-cb1:1')) DB.respostas.push({ id: 'pv:anatel24-cb1:1', v: 'C', cor: 1, ok: false }); if (!DB.redacoes.length) DB.redacoes.push({ id: 'anm24-lgpd', txt: '</textarea><b id="inj">t</b>', env: 0 }); VER++; irPara(t); }, t); await p.waitForTimeout(120);
     if (t === 'plano') { await p.locator('#view details.disc summary').first().click(); await p.locator('#view [data-act="assunto"]').first().click(); await p.waitForTimeout(200); await p.keyboard.press('Escape'); }
     assert.equal(await p.evaluate(() => !!document.querySelector('#inj') || !!window.__xss), false, 'HTML injetado em ' + t);
   }
@@ -421,18 +477,19 @@ test('cópia de segurança: baixa no formato da família e restaura', async () =
 test('sincronização: o outro aparelho recebe sessões e medalhas; a exclusão também viaja; o gist vai criptografado', async () => {
   const gh = githubFalso(), A = await abrir({ github: gh }), B = await abrir({ github: gh });
   const ligar = async p => { await p.click('[data-kf-nuvem]'); await p.click('.kf-dlg [data-kf="sync-ativar"]'); await p.fill('#kf-token', TOKEN_TESTE); await p.click('[data-kf-conectar]'); };
-  await estudar(A.page, { min: 61, ac: 4, er: 1 }); await A.page.evaluate(() => { cfg().nome = 'Bruno'; DB.respostas.push({ id: 'lgpd-003', n: 1, ac: 0, ok: false, em: agora(), cx: 0, due: '2026-11-17', rv: 0 }); salvar(); jogoConferir({ silencioso: true }); });
+  await estudar(A.page, { min: 61, ac: 4, er: 1 }); await A.page.evaluate(() => { cfg().nome = 'Bruno'; DB.respostas.push({ id: 'lgpd-003', n: 1, ac: 0, ok: false, em: agora(), cx: 0, due: '2026-11-17', rv: 0 }); cadernoMarcar('m:anpd-lgpd', QID.get('lgpd-003'), 'C'); salvar(); jogoConferir({ silencioso: true }); });
   await ligar(A.page);
   assert.ok(await esperar(() => A.page.evaluate(() => SY.ligada() && SY.estado.lastSync > 0)), 'A não sincronizou');
   assert.ok(await esperar(async () => (await A.page.getAttribute('[data-kf-nuvem]', 'data-estado')) === 'sincronizado'), 'a nuvem não mostra Sincronizado');
   const arq = gh.arquivo('estudo-facil.json'); assert.ok(arq && !/anpd-lgpd/.test(arq.conteudo), 'o gist deveria estar criptografado');
   await ligar(B.page);
-  assert.ok(await esperar(() => B.page.evaluate(() => DB.sessoes.length === 1 && cfg().nome === 'Bruno' && DB.dias.length === 1 && temMarco('m:primeira') && DB.respostas.length === 1 && DB.respostas[0].due === '2026-11-17')), 'B não recebeu sessões, dias, medalhas e respostas');
+  assert.ok(await esperar(() => B.page.evaluate(() => DB.sessoes.length === 1 && cfg().nome === 'Bruno' && DB.dias.length === 1 && temMarco('m:primeira') && DB.respostas.length === 1 && DB.respostas[0].due === '2026-11-17' && DB.cadernos.length === 1 && DB.cadernos[0].r['lgpd-003'] === 'C')), 'B não recebeu sessões, dias, medalhas, respostas e o andamento do caderno');
   assert.equal(await B.page.evaluate(() => DB.concursos.length + ':' + DB.materias.length + ':' + DB.topicos.length), '1:12:119', 'nada duplicado ao juntar');
   // B exclui a sessão; A recebe a exclusão e não regrava à toa
+  // (se B já estava no meio de uma sincronização, a exclusão só sobe na seguinte: por isso espera-se B ficar em dia e A tenta de novo)
   await B.page.evaluate(() => { DB.sessoes = []; salvar(); return SY.agora({ quiet: true }); });
-  await A.page.evaluate(() => SY.agora({ quiet: true }));
-  assert.ok(await esperar(() => A.page.evaluate(() => DB.sessoes.length === 0)), 'a exclusão não chegou ao A');
+  assert.ok(await esperar(() => B.page.evaluate(async () => { await SY.agora({ quiet: true }); return !SY.estado.sujo; })), 'B não enviou a exclusão');
+  assert.ok(await esperar(() => A.page.evaluate(async () => { await SY.agora({ quiet: true }); return DB.sessoes.length === 0; })), 'a exclusão não chegou ao A');
   assert.deepEqual(A.erros.concat(B.erros), []);
   await A.fechar(); await B.fechar();
 });

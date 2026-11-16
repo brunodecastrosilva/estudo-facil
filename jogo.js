@@ -77,7 +77,9 @@ const AVULSAS = [
   { id: 'pr90', nome: 'Precisão fina', como: 'Acerte 90% ou mais numa sessão com 30 questões.', fam: 'questoes', metal: 'ouro', ic: 'alvo', ok: s => s.pr90 },
   { id: 'gab', nome: 'Gabaritou', como: 'Acerte todas as questões de um treino de 10 ou mais.', fam: 'questoes', metal: 'ouro', ic: 'estrela', ok: s => s.gab },
   { id: 'inst', nome: 'Quem pergunta aprende', como: 'Leve uma dúvida ao instrutor.', fam: 'app', metal: 'bronze', ic: 'balao', ok: s => s.instrutor },
-  { id: 'guia', nome: 'Leu o manual', como: 'Veja o guia do app até o fim.', fam: 'app', metal: 'bronze', ic: 'livro', ok: s => s.guia },
+  { id: 'guia', nome: 'Leu o manual', como: 'Veja o guia do app até o fim.', fam: 'app', metal: 'bronze', ic: 'livro', ok: s => s.guia, se: () => GERAL },
+  { id: 'cad1', nome: 'Caderno fechado', como: 'Resolva todas as questões de um caderno.', fam: 'questoes', metal: 'prata', ic: 'livro', ok: s => s.cadFechados >= 1 },
+  { id: 'cadm', nome: 'Caderno sob medida', como: 'Monte um caderno seu.', fam: 'app', metal: 'bronze', ic: 'pagina', ok: s => s.cadMeus >= 1 },
   { id: 'nuvem', nome: 'Em todo lugar', como: 'Ligue a sincronização entre aparelhos.', fam: 'app', metal: 'bronze', ic: 'nuvem', ok: s => s.sync },
 ];
 const MEDALHAS = [
@@ -100,7 +102,8 @@ function jogoEstado() {
     cedo: DB.sessoes.some(x => !x.manual && new Date(x.ini).getHours() < 8 && new Date(x.ini).getHours() >= 4),
     pr80: DB.sessoes.some(x => (x.ac || 0) + (x.er || 0) >= 20 && x.ac / (x.ac + x.er) >= .8),
     pr90: DB.sessoes.some(x => (x.ac || 0) + (x.er || 0) >= 30 && x.ac / (x.ac + x.er) >= .9),
-    gab: DB.sessoes.some(x => x.gab || ((x.ac || 0) >= 10 && !(x.er || 0))), instrutor: temMarco('f:instrutor'),
+    gab: DB.sessoes.some(x => x.gab || ((x.ac || 0) >= 10 && !(x.er || 0))), instrutor: temMarco('f:instrutor'), cadMeus: DB.cadernos.filter(c => c.itens).length,
+    cadFechados: typeof cadernoDe === 'function' ? DB.cadernos.map(c => cadernoDe(c.id)).filter(Boolean).filter(C => cadernoEstado(C).prox < 0).length : 0,
     disc: Object.fromEntries(DB.materias.map(m => { const L = topicosDe(m.id); return [m.id, [L.filter(t => t.teoria).length, L.length]]; })),
     perfeitos: DB.marcos.filter(m => String(m.id).startsWith('p:')).length, simulados: DB.simulados.length,
     prontidao: Math.max(0, ...DB.concursos.map(c => prontidao(c))),
@@ -126,7 +129,8 @@ function jogoConferir({ silencioso = false } = {}) {
   return novas;
 }
 let medalhaFila = [];
-function medalhaFilaMostrar() { if (!medalhaFila.length || festaAberta || KitFacil.dialogo.aberto() || (typeof guiaAtivo === 'function' && guiaAtivo())) return; const l = medalhaFila; medalhaFila = []; medalhaNova(l); }
+// a medalha nunca abre por cima do treino, do cronômetro em tela cheia ou da abertura: espera a vez
+function medalhaFilaMostrar() { if (!medalhaFila.length || festaAberta || KitFacil.dialogo.aberto() || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof focoAberto === 'function' && focoAberto()) || (typeof treinoAberto === 'function' && treinoAberto())) return; const l = medalhaFila; medalhaFila = []; medalhaNova(l); }
 function jogoMarcar(flag) { if (marcar('f:' + flag)) { salvar({ quieto: true }); setTimeout(() => jogoConferir({ silencioso: typeof guiaAtivo === 'function' && guiaAtivo() }), 400); } }
 
 /* ---------- medalha desenhada (lista e festa) ---------- */

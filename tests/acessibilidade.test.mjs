@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.2 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas do app, nos temas claro e escuro.
+/* Estudo Fácil 1.3 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas do app, nos temas claro e escuro.
    Usa o axe-core pelo pacote de desenvolvimento @axe-core/playwright (npm install). Sem ele, o teste é pulado com aviso:
    não conta como aprovado. Substitui, neste app, comum/testes/acessibilidade.test.mjs (os Ajustes ficam na tela Mais). */
 import { test, before, after } from 'node:test';
@@ -32,7 +32,7 @@ for (const tema of ['light', 'dark']) {
     await p.evaluate(() => { const L = topicosDe('anpd-lgpd'); for (let d = 4; d >= 1; d--) { const dia = maisDias(hojeISO(), -d); registrarSessao({ t: L[4 - d].id, seg: 65 * 60, ac: 9, er: 3, teoria: true, dia, ini: deISO(dia).getTime() + 9 * 36e5 }); }
       DB.simulados.push({ id: 's1', c: 'anpd-2027', nome: 'Simulado 1', data: hojeISO(), r: { gerais: { ac: 20, tot: 50 }, esp: { ac: 20, tot: 70 } } }); DB.eventos.push({ id: 'e1', titulo: 'Aula', data: hojeISO(), hora: '19:00' }); salvar(); jogoConferir({ silencioso: true }); render(); });
     await varrer(p, `Hoje (${nome})`);
-    await p.click('#kf-nav-plano'); await p.locator('#view [data-disc="anpd-lgpd"] summary').click(); await p.waitForTimeout(200); await varrer(p, `Plano (${nome})`);
+    await p.evaluate(() => irPara('plano')); await p.locator('#view [data-disc="anpd-lgpd"] summary').click(); await p.waitForTimeout(200); await varrer(p, `Plano (${nome})`);
     await p.locator('#view [data-act="assunto"]').first().click(); await p.locator('#af-estudar').waitFor(); await varrer(p, `ficha do assunto (${nome})`); await p.keyboard.press('Escape');
     await p.click('#kf-nav-medalhas'); await p.waitForTimeout(200); await varrer(p, `Medalhas (${nome})`);
     await p.locator('#view .medalhas [data-act="medalha"]').first().click(); await p.locator('.kf-dlg .med3d').waitFor(); await varrer(p, `ficha da medalha (${nome})`); await p.keyboard.press('Escape');
@@ -45,7 +45,11 @@ for (const tema of ['light', 'dark']) {
     await varrer(p, `Prova, bloco corrigido (${nome})`);
     await p.evaluate(() => irPara('discursivas')); await p.waitForTimeout(200); await varrer(p, `Discursivas (${nome})`);
     await p.click('#view [data-act="abrir-red"][data-id="anm24-lgpd"]'); await p.locator('#ds-txt').waitFor(); await p.fill('#ds-txt', 'A segurança acompanha o tratamento desde a concepção. '.repeat(8)); await p.click('#view [aria-labelledby="ds-es"] summary'); await p.waitForTimeout(200); await varrer(p, `Discursiva (${nome})`);
-    for (const tela of ['evolucao', 'instrutor', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda']) { await p.evaluate(t => { concId = 'anpd-2027'; discId = 'anpd-lgpd'; irPara(t); }, tela); await p.waitForTimeout(200); await varrer(p, `${tela} (${nome})`); }
+    // cadernos: lista, caderno com respostas certas e erradas e a janela de novo caderno
+    await p.click('#kf-nav-cadernos'); await p.waitForTimeout(200); await varrer(p, `Cadernos (${nome})`);
+    await p.evaluate(() => { cadernoMarcar('m:anpd-dc', QID.get('dc-001'), 'E'); cadernoMarcar('m:anpd-dc', QID.get('dc-002'), 'E'); salvar(); cadId = 'm:anpd-dc'; irPara('caderno'); }); await p.waitForTimeout(200); await varrer(p, `Caderno (${nome})`);
+    await p.click('#kf-nav-cadernos'); await p.click('#cad-novo'); await p.locator('#nc-ok').waitFor(); await varrer(p, `Novo caderno (${nome})`); await p.keyboard.press('Escape');
+    for (const tela of ['evolucao', 'instrutor', 'revisoes']) { await p.evaluate(t => { concId = 'anpd-2027'; discId = 'anpd-lgpd'; irPara(t); }, tela); await p.waitForTimeout(200); await varrer(p, `${tela} (${nome})`); }
     // treino de questões: antes e depois da resposta, com a aula aberta e a resposta do instrutor; a pergunta e os flashcards
     await p.evaluate(() => { INSTRUTOR = { 'lgpd-016': [{ em: '16/11/2026', r: 'O art. 11 não traz o legítimo interesse.' }] }; DB.respostas.push({ id: 'lgpd-004', n: 1, ac: 0, ok: false, em: agora(), cx: 0, due: hojeISO(), rv: 0 }); salvar(); irPara('hoje'); treinoAbrir({ lista: [QID.get('lgpd-016'), QID.get('lgpd-017'), QID.get('lgpd-018')] }); });
     await p.locator('#treino.dentro').waitFor(); await varrer(p, `treino, pergunta (${nome})`);
