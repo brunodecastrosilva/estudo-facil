@@ -490,9 +490,10 @@ body.kf-com-guia .festa{bottom:var(--kf-pe)}
 /* o texto de apoio rola dentro da própria caixa: aberto, não empurra o enunciado para fora da tela */
 /* os blocos do treino não encolhem: quando o conteúdo passa da tela, a tela rola (antes, o enunciado era cortado) */
 .treino-in>*{flex-shrink:0}
-.treino{-webkit-overflow-scrolling:touch}
-.tr-apoio-tx{max-height:30vh;overflow:auto;margin-bottom:10px;border-radius:var(--kf-r-sm)}
-.tr-apoio-tx:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.treino{-webkit-overflow-scrolling:touch;align-items:flex-start} /* a coluna cresce com o conteúdo; assim os botões que acompanham a rolagem têm por onde andar */
+/* o texto de apoio abre inteiro, abaixo do enunciado (que fica no alto); os botões de resposta acompanham a rolagem */
+.tr-apoio-tx{margin-bottom:4px}
+.tr-botoes{position:sticky;bottom:0;z-index:2;background:var(--bg);padding:10px 0 max(4px,env(safe-area-inset-bottom));box-shadow:0 -10px 12px -6px var(--bg)}
 .tr-meta{flex-wrap:wrap}
 .selo-ia{border:1.5px dashed currentColor}
 .anel-centro b.anel-hms{font-size:22px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}

@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.7.2';
+const VERSAO = '1.7.3';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -417,7 +417,9 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.7.2', itens: [
+const NOVIDADES = [{ versao: '1.7.3', itens: [
+  'O texto de apoio abre inteiro, sem rolagem própria, logo abaixo do enunciado. Os botões de resposta ficam sempre à mão.',
+] }, { versao: '1.7.2', itens: [
   'Com o texto de apoio aberto, a tela da questão volta a rolar e o enunciado não fica cortado.',
 ] }, { versao: '1.7.1', itens: [
   'Plano de hoje: quando uma disciplina tem poucas questões, as outras completam a meta do dia.',

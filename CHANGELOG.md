@@ -3,6 +3,12 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.7.3 · 2026-11-16
+
+- **Texto de apoio:** abre inteiro, sem rolagem dentro da caixa. Fica logo abaixo do enunciado, que continua no alto da tela.
+- **Botões de resposta:** acompanham a rolagem; Certo e Errado ficam sempre à mão.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os testes do app e a varredura de acessibilidade.
+
 ## 1.7.2 · 2026-11-16
 
 - **Correção:** com o texto de apoio aberto, a tela da questão não rolava e o enunciado ficava cortado. Agora rola, e o enunciado aparece inteiro.
