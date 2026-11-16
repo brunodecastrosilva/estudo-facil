@@ -2,7 +2,7 @@
 // Arquivos do app: busca a versão nova primeiro e usa a guardada se estiver sem internet.
 // Bibliotecas (fontes) têm versão fixa: usa a guardada.
 // O cache leva a versão do app (package.json); cada app só apaga as próprias cópias antigas.
-const CACHE = 'estudo-facil-1.5.0';
+const CACHE = 'estudo-facil-1.6.0';
 const APP = ['./', './index.html', './estilo.css', './comum/kit-facil.js', './comum/kit-facil.css', './comum/kit-jogo.js', './editais.js', './questoes.js', './questoes2.js', './app.js', './jogo.js', './treino.js', './cadernos.js', './estudar.js', './telas.js', './provas.js', './casca.js', './manifest.webmanifest', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/favicon-32.png'];
 const LIBS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 

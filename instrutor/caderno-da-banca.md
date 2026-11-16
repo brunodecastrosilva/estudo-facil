@@ -102,9 +102,24 @@ desconfiança, mas não decidem sozinhas: ANATEL 50 traz "sempre" e está certo,
 - Português e Inglês da banca são presos a um texto. No app, por ora, as questões são de frase solta; falta criar o
   formato "texto de apoio + itens" com textos próprios.
 
+### Provas no app (1.6.0, 16/11/2026)
+
+- Sete cadernos: ANATEL 2024 (CB1), ANAC 2024 (CB1), ANM 2025 (CG4), DATAPREV 2023 (segurança) e ANTT 2024 (CB1,
+  cargo 1 e cargo 2). São 259 questões oficiais do edital da ANPD; 73 têm comentário (nenhuma da ANTT ainda).
+- Como achar os arquivos de um concurso: abrir `www.cebraspe.org.br/concursos/<concurso>` no Claude in Chrome e ler
+  os links da página (texto do link e nome do arquivo). Não chamar a API do site diretamente. O concurso da ANTT de
+  2024 fica em `ANTT_23`.
+- Gabarito: extraído do PDF no navegador por dois caminhos (número com a letra logo abaixo; linhas de números e de
+  letras emparelhadas) e conferido uma terceira vez pelo WebFetch, incluindo os anulados.
+- Blocos por disciplina: saem dos comandos ("Julgue os itens...") que o leitor de prova separa.
+- ANTT 2024: os específicos (P2) são numerados de 1 a 120; o cargo 2 (Direito) cobrou LGPD (itens 89 a 91), Marco
+  Civil, crimes cibernéticos, LAI, concorrência e 20 itens de controle da administração; o cargo 1 cobrou 23 itens de
+  aprendizado de máquina e IA.
+
 ## 7. O que falta levantar
 
-- Gabarito da ANTT 2024 (CB1) e os específicos de Direito e de formação geral da ANATEL 2024.
+- ANTT 2024: cargos 3 e 4 e as provas do curso de formação (arquivos listados na página do concurso).
+- Os específicos de Direito e de formação geral da ANATEL 2024.
 - ANM 2025: cargos 13 e 15 (regulação, AIR e Lei 13.848) e os de TI (24 a 26), que trazem LGPD.
 - Cursos de formação da ANA, da ANTAQ, da ANS e da ANATEL, que cobram Lei 13.848 e AIR.
 - Mais provas com LGPD: FUNPRESP-EXE 2024, SEPLAG-CE 2024, SUSEP 2025 e Câmara dos Deputados 2025.

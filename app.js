@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.5.0';
+const VERSAO = '1.6.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -408,7 +408,11 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.5.0', itens: [
+const NOVIDADES = [{ versao: '1.6.0', itens: [
+  'Três provas novas do Cebraspe: ANTT 2024, conhecimentos básicos e específicos dos cargos 1 e 2.',
+  'São mais 124 questões oficiais do seu edital, com LGPD, Marco Civil, concorrência, controle da administração e inteligência artificial.',
+  'Para resolvê-las aqui, abra o arquivo das provas atualizado, em Cadernos.',
+] }, { versao: '1.5.0', itens: [
   'Arquivo das provas: leve as questões oficiais para outro aparelho, sem sincronização.',
   'Em Cadernos, use Baixar arquivo das provas no aparelho que já tem as questões e Abrir arquivo das provas no outro.',
 ] }, { versao: '1.4.0', itens: [

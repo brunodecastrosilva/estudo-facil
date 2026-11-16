@@ -3,6 +3,15 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.6.0 · 2026-11-16
+
+- **Três provas novas do Cebraspe:** ANTT 2024, conhecimentos básicos (todos os cargos) e específicos do cargo 1 (qualquer área) e do cargo 2 (Direito), com gabarito definitivo.
+- **Mais 124 questões oficiais do seu edital:** Português, regulação, Administrativo, Constitucional, ética e LAI, concorrência, consumidor, crimes cibernéticos, Marco Civil, LGPD e inteligência artificial. São 259 no total.
+- **Para resolvê-las no app:** abra o arquivo das provas atualizado, em Cadernos → Provas do Cebraspe.
+- **Sem comentário, por enquanto:** os itens da ANTT mostram só o gabarito oficial.
+- **Leitor de prova:** aceita cadernos com os itens mais espaçados que o texto de apoio, como os da ANTT.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os testes do app, os 2 do leitor de prova e a varredura de acessibilidade.
+
 ## 1.5.0 · 2026-11-16
 
 - **Arquivo das provas:** leva as questões oficiais de um aparelho para outro, sem sincronização e sem passar pelo repositório.

@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.5 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.6 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -205,7 +205,7 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   assert.deepEqual(await p.evaluate(() => [DB.textos.length, location.hash, oficiais().length, oficiais().filter(q => q.c).length > 5, QID.has('pv:anatel24-cb1:1'), QID.has('pv:anatel24-cb1:19'), QID.has('pv:anatel24-cb1:30')]), [1, '', 43, true, true, false, false]);
   await nav(p, 'cadernos');
   assert.match(await p.locator('#view [aria-labelledby="cd-p"]').innerText(), /43 questões oficiais[\s\S]*ANATEL 2024[\s\S]*43 questões[\s\S]*ANAC 2024[\s\S]*Folha de respostas/);
-  assert.equal(await p.locator('#view [aria-labelledby="cd-p"] [data-act="abrir-prova"]').count(), 3, 'as provas sem texto no aparelho abrem a folha de respostas');
+  assert.equal(await p.locator('#view [aria-labelledby="cd-p"] [data-act="abrir-prova"]').count(), 6, 'as provas sem texto no aparelho abrem a folha de respostas');
   await p.click('#view [data-act="abrir-cad"][data-id="p:anatel24-cb1"]'); await p.locator('#cad-ir').waitFor();
   assert.equal(await p.locator('#view .cad-q').count(), 43); assert.deepEqual(await p.locator('#view .sub-t').allInnerTexts(), ['Língua Portuguesa', 'Língua Inglesa', 'Regulação e agências reguladoras', 'Direito Administrativo', 'Direito Constitucional']);
   await p.click('#cad-ir'); await p.locator('#treino.dentro').waitFor();
@@ -228,7 +228,7 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   await p.evaluate(() => { cadId = 'm:anpd-regul'; irPara('caderno'); }); assert.equal(await p.locator('#view .sub-t').last().innerText(), 'Prova do Cebraspe · ANATEL 2024');
   await p.evaluate(() => { provaId = 'anatel24-cb1'; irPara('prova'); }); assert.equal(await p.locator('#pv-caderno').count(), 1);
   // o arquivo das provas leva o texto para outro aparelho: baixa aqui, abre lá (sem mexer no andamento de lá)
-  await nav(p, 'cadernos'); assert.equal(await p.locator('#pv-abrir').count(), 1, 'ainda faltam três provas neste aparelho');
+  await nav(p, 'cadernos'); assert.equal(await p.locator('#pv-abrir').count(), 1, 'ainda faltam provas neste aparelho');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#pv-baixar')]); assert.equal(dl.suggestedFilename(), 'estudo-facil-provas.json');
   const arq = await dl.path(), conteudo = JSON.parse(readFileSync(arq, 'utf8')); assert.deepEqual([conteudo.app, conteudo.tipo, conteudo.provas.length, conteudo.provas[0].prova, Object.keys(conteudo.provas[0].itens).length], ['estudo-facil', 'provas', 1, 'anatel24-cb1', 50]);
   const c = await abrir(), q = c.page; await estudar(q, { min: 10 }); await nav(q, 'cadernos'); assert.equal(await q.locator('#pv-baixar').count(), 0);
@@ -289,9 +289,9 @@ test('provas do Cebraspe: só fonte oficial, sem texto de prova; folha de respos
   const a = abrir(), p = (await a).page, A = await a;
   const d = await p.evaluate(() => PROVAS.map(x => ({ id: x.id, urls: [x.caderno, x.gabUrl].every(u => /^https:\/\/cdn\.cebraspe\.org\.br\/concursos\/[\w]+\/arquivos\/[\w]+\.PDF$/i.test(u)), gab: /^[CEX]+$/.test(x.gab), cobre: x.blocos.reduce((n, b) => n + b.ate - b.de + 1, 0) === x.gab.length && x.blocos.every((b, i) => b.de === (i ? x.blocos[i - 1].ate + 1 : x.de)),
     disc: x.blocos.every(b => !b.m || !!materia(b.m)), com: Object.keys(x.itens).every(n => 'CE'.includes(x.gab[n - x.de]) && x.blocos.some(b => b.m && n >= b.de && n <= b.ate)), curto: Object.values(x.itens).every(c => c.split(' ').length <= 40), doEdital: blocosDoEdital(x).reduce((n, b) => n + b.ate - b.de + 1, 0) })));
-  assert.equal(d.length, 4);
+  assert.equal(d.length, 7);
   for (const x of d) assert.deepEqual([x.urls, x.gab, x.cobre, x.disc, x.com, x.curto], [true, true, true, true, true, true], x.id);
-  assert.deepEqual(d.map(x => x.doEdital), [46, 30, 28, 36], 'itens do edital da ANPD em cada prova');
+  assert.deepEqual(d.map(x => x.doEdital), [46, 30, 28, 36, 37, 27, 65], 'itens do edital da ANPD em cada prova');
   await p.evaluate(() => irPara('provas')); await p.locator('#view [data-act="abrir-prova"]').first().waitFor();
   assert.equal(await p.locator('#view details[data-kf-secao]').count(), 7, 'as sete armadilhas da banca');
   await p.click('#view [data-act="abrir-prova"][data-id="anatel24-cb1"]'); await p.locator('#view .prova-capa').waitFor();

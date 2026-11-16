@@ -57,8 +57,9 @@ async function lerCadernoPDF(pdfjs, bytes, { de = 1, ate = 0 } = {}) {
     if (n && (n === prox || (prox === null && (n === 1 || n === de))) && (L.v.length === 1 || L.v[1].x >= mg + 8)) {
       fecha(); if (ctx.length) grupos.push({ de: n, L: ctx }); ctx = [];
       atual = { n, dx: (L.v[1] ? L.v[1].x : mg + 18) - mg, p: [L.t.replace(/^[\u0001\u0002]*\d{1,3}[\u0001\u0002]*\s*/, '')] }; prox = n + 1;
-    // continua o item a linha no mesmo recuo dele (medido da margem da coluna, porque o item pode mudar de coluna); recuo maior (lista, código) só se vier colada na linha de cima
-    } else if (atual && recuada && (Math.abs(L.x - mg - atual.dx) < 4 ? salto <= passo * 1.3 : mesma && L.x - mg > atual.dx && L.x <= mg + 60 && salto <= passo * 1.15)) atual.p.push(L.t);
+    // continua o item a linha no mesmo recuo dele (medido da margem da coluna, porque o item pode mudar de coluna); recuo maior (lista, código) só se vier colada na linha de cima.
+    // No mesmo recuo o vão pode ser maior: há cadernos (ANTT 2024) com os itens mais espaçados que o texto de apoio
+    } else if (atual && recuada && (Math.abs(L.x - mg - atual.dx) < 4 ? salto <= passo * 1.7 : mesma && L.x - mg > atual.dx && L.x <= mg + 60 && salto <= passo * 1.15)) atual.p.push(L.t);
     else {
       if (atual && ate && atual.n >= ate) { fecha(); fim = true; break; }
       fecha(); ctx.push({ t: L.t, par: !ctx.length || salto > passo * 1.3 || recuada, peq: L.h < L.hc - 1.5 });

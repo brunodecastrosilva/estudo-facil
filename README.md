@@ -5,7 +5,7 @@ e no computador. O app gira em torno de **cadernos de questões** de certo ou er
 comentadas; transforma os erros em flashcards, traz as provas oficiais da banca com correção, treina a discursiva, lembra
 das revisões e mostra a evolução, com sequência de dias, missões e mais de cem medalhas.
 
-Versão **1.5.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.6.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno e todo voltado ao concurso
 > da ANPD. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
@@ -25,7 +25,7 @@ referência do projeto (Art. 93).
 - **Hoje:** a sequência de dias, a meta do dia, as três missões, o caderno em andamento e o plano de hoje
 - **Plano do dia:** revisões vencidas primeiro; depois, blocos das disciplinas mais atrasadas em relação ao peso na prova
 - **Edital da ANPD** (em Mais): 12 disciplinas, 119 assuntos, pesos, três fases até a prova e fontes oficiais; cada assunto estudado fica grifado e a prontidão sobe. O edital ainda não saiu: o que é estimativa está marcado como estimativa
-- **Folha de respostas das provas:** quatro cadernos oficiais (ANATEL 2024, ANAC 2024, ANM 2025 e DATAPREV 2023). Sem o texto no aparelho, o caderno abre no site da banca; o app mostra só os blocos do edital da ANPD, com folha de respostas, correção pelo gabarito oficial definitivo (errado desconta um ponto) e comentário do instrutor. O texto das provas não fica no app
+- **Folha de respostas das provas:** sete cadernos oficiais (ANATEL 2024, ANAC 2024, ANM 2025, DATAPREV 2023 e três da ANTT 2024: básicos, cargo 1 e cargo 2). Sem o texto no aparelho, o caderno abre no site da banca; o app mostra só os blocos do edital da ANPD, com folha de respostas, correção pelo gabarito oficial definitivo (errado desconta um ponto) e comentário do instrutor. O texto das provas não fica no app
 - **Como a banca escreve:** as armadilhas que mais apareceram nessas provas; a versão completa é o `instrutor/caderno-da-banca.md`, que guia as questões e as apostilas
 - **Discursiva:** três temas que o Cebraspe cobrou (com o endereço do enunciado e do padrão de resposta) e três temas inéditos do instrutor para a ANPD; contagem de linhas, rascunho guardado, o que a banca espera e envio do texto para correção
 - **Flashcards** das questões erradas, que voltam em 1, 3, 7, 15 e 30 dias; **combo** de acertos seguidos
