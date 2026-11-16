@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.1.0';
+const VERSAO = '1.2.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -89,8 +89,9 @@ const LS = {
    sessoes     sessões de estudo                revisoes   revisões marcadas para cada assunto
    dias        dias em que a meta foi batida    marcos     medalhas vistas e marcas do app (guia, abertura)
    simulados   resultados de simulados          eventos    compromissos da agenda
-   respostas   uma por questão do app já respondida: vezes, acertos e a caixa do flashcard */
-const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'respostas', 'dias', 'marcos', 'simulados', 'eventos'];
+   respostas   uma por questão do app já respondida (vezes, acertos e a caixa do flashcard) e uma por item de prova
+               oficial marcado (pv:<prova>:<item>)       redacoes   textos do treino da discursiva */
+const COLLS = ['concursos', 'materias', 'topicos', 'sessoes', 'revisoes', 'respostas', 'redacoes', 'dias', 'marcos', 'simulados', 'eventos'];
 const CFG_PADRAO = { nome: '', metaMin: 60, dias: [0, 1, 2, 3, 4, 5, 6], bloco: 30, metaQ: 15, revisoes: [1, 7, 30], som: true, vibra: true, jogo: true };
 const CORES = ['#2742D3', '#0E8A7D', '#C2410C', '#7C3AED', '#B4235A', '#0369A1', '#4D7C0F', '#B45309', '#BE185D', '#0F766E', '#6D28D9', '#9A3412'];
 const TIPOS = { teoria: 'Teoria', questoes: 'Questões', revisao: 'Revisão', lei: 'Lei seca' };
@@ -358,7 +359,8 @@ function pontosBase() {
 }
 const totais = () => ({ min: soma(DB.sessoes, s => s.seg / 60), sessoes: DB.sessoes.length, questoes: soma(DB.sessoes, s => (s.ac || 0) + (s.er || 0)), acertos: soma(DB.sessoes, s => s.ac || 0),
   revisoes: DB.revisoes.filter(r => r.feita).length, assuntos: DB.topicos.filter(t => t.teoria).length, dias: DB.dias.length,
-  flash: soma(DB.respostas, r => r.rv || 0), combo: Math.max(0, ...DB.sessoes.map(s => s.combo || 0)), desafios: DB.marcos.filter(m => String(m.id).startsWith('d:')).length });
+  flash: soma(DB.respostas, r => r.rv || 0), combo: Math.max(0, ...DB.sessoes.map(s => s.combo || 0)), desafios: DB.marcos.filter(m => String(m.id).startsWith('d:')).length,
+  blocos: DB.sessoes.filter(s => s.prova).length, redacoes: DB.redacoes.filter(r => r.env).length });
 
 /* ---------- sessão em andamento ---------- */
 const ativaSeg = (a = DB.ativa) => a ? (a.acum || 0) + (a.desde ? Math.max(0, (Date.now() - a.desde) / 1000) : 0) : 0;
@@ -402,7 +404,13 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.1.0', itens: [
+const NOVIDADES = [{ versao: '1.2.0', itens: [
+  'Provas do Cebraspe: quatro cadernos oficiais (ANATEL, ANAC, ANM e DATAPREV), com folha de respostas, correção pelo gabarito definitivo e comentário do instrutor. O caderno abre no site da banca.',
+  'Só os itens do seu edital: cada prova mostra os blocos que servem para a ANPD e deixa o resto de fora.',
+  'Como a banca escreve: as sete armadilhas que mais apareceram nessas provas.',
+  'Discursiva: três temas que o Cebraspe cobrou e três temas do instrutor para a ANPD, com o que a banca espera e envio do texto para correção.',
+  'Seis itens novos de LGPD, feitos a partir do que a banca cobrou.',
+] }, { versao: '1.1.0', itens: [
   'Treino de questões no estilo Cebraspe (certo ou errado), com comentário, fundamento e uma aula curta em cada item. O banco começa com 57 itens inéditos da LGPD.',
   'Flashcards: o item que você erra volta em 1, 3, 7, 15 e 30 dias.',
   'Desafio do dia: dez questões sorteadas, com bônus de pontos. Acertos seguidos viram combo.',
@@ -421,7 +429,7 @@ let SY = null;
 const ocupadoApp = () => (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof focoAberto === 'function' && focoAberto()) || (typeof treinoAberto === 'function' && treinoAberto()) || (typeof festaAberta !== 'undefined' && festaAberta);
 KitFacil.iniciar({
   app: 'estudo-facil', nome: 'Estudo Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
-  resumo: 'Plano de estudos para o concurso da ANPD: questões no estilo Cebraspe, flashcards, revisões, sequência de dias e medalhas.',
+  resumo: 'Plano de estudos para o concurso da ANPD: provas do Cebraspe, questões comentadas, flashcards, discursiva, revisões e medalhas.',
   tela: () => (typeof tab !== 'undefined' ? tab : 'hoje'), exemploDados: 'os concursos, as disciplinas, as sessões de estudo e as revisões',
   abrirAjustes: secao => { if (secao || tab !== 'ajustes') abrirAjustes(); else fecharAjustes(); },
   emAjustes: () => typeof tab !== 'undefined' && tab === 'ajustes',

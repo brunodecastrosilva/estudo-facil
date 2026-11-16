@@ -3,7 +3,8 @@
 "use strict";
 
 /* ---------- escolher o que estudar ---------- */
-const nomeItem = it => { const t = it.t && topico(it.t), m = materia(it.m); return { t: t ? t.nome : 'Estudo livre', m: m ? m.nome : '' }; };
+const nomeItem = it => { const t = it.t && topico(it.t), m = materia(it.m), pv = it.prova && typeof PROVA !== 'undefined' && PROVA.get(it.prova);
+  return { t: t ? t.nome : pv ? `${pv.org} ${pv.ano} · bloco do item ${it.bloco}` : 'Estudo livre', m: m ? m.nome : '' }; };
 const opcoesMaterias = sel => DB.materias.filter(m => topicosDe(m.id).length).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')).map(m => `<option value="${esc(m.id)}" ${m.id === sel ? 'selected' : ''}>${esc(m.nome)}</option>`).join('');
 const opcoesTopicos = (mId, sel) => topicosDe(mId).map(t => `<option value="${esc(t.id)}" ${t.id === sel ? 'selected' : ''}>${esc(t.nome)}${t.teoria ? ' ✓' : ''}</option>`).join('');
 const segHTML = (id, ops, atual, rotulo) => `<div class="kf-seg" id="${id}" role="group" aria-label="${esc(rotulo)}">${ops.map(([v, n]) => `<button type="button" data-v="${esc(String(v))}" aria-pressed="${String(v) === String(atual)}">${esc(n)}</button>`).join('')}</div>`;

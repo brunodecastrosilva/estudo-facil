@@ -44,6 +44,7 @@ function centralQuestoes() {
       ${lin('desafio', I.raio, 'Desafio do dia', D.feito ? 'Feito hoje. Amanhã tem outro.' : '10 itens sorteados · bônus de pontos', D.feito ? `<span class="etiqueta ok">${I.check}Feito</span>` : '')}
       ${lin('flashcards', I.revisar, 'Flashcards', fc ? `${plural(fc, 'item que você errou volta', 'itens que você errou voltam')} hoje` : 'Nenhum para hoje. Eles nascem dos seus erros.', fc ? `<span class="etiqueta">${fc}</span>` : '')}
       ${lin('treino-livre', I.questoes, 'Treino livre', '10 itens: primeiro os que você errou, depois os novos')}
+      <li><button type="button" class="lin" data-kf-ir="provas"><span class="lin-ic">${I.simulado}</span><span class="lin-tx"><b>Provas do Cebraspe</b><small>${PROVAS.length} cadernos oficiais, com gabarito e comentário</small></span>${I.seta}</button></li>
     </ul></section>`;
 }
 const viewHoje = {
@@ -241,6 +242,8 @@ const viewMais = {
     const fc = flashcardsDeHoje().length, nR = respostasDoInstrutor().length;
     return `${cab('Mais')}${KitFacil.nav.mais({ linhas: [
       ...(jogoLigado() ? [{ id: 'evolucao', titulo: 'Evolução', texto: 'Prontidão, constância, horas e acertos', icone: I.evolucao }] : []),
+      { id: 'provas', titulo: 'Provas do Cebraspe', texto: `${PROVAS.length} cadernos oficiais, com gabarito e comentário`, icone: I.simulado },
+      { id: 'discursivas', titulo: 'Discursiva', texto: `${DISCURSIVAS.length} temas, com o que a banca espera`, icone: I.lapis },
       { id: 'instrutor', titulo: 'Instrutor', texto: nR ? plural(nR, 'resposta guardada', 'respostas guardadas') : 'Leve as suas dúvidas ao Claude', icone: I.balao },
       { titulo: 'Flashcards', texto: fc ? `${plural(fc, 'item para rever hoje', 'itens para rever hoje')}` : 'Nenhum para hoje', icone: I.cartas, attrs: 'data-act="flashcards" id="ma-flash"' },
       { id: 'concursos', titulo: 'Concursos', texto: DB.concursos.length ? `${plural(concursosAtivos().length, 'em estudo', 'em estudo')} de ${DB.concursos.length}` : 'Adicione o seu concurso', icone: I.concurso },

@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.1 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.2 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -28,7 +28,7 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral, com o
     const topo = await conferirTopo(a.page); assert.deepEqual(topo.erros, [], `barra de cima em ${nome}`);
     const navAj = await conferirNavAjustes(a.page); assert.deepEqual(navAj.erros, [], `navegação em ${nome}`);
     for (const t of ['plano', 'medalhas', 'mais']) { await nav(a.page, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
-    for (const t of ['evolucao', 'instrutor']) { await a.page.evaluate(t => irPara(t), t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
+    for (const t of ['evolucao', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva']) { await a.page.evaluate(t => { provaId = 'dataprev23-seg'; redId = 'antt24-sandbox'; irPara(t); }, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
     await a.page.evaluate(() => treinoAbrir({ t: 'anpd-lgpd-01' })); await a.page.locator('#treino.dentro').waitFor(); await a.page.click('#treino [data-resp="E"]'); await a.page.locator('#tr-prox').waitFor();
     assert.ok(await a.page.evaluate(() => { const e = document.querySelector('#treino'); return e.scrollWidth <= e.clientWidth + 1; }), `rolagem lateral no treino, ${nome}`); await a.page.keyboard.press('Escape'); await a.page.locator('#festa-ok').click();
     assert.deepEqual(a.erros, [], `erros no console em ${nome}`);
@@ -178,6 +178,69 @@ test('flashcards, desafio do dia e instrutor: o erro volta, o desafio rende bôn
   await a.fechar();
 });
 
+test('provas do Cebraspe: só fonte oficial, sem texto de prova; folha de respostas, correção pelo gabarito e comentário', async () => {
+  const a = abrir(), p = (await a).page, A = await a;
+  const d = await p.evaluate(() => PROVAS.map(x => ({ id: x.id, urls: [x.caderno, x.gabUrl].every(u => /^https:\/\/cdn\.cebraspe\.org\.br\/concursos\/[\w]+\/arquivos\/[\w]+\.PDF$/i.test(u)), gab: /^[CEX]+$/.test(x.gab), cobre: x.blocos.reduce((n, b) => n + b.ate - b.de + 1, 0) === x.gab.length && x.blocos.every((b, i) => b.de === (i ? x.blocos[i - 1].ate + 1 : x.de)),
+    disc: x.blocos.every(b => !b.m || !!materia(b.m)), com: Object.keys(x.itens).every(n => 'CE'.includes(x.gab[n - x.de]) && x.blocos.some(b => b.m && n >= b.de && n <= b.ate)), curto: Object.values(x.itens).every(c => c.split(' ').length <= 40), doEdital: blocosDoEdital(x).reduce((n, b) => n + b.ate - b.de + 1, 0) })));
+  assert.equal(d.length, 4);
+  for (const x of d) assert.deepEqual([x.urls, x.gab, x.cobre, x.disc, x.com, x.curto], [true, true, true, true, true, true], x.id);
+  assert.deepEqual(d.map(x => x.doEdital), [46, 30, 28, 36], 'itens do edital da ANPD em cada prova');
+  await p.click('#view [data-kf-ir="provas"]'); await p.locator('#view [data-act="abrir-prova"]').first().waitFor();
+  assert.equal(await p.locator('#view details[data-kf-secao]').count(), 7, 'as sete armadilhas da banca');
+  await p.click('#view [data-act="abrir-prova"][data-id="anatel24-cb1"]'); await p.locator('#view .prova-capa').waitFor();
+  assert.match(await p.getAttribute('#view .prova-capa a.kf-pri', 'href'), /cdn\.cebraspe\.org\.br.*961_ANATEL_CB1_01\.PDF$/);
+  assert.equal(await p.getAttribute('#view .prova-capa a.kf-pri', 'rel'), 'noopener noreferrer');
+  assert.equal(await p.locator('#view .bloco-prova').count(), 5, 'o bloco da lei do setor fica de fora'); assert.match(await p.locator('#view [aria-labelledby="pv-fora"]').innerText(), /Itens 30 a 33/);
+  const b = '#view [data-bloco="2"]', marca = (n, v) => p.click(`${b} [data-item="${n}"][data-v="${v}"]`);
+  await marca(24, 'C'); await marca(25, 'C'); await marca(26, 'E'); await marca(26, 'E'); await marca(27, 'E');
+  assert.equal(await p.evaluate(() => document.activeElement.dataset.item), '27', 'marcar não tira o foco do botão');
+  assert.deepEqual(await p.evaluate(() => [24, 25, 26, 27].map(n => (marcaDe(PROVA.get('anatel24-cb1'), n) || {}).v)), ['C', 'C', '', 'E'], 'tocar de novo desmarca');
+  assert.equal(await p.locator(`${b} .fr-com`).count(), 0, 'comentário e gabarito só depois de corrigir');
+  await p.click(`${b} [data-corrigir]`); assert.match(await p.locator('.kf-dlg').innerText(), /3 de 6 itens/); await p.locator('.kf-dlg [data-kf-ok]').click();
+  await p.locator('#festa-ok').waitFor(); assert.match(await p.locator('.festa').innerText(), /ANATEL 2024 · itens 24 a 29[\s\S]*Nota líquida[\s\S]*-1 de 6/);
+  await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
+  for (let i = 0; i < 3; i++) { const m = p.locator('#mn-ok'); if (await m.count()) { await m.click(); await p.waitForTimeout(700); } else await p.waitForTimeout(250); }
+  assert.match(await p.locator(`${b} .bl-nota`).innerText(), /-1[\s\S]*1 certo, 2 errados, 3 em branco/);
+  assert.match(await p.locator(`${b} .fr-item.no`).first().innerText(), /Errou · gabarito: Errado[\s\S]*não se subordina a ministério/);
+  assert.equal(await p.locator(`${b} [data-item]:not([disabled])`).count(), 0, 'depois de corrigir, a folha do bloco trava');
+  const r = await p.evaluate(() => ({ s: DB.sessoes.map(s => [s.m, s.t, s.tipo, s.ac, s.er, s.prova, s.bloco]), ganhas: jogoEstado().ganhas.includes('pv1'), blocos: totais().blocos, resumo: provaResumo(PROVA.get('anatel24-cb1')) }));
+  assert.deepEqual(r.s, [['anpd-regul', null, 'questoes', 1, 2, 'anatel24-cb1', 24]]); assert.equal(r.ganhas, true); assert.equal(r.blocos, 1); assert.deepEqual([r.resumo.feitos, r.resumo.ac, r.resumo.er], [1, 1, 2]);
+  // pergunta sobre um item: vai a referência e o gabarito, nunca o texto da prova
+  await p.evaluate(() => { window.copiarTexto = async t => { window.__copiado = t; return true; }; window.open = (...x) => { window.__abriu = x; }; });
+  await p.click(`${b} [data-perg="25"]`); await p.locator('#in-ok').waitFor(); await p.fill('#in-d', 'Por que está errado?'); await p.click('#in-ok'); await semJanela(p);
+  assert.match(await p.evaluate(() => window.__copiado), /caderno 961_ANATEL_CB1_01[\s\S]*Item 25 · gabarito oficial: Errado · marquei: Certo[\s\S]*Minha dúvida: Por que está errado\?/);
+  await p.click(`${b} [data-refazer]`); await p.locator('.kf-dlg [data-kf-ok]').click(); await p.locator(`${b} [data-corrigir]`).waitFor();
+  assert.equal(await p.evaluate(() => DB.respostas.length + ':' + DB.sessoes.length), '0:1', 'refazer apaga as marcações; a sessão continua');
+  assert.deepEqual(A.erros, []);
+  await A.fechar();
+});
+
+test('discursiva: temas oficiais e do instrutor, contagem de linhas, rascunho guardado e envio para correção', async () => {
+  const a = await abrir(), p = a.page;
+  const d = await p.evaluate(() => DISCURSIVAS.map(x => [x.id, x.oficial, !x.url || /^https:\/\/cdn\.cebraspe\.org\.br\//.test(x.url), !!materia(x.m), x.topicos.length >= 3, x.espera.length >= 3, x.oficial ? !!x.url : !x.url]));
+  assert.equal(d.length, 6); assert.equal(d.filter(x => x[1]).length, 3); for (const x of d) assert.deepEqual(x.slice(2), [true, true, true, true, true], x[0]);
+  await p.evaluate(() => irPara('discursivas')); await p.click('#view [data-act="abrir-red"][data-id="i-incidente"]'); await p.locator('#ds-txt').waitFor();
+  assert.ok(await semCampoEmFoco(p), 'a tela abriu com a caixa de texto em foco');
+  assert.match(await p.locator('#view .disc-top').innerText(), /7,5 pts/); assert.match(await p.locator('#view [aria-labelledby="ds-tp"]').innerText(), /Apresentação e estrutura do texto: 1,5 ponto/);
+  assert.equal(await p.locator('#view [aria-labelledby="ds-es"] details').evaluate(e => e.open), false, 'o espelho fica fechado até a pessoa abrir');
+  await p.evaluate(() => { window.copiarTexto = async t => { window.__copiado = t; return true; }; window.open = (...x) => { window.__abriu = x; }; });
+  await p.fill('#ds-txt', 'Texto curto.'); await p.click('#ds-enviar');
+  assert.equal(await p.evaluate(() => window.__copiado || ''), '', 'texto curto demais não é enviado'); assert.equal(await p.getAttribute('#ds-txt', 'aria-invalid'), 'true');
+  const frase = 'O controlador comunica à ANPD e aos titulares o incidente que possa acarretar risco ou dano relevante. ';
+  await p.fill('#ds-txt', frase.repeat(22)); assert.match(await p.locator('#ds-cont').innerText(), /374 palavras, perto de 34 linhas de 30\. Passou do limite/);
+  await p.fill('#ds-txt', frase.repeat(12)); await p.locator('#ds-txt').blur();
+  assert.deepEqual(await p.evaluate(() => DB.redacoes.map(r => [r.id, r.txt.length > 1000, r.env])), [['i-incidente', true, 0]], 'o rascunho fica guardado');
+  await p.click('#ds-enviar');
+  assert.match(await p.evaluate(() => window.__copiado), /\[Estudo Fácil · discursiva para correção\][\s\S]*id i-incidente[\s\S]*até 30 linhas, 30 pontos[\s\S]*Meu texto \(cerca de 19 linhas\)[\s\S]*Corrija como a banca/);
+  assert.ok(await esperar(() => p.evaluate(() => DB.redacoes[0].env > 0 && totais().redacoes === 1 && jogoEstado().ganhas.includes('red1'))), 'o envio conta para a medalha');
+  for (let i = 0; i < 3; i++) { const m = p.locator('#mn-ok'); if (await m.count()) { await m.click(); await p.waitForTimeout(700); } else await p.waitForTimeout(300); }
+  // a correção gravada pelo instrutor aparece junto do texto, que continua lá
+  await p.evaluate(() => { INSTRUTOR = { 'disc:i-incidente': [{ em: '16/11/2026', r: 'Tópico 1: 6,5 de 7,5. Faltou citar o art. 48.' }] }; render(); });
+  assert.match(await p.locator('#view [aria-labelledby="ds-co"]').innerText(), /Faltou citar o art\. 48/); assert.ok((await p.inputValue('#ds-txt')).startsWith('O controlador comunica'));
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
 test('medalhas: mais de cem, com ids únicos, em quatro metais e cinco famílias; a tela mostra a coleção', async () => {
   const a = await abrir(), p = a.page;
   const m = await p.evaluate(() => ({ n: medalhasDoApp().length, ids: new Set(MEDALHAS.map(x => x.id)).size, metais: [...new Set(MEDALHAS.map(x => x.metal))].sort(), fam: [...new Set(MEDALHAS.map(x => x.fam))].sort(), ic: MEDALHAS.every(x => MED_IC[x.ic]), como: MEDALHAS.every(x => x.como && x.como.split(' ').length <= 14), formas: new Set(['bronze', 'prata', 'ouro', 'diamante'].map(formaMetal)).size, antigas: ['seq3', 'seq7', 'seq14', 'seq30', 'seq100', 'h10', 'h50', 'h100', 'q100', 'q500', 'q1000', 'rev10', 'ed25', 'ed50', 'ed90', 'dia1', 'primeira', 'nome', 'cedo', 'guia', 'nuvem'].filter(i => !MEDALHAS.some(x => x.id === i)) }));
@@ -316,8 +379,8 @@ test('Ajustes: as oito guias comuns, as três do app, meta e nome (com a primeir
 test('segurança: texto de fora é protegido antes de ir para a tela', async () => {
   const a = await abrir(), p = a.page;
   await p.evaluate(() => { const x = '<img src=x onerror="window.__xss=1"><b id="inj">oi</b>'; cfg().nome = x; DB.materias[0].nome = x; DB.topicos[0].nome = x; DB.concursos[0].sigla = x; DB.concursos[0].cargo = x; DB.eventos.push({ id: 'e1', titulo: x, data: hojeISO(), hora: '' }); DB.simulados.push({ id: 's1', c: DB.concursos[0].id, nome: x, data: hojeISO(), r: {} }); registrarSessao({ t: DB.topicos[0].id, seg: 600, teoria: true }); salvar(); jogoConferir({ silencioso: true }); });
-  for (const t of ['hoje', 'plano', 'medalhas', 'evolucao', 'instrutor', 'mais', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'ajustes']) {
-    await p.evaluate(t => { concId = DB.concursos[0].id; discId = DB.materias[0].id; irPara(t); }, t); await p.waitForTimeout(120);
+  for (const t of ['hoje', 'plano', 'medalhas', 'evolucao', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva', 'mais', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'ajustes']) {
+    await p.evaluate(t => { concId = DB.concursos[0].id; discId = DB.materias[0].id; provaId = 'anatel24-cb1'; redId = 'anm24-lgpd'; INSTRUTOR = { 'pv:anatel24-cb1:1': [{ em: '<i id="inj">x</i>', r: '<b id="inj">r</b>' }], 'disc:anm24-lgpd': [{ em: 'x', r: '<img src=x onerror="window.__xss=1">' }] }; if (!DB.respostas.some(r => r.id === 'pv:anatel24-cb1:1')) DB.respostas.push({ id: 'pv:anatel24-cb1:1', v: 'C', cor: 1, ok: false }); if (!DB.redacoes.length) DB.redacoes.push({ id: 'anm24-lgpd', txt: '</textarea><b id="inj">t</b>', env: 0 }); VER++; irPara(t); }, t); await p.waitForTimeout(120);
     if (t === 'plano') { await p.locator('#view details.disc summary').first().click(); await p.locator('#view [data-act="assunto"]').first().click(); await p.waitForTimeout(200); await p.keyboard.press('Escape'); }
     assert.equal(await p.evaluate(() => !!document.querySelector('#inj') || !!window.__xss), false, 'HTML injetado em ' + t);
   }

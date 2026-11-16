@@ -155,15 +155,16 @@ async function copiarTexto(txt) {
   try { const a = document.createElement('textarea'); a.value = txt; a.setAttribute('readonly', ''); a.style.cssText = 'position:fixed;opacity:0;top:0;left:0'; document.body.appendChild(a); a.select(); const ok = document.execCommand('copy'); a.remove(); return ok; } catch { return false; }
 }
 const URL_CLAUDE = 'https://claude.ai/project/01a13276-3f92-72f9-bcdd-060873067561';
-function perguntarInstrutor(q = null, marcou = null) {
+// ctx serve às perguntas que não são de questão do banco (item de prova oficial): { rotulo, linhas }
+function perguntarInstrutor(q = null, marcou = null, ctx = null) {
   const t = q && topico(q.t);
-  abrirJanela({ titulo: 'Perguntar ao instrutor', sub: 'O app copia a sua dúvida. No Claude, cole no Projeto Estudo Fácil e envie.', contexto: q ? `Questão ${q.id}` : '',
-    corpo: `<div class="kf-campo"><label class="kf-rotulo" for="in-d">Sua dúvida</label><textarea id="in-d" class="kf-entrada" rows="4" maxlength="1200" placeholder="${q ? 'O que não ficou claro neste item?' : 'Escreva a sua pergunta'}"></textarea></div>
+  abrirJanela({ titulo: 'Perguntar ao instrutor', sub: 'O app copia a sua dúvida. No Claude, cole no Projeto Estudo Fácil e envie.', contexto: q ? `Questão ${q.id}` : ctx ? ctx.rotulo : '',
+    corpo: `<div class="kf-campo"><label class="kf-rotulo" for="in-d">Sua dúvida</label><textarea id="in-d" class="kf-entrada" rows="4" maxlength="1200" placeholder="${q || ctx ? 'O que não ficou claro neste item?' : 'Escreva a sua pergunta'}"></textarea></div>
       <p class="kf-ajuda">A resposta chega na hora, no Claude. Depois ela fica guardada aqui${q ? ', junto desta questão' : ''}.</p>`,
     pe: `<button type="button" class="kf-btn kf-pri" id="in-ok">Copiar e abrir o Claude</button>`,
     aoMontar: d => { $('#in-ok', d).onclick = async () => {
-      const duvida = $('#in-d', d).value.trim(); if (!duvida && !q) { KitFacil.apontar($('#in-d', d)); avisar('Escreva a sua pergunta.'); return; }
-      const txt = ['[Estudo Fácil · pergunta ao instrutor]', q ? `Questão ${q.id} · ${t ? t.nome : ''}\nItem: ${q.e}\nGabarito: ${GAB[q.g]}${marcou ? ` · marquei: ${GAB[marcou]}` : ''}\nComentário do app: ${q.c} (${q.f})` : '', `Minha dúvida: ${duvida || 'explique este item com outras palavras e um exemplo.'}`, 'Responda como meu instrutor e grave a resposta no app.'].filter(Boolean).join('\n\n');
+      const duvida = $('#in-d', d).value.trim(); if (!duvida && !q && !ctx) { KitFacil.apontar($('#in-d', d)); avisar('Escreva a sua pergunta.'); return; }
+      const txt = ['[Estudo Fácil · pergunta ao instrutor]', q ? `Questão ${q.id} · ${t ? t.nome : ''}\nItem: ${q.e}\nGabarito: ${GAB[q.g]}${marcou ? ` · marquei: ${GAB[marcou]}` : ''}\nComentário do app: ${q.c} (${q.f})` : ctx ? ctx.linhas.join('\n') : '', `Minha dúvida: ${duvida || 'explique este item com outras palavras e um exemplo.'}`, 'Responda como meu instrutor e grave a resposta no app.'].filter(Boolean).join('\n\n');
       const ok = await copiarTexto(txt); jogoMarcar('instrutor'); fecharJanela(true);
       avisar(ok ? 'Pergunta copiada. Cole no Claude e envie.' : 'Não deu para copiar. Tente de novo.');
       if (ok && !semSalvar) window.open(URL_CLAUDE, '_blank', 'noopener');

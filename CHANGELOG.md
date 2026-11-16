@@ -3,6 +3,23 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.2.0 · 2026-11-16
+
+O material do app passa a nascer das provas oficiais da banca: primeiro as provas, depois as questões e as apostilas.
+
+- **Provas do Cebraspe:** quatro cadernos oficiais com gabarito definitivo: ANATEL 2024 e ANAC 2024 (conhecimentos básicos de especialista em regulação), ANM 2025 (conhecimentos gerais) e DATAPREV 2023 (segurança da informação e proteção de dados). São 220 itens; 140 servem para o edital da ANPD.
+- **Só o que é do seu edital:** cada prova mostra os blocos que servem para a ANPD (Português, Inglês, regulação, Administrativo, Constitucional, ética, LGPD, direito digital e segurança) e lista à parte o que ficou de fora.
+- **Folha de respostas:** o caderno abre no site do Cebraspe; no app você marca certo ou errado e corrige o bloco. A nota é a líquida da banca: errado desconta um ponto.
+- **Comentário do instrutor** em 73 itens, com a base legal. Em qualquer item dá para perguntar ao instrutor.
+- **Como a banca escreve:** sete armadilhas que se repetiram nessas provas, na tela Provas.
+- **Discursiva:** três temas que o Cebraspe cobrou (LGPD na ANM, sandbox com IA na ANTT e requisição de dados na ANATEL) e três temas inéditos do instrutor para a ANPD. Cada tema tem os tópicos com pontuação, o que a banca espera e envio do texto para correção.
+- **Seis itens novos de LGPD** no banco do app, feitos a partir das armadilhas vistas nas provas. São 63 itens.
+- **Medalhas:** duas séries novas, Prova real e Redator. São 110 medalhas.
+- **O que não entra:** o texto das provas não é copiado para o app. Ficam o endereço oficial, o gabarito e o comentário.
+- **Ainda não entrou:** a prova da ANTT 2024, porque o gabarito definitivo não apareceu em endereço oficial alcançável.
+- **Guia:** 27 passos; os novos mostram as provas e a discursiva.
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou). Rodaram a verificação do padrão, os 21 testes do app, o guia inteiro e a varredura de acessibilidade (WCAG 2.2 AA), no claro e no escuro.
+
 ## 1.1.0 · 2026-11-16
 
 Começa a **fase de testes fechada**: o app passa a ser de uso exclusivo do Bruno e todo voltado ao concurso da ANPD

@@ -1,6 +1,6 @@
 /* Estudo Fácil · banco de questões do app.
-   Itens INÉDITOS, no estilo Cebraspe (certo ou errado), escritos pelo Claude a partir do texto da lei. Não são questões
-   de prova. Cada item: id, t (assunto), e (enunciado), g (gabarito: C ou E), c (comentário) e f (fundamento).
+   Itens INÉDITOS, no estilo Cebraspe (certo ou errado), escritos pelo Claude a partir do texto da lei e das armadilhas
+   vistas nas provas oficiais (provas.js e instrutor/caderno-da-banca.md). Não são questões de prova. Cada item: id, t (assunto), e (enunciado), g (gabarito: C ou E), c (comentário) e f (fundamento).
    AULAS traz uma aula curta por assunto, mostrada junto de cada questão dele.
    Achou um erro? Toque em "Perguntar ao instrutor" na questão. */
 const AULAS = {
@@ -82,4 +82,11 @@ const QUESTOES = [
   { id: 'lgpd-055', t: 'anpd-lgpd-19', g: 'C', e: 'Com a Lei 15.352/2026, a ANPD passou a ser agência reguladora, com natureza de autarquia especial.', c: 'É a base do seu concurso: a mesma lei criou a carreira de Especialista em Regulação de Proteção de Dados.', f: 'Lei 15.352/2026' },
   { id: 'lgpd-056', t: 'anpd-lgpd-19', g: 'C', e: 'A aplicação das sanções previstas na LGPD compete exclusivamente à ANPD.', c: 'Em proteção de dados, as competências da ANPD prevalecem sobre as correlatas de outros órgãos.', f: 'LGPD, art. 55-K' },
   { id: 'lgpd-057', t: 'anpd-lgpd-19', g: 'E', e: 'Os regulamentos e as normas editados pela ANPD dispensam consulta pública e análise de impacto regulatório.', c: 'É o contrário: devem ser precedidos de consulta e audiência públicas e de análise de impacto regulatório.', f: 'LGPD, art. 55-J, § 2º' },
+  // itens feitos depois da leitura das provas do Cebraspe (provas.js): mesmas armadilhas, outros enunciados
+  { id: 'lgpd-058', t: 'anpd-lgpd-02', g: 'E', e: 'Em uma empresa, o encarregado é o agente de tratamento que executa as operações com dados pessoais segundo as instruções do controlador.', c: 'Quem trata dados em nome do controlador é o operador. O encarregado nem é agente de tratamento: é o canal com os titulares e a ANPD.', f: 'LGPD, art. 5º, VII, VIII e IX' },
+  { id: 'lgpd-059', t: 'anpd-lgpd-02', g: 'E', e: 'A pseudonimização equivale à anonimização, razão pela qual o dado pseudonimizado deixa de ser dado pessoal.', c: 'Na pseudonimização, a pessoa ainda pode ser identificada com a informação adicional guardada à parte. O dado continua pessoal.', f: 'LGPD, arts. 12 e 13, § 4º' },
+  { id: 'lgpd-060', t: 'anpd-lgpd-03', g: 'E', e: 'Pelo princípio da transparência, o tratamento deve ser compatível com as finalidades informadas ao titular, de acordo com o contexto do tratamento.', c: 'Isso é adequação. Transparência é dar ao titular informações claras, precisas e acessíveis sobre o tratamento e sobre os agentes.', f: 'LGPD, art. 6º, II e VI' },
+  { id: 'lgpd-061', t: 'anpd-lgpd-14', g: 'E', e: 'Nos órgãos públicos, a função de encarregado pelo tratamento de dados pessoais cabe, por força da LGPD, ao ouvidor.', c: 'A lei não liga o encarregado à ouvidoria: ele é indicado pelo controlador. No poder público, a indicação é obrigatória.', f: 'LGPD, arts. 23, III, e 41' },
+  { id: 'lgpd-062', t: 'anpd-lgpd-10', g: 'C', e: 'O titular pode requerer, a qualquer momento, a eliminação de dados desnecessários, excessivos ou tratados em desconformidade com a LGPD.', c: 'É o inciso IV do art. 18, que também fala em anonimização e bloqueio. Repare no recorte: desnecessários, excessivos ou irregulares.', f: 'LGPD, art. 18, IV' },
+  { id: 'lgpd-063', t: 'anpd-lgpd-18', g: 'E', e: 'A multa simples da LGPD é de até 2% do faturamento global do grupo econômico, sem limite de valor por infração.', c: 'A base é o faturamento no Brasil, no último exercício e sem os tributos, e há teto de R$ 50 milhões por infração.', f: 'LGPD, art. 52, II' },
 ];

@@ -3,10 +3,10 @@
 
 /* ---------- navegação ---------- */
 let tab = 'hoje', novoItem = null;
-const TELAS = { hoje: viewHoje, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
-const TITULOS = { hoje: 'Hoje', plano: 'Plano', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
-const PAI = { concurso: 'concursos', disciplina: 'disciplinas' };
-const DE_MAIS = new Set(['concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'instrutor']);
+const TELAS = { hoje: viewHoje, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, provas: viewProvas, prova: viewProva, discursivas: viewDiscursivas, discursiva: viewDiscursiva, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
+const TITULOS = { hoje: 'Hoje', plano: 'Plano', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', provas: 'Provas do Cebraspe', prova: 'Prova', discursivas: 'Discursiva', discursiva: 'Discursiva', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
+const PAI = { concurso: 'concursos', disciplina: 'disciplinas', prova: 'provas', discursiva: 'discursivas' };
+const DE_MAIS = new Set(['concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva']);
 function irPara(t, { topo = true } = {}) {
   if (t === 'estudar') { abrirEstudar(); return; }
   if (t === 'ajustes') { abrirAjustes(); return; }
@@ -23,7 +23,7 @@ function pintarNav() {
   const html = KitFacil.nav.barra({ itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), terceiro], centro, mais: { atual: tab === 'mais' || DE_MAIS.has(tab) || (jogo && tab === 'evolucao') } });
   const nav = $('#tabs'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
   const lado = KitFacil.nav.trilho({ destaque: { ...centro, rotulo: viva ? 'Voltar ao foco' : 'Estudar agora' },
-    itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('evolucao', 'Evolução', I.evolucao), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar), it('concursos', 'Concursos', I.concurso, ['concurso']), it('disciplinas', 'Disciplinas', I.disciplinas, ['disciplina']), it('simulados', 'Simulados', I.simulado), it('agenda', 'Agenda', I.agenda)], mais: { atual: tab === 'mais' } });
+    itens: [it('hoje', 'Hoje', I.hoje), it('plano', 'Plano', I.plano), ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('evolucao', 'Evolução', I.evolucao), it('provas', 'Provas', I.simulado, ['prova']), it('discursivas', 'Discursiva', I.lapis, ['discursiva']), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar), it('concursos', 'Concursos', I.concurso, ['concurso']), it('disciplinas', 'Disciplinas', I.disciplinas, ['disciplina']), it('simulados', 'Simulados', I.simulado), it('agenda', 'Agenda', I.agenda)], mais: { atual: tab === 'mais' } });
   const t = $('#trilho'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
 }
 document.addEventListener('click', e => {
@@ -46,6 +46,8 @@ const ACOES = {
   'flashcards': () => flashcardsAbrir(),
   'treino-livre': () => treinoAbrir({ n: 10 }),
   'perguntar': () => perguntarInstrutor(),
+  'abrir-prova': b => { provaId = b.dataset.id; provaIni = 0; irPara('prova'); },
+  'abrir-red': b => { redId = b.dataset.id; irPara('discursiva'); },
   'sobre-sequencia': () => sobreSequencia(),
   'guia': () => guiaIniciar(),
   'novo-concurso': () => novoConcurso(),
@@ -80,11 +82,13 @@ function sobreSequencia() {
 function render() {
   if (tab === 'concurso' && !DB.concursos.some(c => c.id === concId)) tab = 'concursos';
   if (tab === 'disciplina' && !materia(discId)) tab = 'disciplinas';
+  if (tab === 'prova' && !PROVA.has(provaId)) tab = 'provas';
+  if (tab === 'discursiva' && !DISC.has(redId)) tab = 'discursivas';
   if (!TELAS[tab] && tab !== 'ajustes') tab = 'hoje';
   pintarNav();
   const v = $('#view'), tela = tab === 'ajustes' ? viewAjustes : TELAS[tab];
   $('.wrap').classList.toggle('largo', tab === 'ajustes');
-  const chaveTela = tab + (tab === 'concurso' ? concId : tab === 'disciplina' ? discId : '');
+  const chaveTela = tab + (tab === 'concurso' ? concId : tab === 'disciplina' ? discId : tab === 'prova' ? provaId : tab === 'discursiva' ? redId : '');
   const trocou = v.dataset.telaAtual !== chaveTela; v.dataset.telaAtual = chaveTela;
   // as seções abertas continuam abertas depois de redesenhar
   const abertas = trocou ? null : new Set($$('details[data-chave]', v).filter(d => d.open).map(d => d.dataset.chave)), fechadas = trocou ? null : new Set($$('details[data-chave]', v).filter(d => !d.open).map(d => d.dataset.chave));
@@ -214,7 +218,7 @@ function aberturaAbrir({ rever = false } = {}) {
    roteiro e a troca dos dados reais pelos da demonstração. */
 let dadosReais = null;
 const guiaAtivo = () => KitFacil.guia.emDemonstracao();
-const guiaFoto = () => JSON.stringify({ DB, tab, concId, discId, planoConc });
+const guiaFoto = () => JSON.stringify({ DB, tab, concId, discId, planoConc, provaId, redId });
 const guiaSemAviso = () => $$('.kf-toast').forEach(e => { e.hidden = true; });
 function guiaLimpar() { $('#festa-ok')?.click(); if (treinoAberto()) treinoFechar(); if (focoAberto()) focoFechar(); fecharJanela(true); guiaSemAviso(); medalhaFila = []; }
 function guiaIniciar() {
@@ -231,7 +235,7 @@ function guiaIniciar() {
       render(); window.scrollTo({ top: 0 });
     },
     foto: guiaFoto, limpar: guiaLimpar,
-    restaurar: f => { if (tab === 'ajustes') sairDosAjustes(); const o = JSON.parse(f); DB = o.DB; tab = o.tab; concId = o.concId; discId = o.discId; planoConc = o.planoConc; VER++; $('#view').dataset.telaAtual = ''; render(); window.scrollTo({ top: 0 }); },
+    restaurar: f => { if (tab === 'ajustes') sairDosAjustes(); const o = JSON.parse(f); DB = o.DB; tab = o.tab; provaId = o.provaId; redId = o.redId; concId = o.concId; discId = o.discId; planoConc = o.planoConc; VER++; $('#view').dataset.telaAtual = ''; render(); window.scrollTo({ top: 0 }); },
     terminar: ({ concluiu }) => {
       if (tab === 'ajustes') sairDosAjustes();
       const r = dadosReais; dadosReais = null; semSalvar = false;
@@ -289,6 +293,13 @@ const GUIA = [
     acao: async m => { await demoIr(m, 'medalhas'); await m.apontar('#view .nivel-card', 1400); await m.apontar('#view .vitrine', 1700); await m.tocar('#view .medalhas [data-act="medalha"][data-id="primeira"]'); await m.acha('.kf-dlg .med3d'); await m.espera(700); await m.arrastar('.kf-dlg .med3d', 140); await m.arrastar('.kf-dlg .med3d', -220, { dur: 1300 }); await m.fechar(); await m.some('.kf-dlg .med3d'); } },
   { t: 'A sua evolução', d: 'Em Mais: prontidão, constância, horas por semana e acertos.',
     acao: async m => { if (tab !== 'evolucao') { if ($(navQ('evolucao'))?.getClientRects().length) await m.tocar(navQ('evolucao')); else { await demoIr(m, 'mais'); await m.tocar('#view [data-kf-ir="evolucao"]'); } } await m.apontar('#view #ev-pr', 1500, { opcional: true, prazo: 800 }); await m.apontar('#view .calor', 1700, { opcional: true, prazo: 800 }); } },
+  { t: 'Provas do Cebraspe', d: 'O caderno abre no site da banca. Aqui você marca, corrige e lê o comentário.',
+    acao: async m => { await demoIr(m, 'mais'); if (!$('#view [data-kf-ir="provas"]')) await m.tocar(navQ('mais')); await m.tocar('#view [data-kf-ir="provas"]'); await m.apontar('#view .lista', 1500); await m.tocar('#view [data-act="abrir-prova"][data-id="anatel24-cb1"]'); await m.apontar('#view .prova-capa', 1700);
+      const b = '#view [data-bloco="2"]'; await m.tocar(`${b} [data-item="24"][data-v="C"]`, { depois: 350 }); await m.tocar(`${b} [data-item="25"][data-v="C"]`, { depois: 350 }); await m.tocar(`${b} [data-item="26"][data-v="C"]`, { depois: 350 });
+      await m.tocar(`${b} [data-corrigir]`); await m.tocar('.kf-dlg [data-kf-ok]'); const ok = await m.acha('#festa-ok', { opcional: true, prazo: 2500 }); if (ok) { await m.espera(2200); await m.tocar('#festa-ok'); await m.some('#festa-ok'); }
+      await m.apontar(`${b} .bl-nota`, 1500); await m.apontar(`${b} .fr-item.no .fr-com`, 2200, { opcional: true, prazo: 1000 }); } },
+  { t: 'Discursiva', d: 'Temas que a banca cobrou e temas do instrutor. Escreva e mande corrigir.',
+    acao: async m => { await demoIr(m, 'mais'); if (!$('#view [data-kf-ir="discursivas"]')) await m.tocar(navQ('mais')); await m.tocar('#view [data-kf-ir="discursivas"]'); await m.apontar('#view .lista', 1500); await m.tocar('#view [data-act="abrir-red"][data-id="anm24-lgpd"]'); await m.apontar('#view .disc-capa', 1600); await m.apontar('#view .disc-top', 1800); await m.apontar('#ds-enviar', 1500); } },
   { t: 'O instrutor', d: 'As respostas do Claude às suas dúvidas ficam guardadas aqui.',
     acao: async m => { await demoIr(m, 'mais'); if (!$('#view [data-kf-ir="instrutor"]')) await m.tocar(navQ('mais')); await m.tocar('#view [data-kf-ir="instrutor"]'); await m.apontar('#view .instrutor-capa', 2400); } },
   { t: 'Revisões na data certa', d: 'Concluiu a teoria? As revisões entram sozinhas, em 1, 7 e 30 dias.',

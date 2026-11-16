@@ -1,4 +1,4 @@
-# Proposta para o Integrador · Estudo Fácil 1.1.0 (16/11/2026)
+# Proposta para o Integrador · Estudo Fácil 1.2.0 (16/11/2026)
 
 O Estudo Fácil foi refeito do zero, na vez dele de seguir o Conta Fácil (Código, Art. 93, § 2º). O que segue precisa de
 decisão no Integrador (Código, Art. 7º). Nada aqui foi alterado na pasta `comum/`.
@@ -25,7 +25,8 @@ Estudo Fácil nada muda. Para desfazer no futuro, basta tirar a marca.
 - **Art. 1º** O Estudo Fácil é, nesta fase de testes fechada, o app de estudos do Bruno para o concurso da ANPD (Especialista em Regulação de Proteção de Dados, banca Cebraspe). **§ 1º** A fase fechada é provisória: no futuro o app volta a ser um controle de estudos geral, para o público. **§ 2º** Enquanto durar, os outros apps da família não o listam.
 - **Art. 6º** A barra de baixo tem Hoje, Plano, Estudar (botão redondo, no centro), Medalhas e "Mais" (Evolução, Instrutor, Flashcards, Concursos, Disciplinas, Revisões, Simulados, Agenda, o guia e os Ajustes). **Parágrafo único.** Com as medalhas desligadas, a Evolução ocupa o lugar de Medalhas.
 - **Art. 8º** O plano da ANPD vem de fábrica; outros concursos entram digitados, com o conteúdo programático colado.
-- **Art. 14 (novo).** O estudo é por questões: o banco do app tem itens inéditos de certo ou errado, escritos a partir da lei, com comentário, fundamento e uma aula curta por assunto. Texto de prova e conteúdo de sites de questões não entram no repositório.
+- **Art. 14 (novo).** O estudo é por questões, e o material nasce das provas oficiais: primeiro se levantam as provas da banca no site do Cebraspe, depois se escrevem as questões, os comentários e as apostilas, seguindo o `instrutor/caderno-da-banca.md`. **§ 1º** Das provas oficiais ficam no repositório o endereço, o gabarito definitivo, os blocos por disciplina e o comentário do instrutor; o texto da prova, não. **§ 2º** Conteúdo de sites de questões não entra.
+- **Art. 6º, complemento.** Em "Mais" entram também Provas do Cebraspe e Discursiva.
 - **Art. 15 (novo).** O instrutor é o Claude, no Projeto Estudo Fácil: o app copia a dúvida, a resposta sai na conversa e fica gravada em `instrutor/respostas.json`, sem nada pessoal.
 
 ## 1. Anexo I: identidade do Estudo Fácil

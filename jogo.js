@@ -60,6 +60,8 @@ const SERIES = [
   { id: 'q', nome: 'Resolvedor', fam: 'questoes', ic: 'questoes', k: 'questoes', alvos: [50, 100, 250, 500, 1000, 2500, 5000, 10000], como: n => `Resolva ${nBR(n)} questões.` },
   { id: 'ac', nome: 'Mira', fam: 'questoes', ic: 'alvo', k: 'acertos', alvos: [50, 250, 1000, 2500, 5000], como: n => `Acerte ${nBR(n)} questões.` },
   { id: 'cb', nome: 'Combo', fam: 'questoes', ic: 'raio', k: 'combo', alvos: [5, 10, 15, 20], como: n => `Acerte ${n} questões seguidas num treino.` },
+  { id: 'pv', nome: 'Prova real', fam: 'questoes', ic: 'simulado', k: 'blocos', alvos: [1, 5, 15, 40], como: n => n === 1 ? 'Corrija um bloco de prova do Cebraspe.' : `Corrija ${n} blocos de provas do Cebraspe.` },
+  { id: 'red', nome: 'Redator', fam: 'questoes', ic: 'marca', k: 'redacoes', alvos: [1, 3, 6], como: n => n === 1 ? 'Envie uma discursiva ao instrutor.' : `Envie ${n} discursivas ao instrutor.` },
   { id: 'fc', nome: 'Baralho', fam: 'questoes', ic: 'cartas', k: 'flash', alvos: [10, 50, 100, 500, 1000], como: n => `Reveja ${nBR(n)} flashcards.` },
   { id: 'as', nome: 'Grifo', fam: 'edital', ic: 'marca', k: 'assuntos', alvos: [1, 10, 25, 50, 100], como: n => n === 1 ? 'Grife o seu primeiro assunto.' : `Grife ${n} assuntos do edital.` },
   { id: 'rev', nome: 'Memória', fam: 'edital', ic: 'revisar', k: 'revisoes', alvos: [10, 25, 50, 100, 250], como: n => `Faça ${n} revisões.` },

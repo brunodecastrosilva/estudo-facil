@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.1 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas do app, nos temas claro e escuro.
+/* Estudo Fácil 1.2 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas do app, nos temas claro e escuro.
    Usa o axe-core pelo pacote de desenvolvimento @axe-core/playwright (npm install). Sem ele, o teste é pulado com aviso:
    não conta como aprovado. Substitui, neste app, comum/testes/acessibilidade.test.mjs (os Ajustes ficam na tela Mais). */
 import { test, before, after } from 'node:test';
@@ -37,6 +37,14 @@ for (const tema of ['light', 'dark']) {
     await p.click('#kf-nav-medalhas'); await p.waitForTimeout(200); await varrer(p, `Medalhas (${nome})`);
     await p.locator('#view .medalhas [data-act="medalha"]').first().click(); await p.locator('.kf-dlg .med3d').waitFor(); await varrer(p, `ficha da medalha (${nome})`); await p.keyboard.press('Escape');
     await p.click('#kf-nav-mais'); await p.waitForTimeout(200); await varrer(p, `Mais (${nome})`);
+    // provas do Cebraspe (antes e depois de corrigir um bloco) e discursiva
+    await p.evaluate(() => irPara('provas')); await p.waitForTimeout(200); await varrer(p, `Provas (${nome})`);
+    await p.click('#view [data-act="abrir-prova"][data-id="anm24-cg4"]'); await p.waitForTimeout(200); await p.click('#view [data-item="14"][data-v="C"]'); await p.click('#view [data-item="15"][data-v="C"]'); await varrer(p, `Prova, folha de respostas (${nome})`);
+    await p.evaluate(() => corrigirBloco(PROVA.get('anm24-cg4'), blocosDoEdital(PROVA.get('anm24-cg4'))[2])); await p.locator('.kf-dlg [data-kf-ok]').click(); await p.locator('#festa-ok').click(); await p.locator('.festa').waitFor({ state: 'detached' });
+    for (let i = 0; i < 4; i++) { const b = p.locator('#mn-ok'); if (await b.count()) { await b.click(); await p.waitForTimeout(500); } else await p.waitForTimeout(250); }
+    await varrer(p, `Prova, bloco corrigido (${nome})`);
+    await p.evaluate(() => irPara('discursivas')); await p.waitForTimeout(200); await varrer(p, `Discursivas (${nome})`);
+    await p.click('#view [data-act="abrir-red"][data-id="anm24-lgpd"]'); await p.locator('#ds-txt').waitFor(); await p.fill('#ds-txt', 'A segurança acompanha o tratamento desde a concepção. '.repeat(8)); await p.click('#view [aria-labelledby="ds-es"] summary'); await p.waitForTimeout(200); await varrer(p, `Discursiva (${nome})`);
     for (const tela of ['evolucao', 'instrutor', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda']) { await p.evaluate(t => { concId = 'anpd-2027'; discId = 'anpd-lgpd'; irPara(t); }, tela); await p.waitForTimeout(200); await varrer(p, `${tela} (${nome})`); }
     // treino de questões: antes e depois da resposta, com a aula aberta e a resposta do instrutor; a pergunta e os flashcards
     await p.evaluate(() => { INSTRUTOR = { 'lgpd-016': [{ em: '16/11/2026', r: 'O art. 11 não traz o legítimo interesse.' }] }; DB.respostas.push({ id: 'lgpd-004', n: 1, ac: 0, ok: false, em: agora(), cx: 0, due: hojeISO(), rv: 0 }); salvar(); irPara('hoje'); treinoAbrir({ lista: [QID.get('lgpd-016'), QID.get('lgpd-017'), QID.get('lgpd-018')] }); });
