@@ -171,13 +171,13 @@ mostrar. O arquivo é público: não entra nome, e-mail nem nada pessoal.
 | Exceção | Por quê |
 |---|---|
 | Código dividido em vários `.js`, carregados com `?v=<versão>` | Regras do Estudo Fácil, Art. 5º (exceção já aprovada) |
-| **Fase de testes fechada (desde a 1.1.0, provisória):** o app é de uso exclusivo do Bruno e só do concurso da ANPD; a página pede para não entrar em buscadores (`noindex`) e os outros apps não devem listá-lo em "Outros apps da família" | Decisão do Bruno em 16/11/2026. Exceção ao Código, Art. 10 (app feito para o mercado), e às Regras do Estudo Fácil, Art. 1º (controle de estudos geral). No futuro o app volta a ser publicado para o público geral. **Falta o registro no Painel do Integrador** (Art. 5º, III) e a mudança no Kit, que só o Integrador faz (proposta 0) |
-| **Sem guia (desde a 1.3.0, provisória):** o guia sai da tela e a função nova (cadernos) não entra nele | Decisão do Bruno em 16/11/2026: na fase fechada o guia deixa o app extenso e não ajuda quem é o único usuário. Exceção ao Código, Arts. 77 a 80. Volta, refeito, quando o app for aberto ao público. **Falta o registro no Painel** |
-| **Funções gerais fora da tela (desde a 1.3.0, provisória):** Concursos, Disciplinas, Simulados e Agenda; a barra de baixo passa a ser Hoje, Cadernos, Estudar, Medalhas e Mais | Mesma decisão. Diverge das Regras do Estudo Fácil, Arts. 6º a 9º, até o Integrador atualizar o texto (proposta 0, c). **Falta o registro no Painel** |
+| **Fase de testes fechada (desde a 1.1.0, provisória):** o app é de uso exclusivo do Bruno e só do concurso da ANPD; a página pede para não entrar em buscadores (`noindex`) e os outros apps não devem listá-lo em "Outros apps da família" | Decisão do Bruno em 16/11/2026. Exceção ao Código, Art. 10 (app feito para o mercado), e às Regras do Estudo Fácil, Art. 1º (controle de estudos geral). No futuro o app volta a ser publicado para o público geral. Registrada no Painel do Integrador (Art. 5º, III); a mudança no Kit, que só o Integrador faz, está no D18 do Painel |
+| **Sem guia (desde a 1.3.0, provisória):** o guia sai da tela e a função nova (cadernos) não entra nele | Decisão do Bruno em 16/11/2026: na fase fechada o guia deixa o app extenso e não ajuda quem é o único usuário. Exceção ao Código, Arts. 77 a 80. Volta, refeito, quando o app for aberto ao público. Registrada no Painel do Integrador |
+| **Funções gerais fora da tela (desde a 1.3.0, provisória):** Concursos, Disciplinas, Simulados e Agenda; a barra de baixo passa a ser Hoje, Cadernos, Estudar, Medalhas e Mais | Mesma decisão. Diverge das Regras do Estudo Fácil, Arts. 6º a 9º, até o Integrador atualizar o texto (Painel do Integrador, D18). Registrada no Painel do Integrador |
 
 **Peças próprias do app** (não substituem peça do Kit; Código, Art. 72, § 4º): a medalha em 3D (`jogo.js`), o modo foco, o treino
-de questões e a festa de fim de sessão, que são telas cheias de marca (Art. 68, § 4º). O que pode virar padrão está em
-[PROPOSTA-PARA-O-INTEGRADOR.md](PROPOSTA-PARA-O-INTEGRADOR.md).
+de questões e a festa de fim de sessão, que são telas cheias de marca (Art. 68, § 4º). O que pode virar padrão está no Painel do
+Integrador (D18).
 
 ## Serviços externos e configuração
 
