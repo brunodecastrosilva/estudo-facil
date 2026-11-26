@@ -483,6 +483,7 @@ test('apostila de Direito Administrativo: 16 capítulos (12 da ANPD e 4 só do C
     assert.equal(new Set(c.match(/^\? [a-z] \|/gm)).size, n(/^\? /gm), `letras repetidas em ${id}`);
   }
   assert.ok(!/—|–/.test(txt), 'sem travessão');
+  const sw = readFileSync(new URL('../sw.js', import.meta.url), 'utf8'); for (const f of readdirSync(new URL('../apostilas/', import.meta.url))) assert.ok(sw.includes(`'./apostilas/${f}'`), `o service worker guarda ${f} para uso sem internet`);
   const a = await abrirTudo(), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
   await p.evaluate(() => apCarregar('anpd-da')); await p.waitForFunction(() => apPronta('anpd-da'));
   const d = await p.evaluate(() => { const A = APOSTILAS.find(x => x.m === 'anpd-da'), tx = AP_TXT['anpd-da']; return { ids: A.ids.length, caps: A.caps, lidos: tx.caps.length, semAssunto: tx.caps.filter(c => !topico(c.t)).map(c => c.t), cartoes: tx.caps.reduce((n, c) => n + c.cartoes.length, 0), semSecao: tx.caps.flatMap(c => c.cartoes.filter(k => !(k.sec >= 0)).map(() => c.t)), sug: sugestao(), doses: A.ids.filter(id => doseDe(id)).length, cofen: DB.concursos.find(c => c.id === 'cofen-2027').disc.flatMap(x => x.topicos).filter(id => A.ids.includes(id)).length }; });

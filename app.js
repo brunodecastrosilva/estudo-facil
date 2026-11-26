@@ -2,7 +2,7 @@
    As telas ficam em telas.js; as apostilas e a leitura, em apostilas.js; os cartões, em cartoes.js; níveis e medalhas,
    em jogo.js; moldura, Ajustes e abertura, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.15.0';
+const VERSAO = '1.15.1';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -338,7 +338,9 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db') { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.15.0', itens: [
+const NOVIDADES = [{ versao: '1.15.1', itens: [
+  'A apostila de Direito Administrativo agora abre também sem internet.',
+] }, { versao: '1.15.0', itens: [
   'Apostila nova: Direito Administrativo, com 16 capítulos e 83 cartões. Serve à ANPD e ao Cofen.',
   'A lei seca não trava mais a fila: o próximo capítulo é a leitura principal, e a lei fica como segunda opção em Hoje.',
   'Quero reler depois não conclui mais o capítulo: ele continua na fila, e o dia vale.',

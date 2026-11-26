@@ -3,6 +3,11 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.15.1 · 2026-11-26
+
+- **Apostila de Direito Administrativo sem internet:** o arquivo da apostila nova tinha ficado fora da lista que o app guarda no aparelho. Agora ela abre sem sinal, como a da LGPD.
+- **Testes pulados nesta versão:** a varredura de acessibilidade e o leitor de PDF (nada mudou neles desde a 1.15.0, de hoje) e os testes do Kit.
+
 ## 1.15.0 · 2026-11-26
 
 Rodada de revisão: o Claude usou o app como o Bruno usaria e corrigiu o que encontrou. Mais a segunda apostila.
