@@ -1,7 +1,9 @@
 /* Estudo Fácil · as leis na íntegra, dentro do app.
    O texto vem do site do Planalto (texto compilado), parágrafo a parágrafo, sem alteração: fica em leis/<id>.json
    ({ fonte, lido, p: [{ t: texto, r: 1 se revogado (riscado no Planalto), c: 1 se centralizado }] }).
-   Aqui ficam a lista, o sumário e a tela de leitura na identidade do app. */
+   Aqui ficam a lista, o sumário, a tela de leitura na identidade do app e o recorte da dose de lei seca de cada
+   capítulo (a tela da dose fica em apostilas.js). */
+"use strict";
 const LEIS = [
   ['lgpd', 'Lei 13.709/2018', 'Lei Geral de Proteção de Dados (LGPD)', 'anpd-lgpd-01'],
   ['l15352', 'Lei 15.352/2026', 'ANPD como agência reguladora e carreira', 'anpd-inst-01'],
@@ -32,7 +34,7 @@ const LEI = new Map(LEIS.map(l => [l.id, l]));
 const LEI_TXT = {};          // textos já buscados nesta visita
 let leiId = null, leiAlvo = null;
 /* Qual lei abre para cada assunto, e em que artigo. O que não está na tabela usa a lei ligada ao assunto em LEIS;
-   nos assuntos da LGPD, o artigo sai do próprio nome do assunto ("arts. 17 a 22"). */
+   nos assuntos com dose de lei seca (DOSES), vale o primeiro artigo da dose. */
 const LEI_DO_ASSUNTO = {
   'regul-04': ['l13848'], 'regul-05': ['l9986'], 'regul-06': ['d10411'], 'regul-07': ['l13874'], 'regul-08': ['l13848', '9'], 'regul-09': ['lc182', '11'], 'regul-10': ['l13848', '14'], 'regul-11': ['l13848', '25'],
   'da-01': ['cf', '37'], 'da-05': ['l9784'], 'da-06': ['l14133'], 'da-07': ['l8112'], 'da-08': ['cf', '37'], 'da-09': ['cf', '70'], 'da-10': ['l8429'], 'da-11': ['l12846'], 'da-12': ['l14129'],
@@ -48,8 +50,37 @@ const LEI_DO_ASSUNTO = {
 function leiDoAssunto(tId) {
   const t = topico(tId); if (!t) return null; const k = LEI_DO_ASSUNTO[tId.replace(/^anpd-/, '')];
   if (k && LEI.has(k[0])) return { id: k[0], art: k[1] || '' };
-  if (t.m === 'anpd-lgpd') { const m = /arts?\.\s*(\d+(?:-[A-Z])?)/i.exec(t.nome); return { id: 'lgpd', art: m ? m[1] : '' }; }
+  if (DOSES[tId]) return { id: DOSES[tId][0], art: DOSES[tId][1] };
   const L = LEIS.find(l => l.t === tId); return L ? { id: L.id, art: '' } : null;
+}
+/* A dose de lei seca de cada capítulo: a lei, o primeiro e o último artigo. Só entra aqui o assunto que tem apostila;
+   os números foram conferidos no texto guardado em leis/<id>.json. */
+const DOSES = {
+  'anpd-lgpd-01': ['lgpd', '1', '4'], 'anpd-lgpd-02': ['lgpd', '5', '5'], 'anpd-lgpd-03': ['lgpd', '6', '6'], 'anpd-lgpd-04': ['lgpd', '7', '7'], 'anpd-lgpd-05': ['lgpd', '8', '9'],
+  'anpd-lgpd-06': ['lgpd', '10', '10'], 'anpd-lgpd-07': ['lgpd', '11', '13'], 'anpd-lgpd-08': ['lgpd', '14', '14'], 'anpd-lgpd-09': ['lgpd', '15', '16'], 'anpd-lgpd-10': ['lgpd', '17', '22'],
+  'anpd-lgpd-11': ['lgpd', '20', '20'], 'anpd-lgpd-12': ['lgpd', '23', '32'], 'anpd-lgpd-13': ['lgpd', '33', '36'], 'anpd-lgpd-14': ['lgpd', '37', '41'], 'anpd-lgpd-15': ['lgpd', '42', '45'],
+  'anpd-lgpd-16': ['lgpd', '46', '49'], 'anpd-lgpd-17': ['lgpd', '50', '51'], 'anpd-lgpd-18': ['lgpd', '52', '54'], 'anpd-lgpd-19': ['lgpd', '55-A', '58-B'],
+};
+const doseDe = tId => { const d = DOSES[tId]; return d && LEI.has(d[0]) && topico(tId) ? { lei: d[0], de: d[1], ate: d[2] } : null; };
+const artOrd = n => /^\d$/.test(n) ? n + 'º' : n;
+const doseRotulo = d => `${LEI.get(d.lei).nome} · ${d.de === d.ate ? 'art. ' + artOrd(d.de) : `arts. ${artOrd(d.de)} a ${artOrd(d.ate)}`}`;
+// o número de um artigo vira uma chave que dá para comparar: 55 < 55-A < 55-B < 56
+const artChave = s => { const m = /^(\d+)(?:-([A-Z]))?$/.exec(String(s).replace(/\./g, '')); return m ? +m[1] * 100 + (m[2] ? m[2].charCodeAt(0) - 64 : 0) : -1; };
+const artDoParagrafo = p => { const m = /^Art\.\s*(\d[\d.]*)\s*(?:º|°|o)?\s*(-[A-Z])?/.exec(p.t); return m ? artChave(m[1].replace(/\./g, '') + (m[2] || '')) : -1; };
+/* os parágrafos da dose, com a posição de cada um na lei: do primeiro "Art. <de>" até antes do primeiro artigo de número
+   maior que <ate>. Redações antigas que o Planalto mantém no texto vêm junto, como lá. Títulos de capítulo que sobram no
+   fim (são do artigo seguinte) ficam de fora. */
+function doseParagrafos(P, d) {
+  const a = artChave(d.de), z = artChave(d.ate), ini = P.findIndex(p => artDoParagrafo(p) === a); if (ini < 0) return [];
+  let fim = P.findIndex((p, i) => i > ini && artDoParagrafo(p) > z); if (fim < 0) fim = P.length;
+  while (fim > ini + 1 && P[fim - 1].c) fim--;
+  return P.slice(ini, fim).map((p, k) => [p, ini + k]);
+}
+const LEI_BUSCA = {};
+function leiCarregar(id) {
+  if (LEI_TXT[id] && !LEI_TXT[id].erro) return Promise.resolve(LEI_TXT[id]);
+  if (!LEI_BUSCA[id]) LEI_BUSCA[id] = fetch(`leis/${id}.json?v=${VERSAO}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => { LEI_TXT[id] = j; delete LEI_BUSCA[id]; return j; }).catch(() => { LEI_TXT[id] = { erro: 1, p: [] }; delete LEI_BUSCA[id]; return LEI_TXT[id]; });
+  return LEI_BUSCA[id];
 }
 function leiAbrirEm(id, art = '') { if (!LEI.has(id)) return; leiId = id; leiAlvo = art || null; irPara('lei'); }
 // depois que o texto está na tela, vai ao artigo pedido (o primeiro não revogado com aquele número)
@@ -59,13 +90,10 @@ function leiIrAoAlvo() {
   if (i >= 0) setTimeout(() => leiRolar(document.getElementById('lei-p' + i)), 350);
 }
 
-/* Abrir uma lei não é estudar: só ler não cria sessão nem conta tempo. O tempo conta dentro de uma sessão de estudo:
-   a que já está em andamento (a leitura entra nela, seja qual for a lei) ou a que começa no botão "Estudar esta lei".
-   Assim nunca há duas sessões ao mesmo tempo. */
 const viewLeis = {
   html() {
     const porM = []; for (const L of LEIS) { const t = topico(L.t), m = t && materia(t.m); if (!m) continue; const g = porM.find(x => x.m.id === m.id); g ? g.L.push(L) : porM.push({ m, L: [L] }); }
-    return `${voltaMais()}${cab('Leis', 'O texto oficial do Planalto, na íntegra. O tempo de leitura conta no assunto e na meta do dia.')}
+    return `${voltaMais()}${cab('Leis', 'O texto oficial do Planalto, na íntegra, sem alteração.')}
       ${porM.map((g, k) => `<section aria-labelledby="le-${k}"><div class="sec-cab"><h2 class="sub-t" id="le-${k}">${esc(g.m.nome)}</h2></div>
         <ul class="card lista">${g.L.map(L => `<li><button type="button" class="lin" data-act="abrir-lei" data-id="${esc(L.id)}"><span class="lin-ic">${I.lei}</span><span class="lin-tx"><b>${esc(L.nome)}</b><small>${esc(L.sub)}</small></span>${I.seta}</button></li>`).join('')}</ul></section>`).join('')}`;
   },
@@ -95,7 +123,7 @@ const leiParagrafo = (p, i) => {
 const viewLei = {
   html() {
     const L = LEI.get(leiId), tx = LEI_TXT[leiId], t = topico(L.t), semRev = LS.get('leiSemRev', 0);
-    if (!tx) { fetch(`leis/${L.id}.json?v=${VERSAO}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => { LEI_TXT[L.id] = j; if (tab === 'lei' && leiId === L.id) render(); }).catch(() => { LEI_TXT[L.id] = { erro: 1, p: [] }; if (tab === 'lei' && leiId === L.id) render(); }); }
+    if (!tx) leiCarregar(L.id).then(() => { if (tab === 'lei' && leiId === L.id) render(); });
     const volta = `<button type="button" class="volta" data-kf-ir="leis">${I.volta}<span>Leis</span></button>`;
     if (!tx) return `${volta}${cab(L.nome, esc(L.sub))}<p class="apoio" role="status">Abrindo o texto…</p>`;
     if (tx.erro) { delete LEI_TXT[L.id]; return `${volta}${cab(L.nome, esc(L.sub))}${KitFacil.ui.vazio({ titulo: 'Não deu para abrir a lei', texto: 'Confira a internet e tente de novo.' })}`; }
@@ -105,10 +133,8 @@ const viewLei = {
       : S.artigos.length ? `<ol class="lei-arts">${S.artigos.map(x => `<li><button type="button" class="lei-ir" data-act="lei-ir" data-i="${x.i}" aria-label="Artigo ${esc(x.t)}">Art. ${esc(x.t)}</button></li>`).join('')}</ol>` : '';
     return `${volta}${cab(L.nome, esc(L.sub))}
       <div class="lei-barra"><span class="etiqueta">${esc(t ? t.nome : '')}</span></div>
-      ${DB.ativa ? `<p class="apoio" role="status">Sessão em andamento${topico(DB.ativa.t) ? ': ' + esc(topico(DB.ativa.t).nome) : ''}. O tempo desta leitura conta nela.</p>`
-        : `<button type="button" class="kf-btn kf-comecar bloco" data-act="lei-estudar" id="lei-estudar">${I.play}Estudar esta lei</button><p class="apoio">Só abrir a lei não conta tempo. A sessão de estudo começa neste botão.</p>`}
       ${rev ? linhaChave('lei-rev', !semRev, 'Mostrar o texto revogado', `${plural(rev, 'trecho riscado', 'trechos riscados')}, como no Planalto`) : ''}
-      ${sumario ? `<details class="tr-aula lei-sumario" id="lei-sumario" data-kf-secao open><summary><b>Sumário</b></summary>${sumario}</details>` : ''}
+      ${sumario ? `<details class="lei-sumario" id="lei-sumario" data-kf-secao open><summary><b>Sumário</b></summary>${sumario}</details>` : ''}
       <article class="folha lei-folha${semRev ? ' sem-rev' : ''}" lang="pt-BR">${tx.p.map((p, i) => leiParagrafo(p, i)).join('')}</article>
       ${sumario ? `<button type="button" class="kf-btn lei-topo" data-act="lei-sumario" id="lei-topo">${I.plano || ''}Sumário</button>` : ''}
       <p class="apoio">Texto compilado do Planalto, copiado em ${esc(tx.lido.split('-').reverse().join('/'))}, sem alteração. <a href="${esc(tx.fonte)}" target="_blank" rel="noopener noreferrer">Conferir no site oficial</a></p>`;
@@ -120,7 +146,6 @@ document.addEventListener('change', e => { if (e.target && e.target.id === 'lei-
 const leiRolar = el => { if (!el) return; el.scrollIntoView({ block: 'start', behavior: KitFacil.movimento && KitFacil.movimento.reduzido && KitFacil.movimento.reduzido() ? 'auto' : 'smooth' }); try { el.focus({ preventScroll: true }); } catch {} };
 const ACOES_LEI = {
   'abrir-lei': b => { if (LEI.has(b.dataset.id)) { leiId = b.dataset.id; irPara('lei'); } },
-  'lei-estudar': () => { const L = LEI.get(leiId); if (!L || DB.ativa || !topico(L.t)) return; iniciarSessao({ t: L.t, tipo: 'lei' }); render(); avisar('Sessão começou. O tempo está contando.'); },
   'lei-ir': b => leiRolar(document.getElementById('lei-p' + b.dataset.i)),
   'lei-sumario': () => { const d = document.getElementById('lei-sumario'); if (d) { d.open = true; leiRolar(d.querySelector('summary')); } },
 };

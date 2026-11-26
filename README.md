@@ -1,54 +1,62 @@
 # Estudo Fácil
 
-Controle de estudos para os concursos da ANPD (Especialista em Regulação de Proteção de Dados, banca Cebraspe: o foco) e
-do Cofen (Analista Técnico, banca Instituto Quadrix), no celular e no computador. O app traz os dois editais para grifar,
-com os assuntos em comum ligados, **apostilas** escritas para leigos e voltadas ao jeito de o Cebraspe cobrar, as leis na
-íntegra, o treino da discursiva, as revisões e a evolução, com sequência de dias, missões e medalhas. **As questões são
-resolvidas fora do app, no Tec Concursos:** aqui entram só o tempo, os acertos e os erros.
+Estudo para os concursos da ANPD (Especialista em Regulação de Proteção de Dados, banca Cebraspe: o foco) e do Cofen
+(Analista Técnico, banca Instituto Quadrix), feito para estudar no caminho, pelo celular. O app **entrega a teoria em
+capítulos**, diz qual é a próxima leitura, traz de volta o que foi lido em **cartões de conceito**, mostra a **lei seca**
+de cada capítulo e mantém o hábito com a sequência de dias. **As questões são resolvidas fora do app, no Tec Concursos.**
 
-Versão **1.13.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.14.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno; desde a 1.13.0, voltado aos
-> concursos da ANPD e do Cofen. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
-> fora da tela. No futuro ele volta a ser publicado para o público geral. Veja "Exceções ao padrão".
+> concursos da ANPD e do Cofen. Na 1.14.0 ele foi refeito no desenho combinado em 26/11/2026 ("estudo no ônibus"). No
+> futuro volta a ser publicado para o público geral. Veja "Exceções ao padrão".
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
-[Código do Projeto Fácil](comum/CODIGO.md). Na versão 1.0.0 o app foi refeito do zero, seguindo o Conta Fácil, que é a
-referência do projeto (Art. 93).
+[Código do Projeto Fácil](comum/CODIGO.md).
 
 ## O que o app faz
 
-- **Apostilas (1.13.0):** teoria do instrutor (Claude) para quem nunca viu o assunto, voltada ao Cebraspe. O texto fica em `apostilas/<disciplina>.md`, num formato de linhas simples (veja o cabeçalho de `apostilas.js`): um capítulo por assunto do edital, com explicação, exemplo, trecho da lei, "como o Cebraspe cobra", modelos de item certo e errado (só leitura) e resumo. Abrir a apostila não conta tempo; a sessão começa no botão do capítulo ou em Estudar → Teoria, que abre a apostila no capítulo do assunto. O botão no fim do capítulo marca a teoria como concluída. Por ora existe a da LGPD (19 capítulos)
-- **Dois editais integrados (1.13.0):** ANPD e Cofen. Disciplina e assunto são globais: o edital do Cofen reaproveita os assuntos da ANPD pelo nome (`daAnpd`, em `editais.js`) e acrescenta os que são só dele com id próprio (`{ id, nome }`). O que se estuda num assunto em comum conta nos dois
-- **Questões no Tec Concursos (1.13.0):** em Estudar, a opção Questões abre o cronômetro com os contadores de acertos e de erros; "Lançar estudo" serve para o que foi feito sem o cronômetro
-- **Fora da tela desde a 1.13.0** (o código e os dados continuam; em `localhost`, `?questoes=1` liga): tudo o que está abaixo sobre cadernos, questões nativas, questões oficiais, provas em lote, folha de respostas, flashcards e desafio do dia
-- **Cadernos de questões:** um caderno por disciplina (as doze do plano), com as questões agrupadas por assunto. Cada caderno guarda o seu andamento: continuar de onde parou, abrir qualquer questão pelo número, refazer só as erradas ou zerar as respostas
-- **Atalhos:** só as que errei, nunca resolvidas e o desafio do dia
-- **Meus cadernos:** cadernos montados por disciplina, filtro (todas, nunca resolvidas ou as que errei) e tamanho
-- **Questões nativas:** 220 questões de certo ou errado no estilo Cebraspe, **escritas dentro do app** (`questoes.js` e `questoes2.js`) a partir da lei e das armadilhas vistas nas provas oficiais. Cada uma tem gabarito, comentário e fundamento, e leva o selo "Feita por IA". Não são questões de prova
-- **Questões oficiais do Cebraspe:** o texto das provas cadastradas chega ao aparelho e cada prova vira caderno, só com os itens do edital, com comando, texto de apoio, gabarito definitivo e comentário do instrutor. As questões de prova também entram no caderno da disciplina, nos atalhos, nos cadernos montados e nos flashcards. **O texto fica só nos dados de quem usa; não entra no repositório** (veja "A ponte das provas")
-- **Leis na íntegra** (em Mais): 24 normas do edital com o texto compilado do Planalto, sem alteração (`leis/<id>.json`: `fonte`, `lido` e `p`, a lista de parágrafos, com `r` no que está revogado e `c` no que é centralizado). Cada lei tem um sumário montado na hora, a partir dos títulos centralizados (ou dos artigos, quando não há capítulos), com link para cada parte. Abrir a lei não conta tempo: a sessão de "Lei seca" começa no botão "Estudar esta lei" (o cronômetro do app); com uma sessão em andamento, a leitura entra nela, e nunca há duas sessões ao mesmo tempo. A lista e a tela ficam em `leis.js`
-- **Hoje:** a sequência de dias, a meta do dia, as três missões, o caderno em andamento e o plano de hoje
-- **Plano do dia:** revisões vencidas primeiro; depois, blocos das disciplinas mais atrasadas em relação ao peso na prova
-- **Edital da ANPD** (em Mais): 12 disciplinas, 119 assuntos, pesos, três fases até a prova e fontes oficiais; cada assunto estudado fica grifado e a prontidão sobe. O edital ainda não saiu: o que é estimativa está marcado como estimativa
-- **Provas em lote (1.12.0):** além dos sete cadernos cadastrados à mão, o app aceita provas trazidas pelo levantamento automático (`instrutor/levantamento.js`): 234 cadernos de 46 concursos do Cebraspe, com cerca de 4,7 mil questões. O cadastro (gabarito e blocos por disciplina) viaja com o texto, pela ponte ou pelo arquivo das provas, e o texto fica no IndexedDB do aparelho.
-- **Folha de respostas das provas:** sete cadernos oficiais (ANATEL 2024, ANAC 2024, ANM 2025, DATAPREV 2023 e três da ANTT 2024: básicos, cargo 1 e cargo 2). Sem o texto no aparelho, o caderno abre no site da banca; o app mostra só os blocos do edital da ANPD, com folha de respostas, correção pelo gabarito oficial definitivo (errado desconta um ponto) e comentário do instrutor. O texto das provas não fica no app
-- **Como a banca escreve:** as armadilhas que mais apareceram nessas provas; a versão completa é o `instrutor/caderno-da-banca.md`, que guia as questões e as apostilas
-- **Discursiva:** três temas que o Cebraspe cobrou (com o endereço do enunciado e do padrão de resposta) e três temas inéditos do instrutor para a ANPD; contagem de linhas, rascunho guardado, o que a banca espera e envio do texto para correção
-- **Flashcards** das questões erradas, que voltam em 1, 3, 7, 15 e 30 dias; **combo** de acertos seguidos
-- **Instrutor:** "Perguntar ao instrutor" copia a questão e a dúvida para levar ao Claude (Projeto Estudo Fácil); a resposta fica gravada em `instrutor/respostas.json` e aparece junto da questão
-- **Modo foco:** cronômetro em tela cheia para lei seca, teoria e assuntos ainda sem questões do app; dá para recolher sem parar o tempo
-- **Revisões** em 1, 7 e 30 dias depois da teoria (ou os dias que você escolher)
-- **Sequência e folgas:** dias seguidos com a meta batida; a folga guardada salva um dia de falta
-- **Pontos, 10 níveis e 111 medalhas** em quatro metais (bronze, prata, ouro e diamante), com tela própria na barra de baixo; em 3D (WebGL), giram com o dedo. Dá para desligar nos Ajustes
-- **Evolução:** prontidão, constância, horas por semana, acertos por disciplina e totais
-- **Abertura** na primeira vez
-- **Use em vários aparelhos (opcional):** dados sincronizados, criptografados, num gist secreto da sua conta GitHub
-- **Avaliação e relato de problemas** pelo balão no alto da tela; **presente para o criador** (Pix, opcional)
+- **Hoje limpo:** a sequência de dias, a semana, **uma leitura sugerida e um botão**. Sem relógio, sem porcentagem e sem
+  contagem regressiva. Uma data só aparece ali quando está a até 7 dias e pede uma ação (por exemplo, o fim da inscrição)
+- **A unidade de estudo é o capítulo concluído**, não o tempo nem a questão. No fim de cada capítulo: **Entendi** ou
+  **Quero reler depois**; em seguida, a lei seca do capítulo, o próximo capítulo e um atalho que só abre o Tec Concursos
+- **A leitura continua de onde parou:** o app guarda, no aparelho, o ponto de cada capítulo em que a leitura ficou
+- **Apostilas:** teoria do instrutor (Claude) para quem nunca viu o assunto, voltada à banca. O texto fica em
+  `apostilas/<disciplina>.md`, um capítulo por assunto do edital (formato no cabeçalho de `apostilas.js`). Por ora existe
+  a da LGPD (19 capítulos)
+- **Lei seca na fila:** depois do capítulo, uma dose só com os artigos daquele assunto, recortados do texto oficial
+  (`DOSES`, em `leis.js`). O texto não muda: redações antigas e trechos riscados aparecem como no Planalto
+- **Relembrar:** cartões de conceito (frente pergunta, verso responde; **Lembrei** ou **Não lembrei**), escritos junto
+  com cada capítulo. Nascem quando o capítulo é concluído e voltam em 1, 3, 7, 15, 30 e 60 dias. Não são questões de
+  banca. Cartão não lembrado: o app abre na hora **só o trecho** do capítulo que responde, e o cartão volta no dia
+  seguinte. O capítulo inteiro só volta à fila quando **mais da metade** dos cartões dele está como "não lembrei"
+- **Sequência:** o dia vale com um capítulo concluído **ou** com a revisão (uma rodada de cartões até o fim). Sábado e
+  domingo são livres: não quebram a sequência e, com estudo, somam. A cada 7 dias seguidos entra uma folga (até 2)
+- **Fila de leitura até 28/02/2027:** primeiro o que serve aos dois concursos (Português, Direito Administrativo,
+  Constitucional e LGPD); depois contratos e o resto do Cofen; o que é só da ANPD, depois da prova do Cofen. Só entra na
+  fila o assunto que já tem apostila
+- **Edital = painel:** cobertura em porcentagem (assuntos concluídos sobre assuntos do edital), contagem regressiva de
+  cada prova, as datas importantes e as disciplinas, assunto por assunto. É lá que os números ficam. O assunto estudado
+  por outro material pode ser marcado à mão (não faz o dia valer)
+- **Resumo semanal:** registro do que foi feito em cada semana (capítulos, cartões, doses de lei e dias), sem meta
+- **Medalhas e níveis:** 30 medalhas em quatro metais, sobre o que o app mede: dias seguidos, capítulos concluídos,
+  conceitos lembrados e disciplina fechada. Em 3D (WebGL), giram com o dedo. Dá para desligar nos Ajustes
+- **Leis na íntegra** (em Mais): 24 normas dos editais com o texto compilado do Planalto, sem alteração
+  (`leis/<id>.json`: `fonte`, `lido` e `p`, a lista de parágrafos, com `r` no que está revogado e `c` no que é
+  centralizado), com sumário montado na hora
+- **Discursiva:** três temas que o Cebraspe cobrou e três temas inéditos do instrutor; contagem de linhas, rascunho
+  guardado, o que a banca espera e **envio do texto para correção** (o app copia o texto; a correção acontece na conversa
+  do Claude e fica gravada em `instrutor/respostas.json`)
+- **Abertura** na primeira vez; **use em vários aparelhos (opcional)**, com dados criptografados num gist secreto da
+  sua conta GitHub; **avaliação e relato de problemas** pelo balão; **presente para o criador** (Pix, opcional)
 - Tema claro, escuro ou automático; instalável; funciona sem internet depois da primeira visita
 
-**Fora da tela nesta fase** (o código continua no repositório): Concursos (outros editais), Disciplinas (cadastro),
-Simulados, Agenda e o guia (em `localhost`, `?geral=1` liga); e, desde a 1.13.0, as questões dentro do app (`?questoes=1`).
+**Saíram de vez na 1.14.0:** cronômetro e modo foco, meta de tempo, meta de 50 questões, missões do dia, lançamento de
+acertos e erros, plano do dia por blocos, revisões de 1, 7 e 30 dias (os cartões as substituem), a tela Evolução, a tela
+Instrutor e as medalhas de horas, questões, acertos e simulados. O código das questões dentro do app (cadernos, treino,
+flashcards e provas do Cebraspe), das telas gerais (Concursos, Disciplinas, Simulados e Agenda) e do guia também saiu do
+repositório: está guardado no histórico, no commit `537c861` (versão 1.13.0). As ferramentas do levantamento de provas
+continuam em `instrutor/`.
 
 ## Como usar
 
@@ -62,13 +70,16 @@ Abra o endereço em qualquer navegador, no celular, no tablet ou no computador. 
 
 | Dado | Onde fica |
 |---|---|
-| Concursos, disciplinas, sessões, respostas das questões (com os flashcards), andamento dos cadernos, texto das provas oficiais trazidas pela ponte, marcações das provas oficiais, textos da discursiva, revisões, dias com a meta batida, medalhas, simulados, agenda e ajustes | neste aparelho (armazenamento do navegador, chaves `estudofacil.*`) |
-| Os mesmos dados, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
-| Perguntas ao instrutor e discursivas enviadas | o app só copia o texto; quem envia é a pessoa, no Claude. As respostas gravadas ficam no repositório (`instrutor/respostas.json`), que é público: nada pessoal entra nelas |
+| Capítulos concluídos, cartões, dias de estudo, medalhas, textos da discursiva e ajustes | neste aparelho (armazenamento do navegador, chaves `estudofacil.*`) |
+| O ponto em que cada leitura parou e as preferências (tema, mostrar o texto revogado) | só neste aparelho; não sincronizam |
+| Os mesmos dados da primeira linha, com a sincronização ligada | gist secreto na conta GitHub do usuário, criptografado no aparelho (AES-256) |
+| Discursivas enviadas para correção | o app só copia o texto; quem envia é a pessoa, no Claude. As correções gravadas ficam no repositório (`instrutor/respostas.json`), que é público: nada pessoal entra nelas |
 | Avaliações e relatos de problema enviados | Firestore do projeto no Firebase (Google), coleção `feedback`; apagados depois de 2 anos |
 
-Quem usava a versão 0.x começa de novo: o formato mudou e os dados não são trazidos (Código, Art. 32-A). A cópia antiga
-fica guardada no aparelho, na chave `estudofacil.db_antigo`, até uma restauração de fábrica.
+**Quem vem da 1.13 (formato 3):** chegam ao formato novo o nome, os capítulos já concluídos, os dias da sequência e os
+textos da discursiva. Sessões, tempo, medalhas antigas e respostas de questões não têm lugar no desenho novo e não são
+trazidas (Código, Art. 32-A); a cópia do formato antigo fica guardada no aparelho, na chave `estudofacil.db_v3`, até uma
+restauração de fábrica. O texto das provas guardado no IndexedDB do aparelho não é tocado.
 
 ## Para desenvolver
 
@@ -79,7 +90,7 @@ O Node (22 ou mais novo) só é usado para o servidor local, os testes e a verif
 npm start                         # abre em http://localhost:8080/estudo-facil/
 npm install                       # primeira vez: instala o Playwright e o axe, usados nos testes
 npx playwright install chromium   # primeira vez (sem ele, os testes usam o Google Chrome instalado)
-npm test                          # testes do Kit Fácil e do app, sem internet (inclui o guia inteiro, uns 6 minutos)
+npm test                          # testes do Kit Fácil e do app, sem internet
 node --test tests/app.test.mjs    # só os testes do app
 npm run verificar                 # Código do Projeto Fácil, segredos, versão, service worker, CSP e SRI
 ```
@@ -95,81 +106,64 @@ Ao mudar a versão, atualize também o `?v=` dos arquivos no `index.html`.
 | `index.html` | moldura da página: barra de cima, navegação e a política de segurança (CSP) |
 | `estilo.css` | identidade visual "caderno e marca-texto" e todas as telas |
 | `editais.js` | a biblioteca: o plano da ANPD (edital previsto, banca Cebraspe) e o edital do Cofen (publicado, banca Instituto Quadrix), com os assuntos em comum ligados |
-| `apostilas.js` e `apostilas/` | a lista, o leitor do formato e a tela das apostilas; o texto de cada uma, em `.md` |
-| `questoes.js` e `questoes2.js` | o banco de questões do app (questões inéditas de certo ou errado, com comentário e fundamento) e uma aula curta por assunto: LGPD no primeiro, as outras onze disciplinas no segundo |
-| `cadernos.js` | cadernos de questões: por disciplina, atalhos, cadernos montados e o andamento de cada um |
-| `app.js` | motor: dados, plano do dia, sequência, pontos, domínio, revisões e sincronização |
-| `jogo.js` | níveis, medalhas (séries em quatro metais, desenhadas e em 3D) e a festa de fim de sessão |
-| `treino.js` | treino de questões em tela cheia, flashcards, desafio do dia e a ponte com o instrutor |
-| `provas.js` | provas oficiais do Cebraspe (endereços, gabarito definitivo, blocos por disciplina e comentários; sem o texto das provas), folha de respostas e o treino da discursiva |
+| `app.js` | motor: dados, fila de leitura, cartões, o dia e a sequência, pontos, cobertura do edital e sincronização |
+| `jogo.js` | níveis, medalhas (séries em quatro metais, desenhadas e em 3D) e a festa do dia |
+| `telas.js` | Hoje, Edital, a ficha do assunto, Medalhas, Resumo semanal e Mais |
+| `apostilas.js` e `apostilas/` | a lista, o leitor do formato, a tela de cada capítulo, o fim do capítulo e a tela da dose de lei seca; o texto de cada apostila, em `.md`, com os cartões |
+| `cartoes.js` | Relembrar: a ligação dos cartões com a apostila e a rodada de revisão |
+| `leis.js` e `leis/` | as leis na íntegra: lista, sumário, leitura e o recorte da dose de cada capítulo |
+| `discursiva.js` | os temas da discursiva, o texto e o envio para correção |
+| `casca.js` | navegação, ações, Ajustes, abertura e arranque |
 | `instrutor/caderno-da-banca.md` | o que o instrutor aprendeu sobre o jeito de a banca escrever; toda conversa que escreve material lê e melhora |
-| `instrutor/leitor-de-prova.js` | a ferramenta da ponte: lê o PDF oficial no navegador (duas colunas, itens, comandos e textos de apoio) e manda o resultado ao app pelo endereço. Não é carregada pelo app |
-| `instrutor/respostas.json` | respostas do instrutor (Claude), por questão; o app lê ao abrir |
-| `estudar.js` | escolher o que estudar, modo foco, fechar a sessão, lançar estudo feito e a ficha do assunto |
-| `telas.js` | Hoje, Edital, Medalhas, Evolução, Instrutor, Mais e Revisões; e as telas gerais, fora da fase fechada (Concursos, Disciplinas, Simulados e Agenda) |
-| `casca.js` | navegação, Ajustes, abertura e arranque (e o guia, desligado nesta fase) |
+| `instrutor/respostas.json` | correções de discursiva gravadas pelo instrutor (chave `disc:<tema>`); o app lê ao abrir |
+| `instrutor/levantamento.js` e `instrutor/leitor-de-prova.js` | ferramentas do levantamento de provas do Cebraspe (contagem do que cai). Não são carregadas pelo app |
 | `comum/` | **Kit Fácil**: sincronização, avaliação, apoio, cópia de segurança, Ajustes, janelas e avisos. Igual nos quatro apps: não edite só aqui |
 | `sw.js`, `manifest.webmanifest`, `icons/` | instalação e uso sem internet |
-| `tests/` | testes do app, de acessibilidade e do leitor de prova, este com um PDF inventado (o do guia fica pulado enquanto o guia estiver desligado) |
+| `tests/` | testes do app, de acessibilidade e do leitor de prova (este, com um PDF inventado) |
 
 ## Modelo de dados
 
-Tudo fica num objeto só (`estudofacil.db`, formato 3). Cada lista tem registros com `id`; a sincronização junta registro a registro.
+Tudo fica num objeto só (`estudofacil.db`, formato 4). Cada lista tem registros com `id`; a sincronização junta registro a registro.
 
 | Lista | O que guarda |
 |---|---|
-| `concursos` | editais: situação (Estudando, Em espera ou Encerrado), previsto ou publicado, datas, prova (nota mínima e áreas com peso) e os vínculos `disc` (disciplina, área, itens, se está fora do plano e os assuntos cobrados) |
-| `materias` e `topicos` | disciplinas e assuntos, **globais**; o assunto guarda quando a teoria foi concluída |
-| `sessoes` | sessões de estudo: assunto, tipo (teoria, questões, revisão, lei seca), tempo, acertos, erros e o dia; nos treinos, também o bônus e o maior combo |
-| `respostas` | uma por questão do app já respondida (`id` = o da questão): vezes, acertos, a última resposta e a caixa do flashcard (`cx`, `due`, `rv`); e uma por item de prova oficial marcado (`pv:<prova>:<item>`, com `v` e `cor`) |
-| `cadernos` | andamento dos cadernos: as respostas dadas em cada um (`r`), por questão; o caderno de disciplina tem `id` `m:<disciplina>` e o montado guarda também o nome e a lista de questões (`itens`) |
-| `textos` | texto das provas oficiais que já chegaram ao aparelho (`id` = o da prova): `itens` (número → enunciado) e `grupos` (a partir de qual item valem o comando e o texto de apoio). Só existe nos dados de quem usa |
-| `redacoes` | textos do treino da discursiva (`id` = o do tema), com a data do envio ao instrutor |
-| `revisoes` | revisões marcadas e feitas de cada assunto |
-| `dias` | dias em que a meta foi batida (a sequência sai daqui) |
-| `marcos` | medalhas já ganhas (`m:`), dias perfeitos (`p:`), desafios do dia feitos (`d:`) e marcas do app (`f:`) |
-| `simulados` e `eventos` | resultados de simulados e compromissos da agenda |
-| `cfg` e `ativa` | ajustes (nome, meta, dias de estudo, bloco, revisões, som, vibração, medalhas) e a sessão em andamento |
+| `concursos` | editais: previsto ou publicado, datas (`acao` marca a que pede uma ação), prova e os vínculos `disc` (disciplina, área, itens e os assuntos cobrados) |
+| `materias` e `topicos` | disciplinas e assuntos, **globais**. No assunto: `teoria` (quando o capítulo foi concluído pela primeira vez), `lido` (última leitura), `reler` (pediu para reler depois), `volta` (voltou à fila pelos cartões) e `lei` (dose de lei seca lida) |
+| `cartoes` | um por cartão já ativado (`id` = `<assunto>#<letra>`, a mesma letra da apostila): caixa (`cx`), quando volta (`due`), vezes lembrado (`ok`) e não lembrado (`no`) e a última resposta (`ult`) |
+| `dias` | um por dia com estudo: capítulos (`cap`), cartões respondidos (`car`), doses de lei (`lei`) e se o dia vale para a sequência (`vale`) |
+| `marcos` | medalhas já ganhas (`m:`) e marcas do app (`f:`) |
+| `redacoes` | textos do treino da discursiva (`id` = o do tema), com a data do envio |
+| `cfg` | ajustes: nome, dias de estudo (de fábrica, segunda a sexta), medalhas e vibração |
 
 Regras:
 
-- **peso** de uma disciplina: itens × peso da área, sobre o total da prova; com vários concursos em estudo, a média. Enquanto o edital é previsto, o fator `f1` puxa para a frente o que quase certamente cai;
-- **plano do dia:** até 5 revisões vencidas e, depois, `meta ÷ bloco` blocos das disciplinas mais atrasadas em relação ao peso (estudo dos últimos 14 dias, até ontem);
-- **domínio** do assunto: 0 Novo · 1 Começado · 2 Estudado (teoria concluída) · 3 Revisado (1 revisão, ou 10 questões com 70%) · 4 Dominado (todas as revisões, ou 2 revisões e 20 questões com 80%);
-- **prontidão:** média do domínio dos assuntos, com o peso de cada disciplina;
-- **sequência:** dias seguidos em `dias`; dia fora da rotina é neutro; a cada 7 dias seguidos entra uma folga (até 2), gasta sozinha num dia de falta;
-- **treino:** primeiro os itens errados por último, depois os nunca respondidos, depois os mais antigos. Respondeu todas as questões de um assunto, ele fica grifado e as revisões entram;
-- **provas oficiais:** a correção é por bloco; a nota é a líquida da banca (certo +1, errado −1, em branco e anulado 0) e cada bloco corrigido vira uma sessão de questões da disciplina;
-- **integração:** a resposta dada em qualquer lugar (plano de hoje, treino, caderno) vale em todo caderno de fábrica que tem a questão: o da disciplina e, se for de prova, o da prova;
-- **assunto da questão oficial:** o bloco da prova tem um assunto de partida e as palavras do comando e do item apontam o mais específico (`ASSUNTO_DO_BLOCO` e `REGRAS_ASSUNTO`, em `provas.js`); é automático e pode errar;
-- **tempo:** cada segundo com a questão na tela soma no assunto dela (o relógio para quando o app sai da tela e não passa de 30 minutos por questão); o treino de um assunto segue pelos próximos assuntos da disciplina; todo tempo aparece em hh:mm:ss;
-- **plano do dia e missões:** as questões do plano somam a meta de questões (50 por dia, de fábrica), em pelo menos duas disciplinas;
-- **cadernos:** a resposta vale duas vezes: no caderno (o andamento, que pode ser zerado) e no histórico geral da questão (flashcards, estatísticas e medalhas, que ficam). "Refazer as erradas" tira do caderno as respostas erradas e volta nelas; ao sair, as questões respondidas viram uma sessão por assunto;
-- **flashcards:** item errado entra na caixa 0 e volta no dia seguinte; "Lembrei" sobe de caixa (1, 3, 7, 15 e 30 dias) e "Não lembrei" volta para o começo;
-- **pontos:** 1 por minuto, 1 por questão e mais 2 por acerto, 1 de bônus por acerto a partir do terceiro seguido, 20 pelo desafio do dia (mais 30 com 80% de acertos), 2 por flashcard revisto, 15 por revisão, 25 por assunto grifado, 30 por dia com a meta batida e 50 por medalha. Tudo sai dos dados, então acompanha a sincronização.
+- **o dia vale** quando um capítulo é concluído no app (Entendi ou Quero reler depois) ou quando uma rodada de cartões
+  chega ao fim. Marcar um assunto à mão no Edital não faz o dia valer;
+- **sequência:** dias seguidos que valeram; dia fora da rotina é neutro (se houver estudo, soma); a cada 7 dias seguidos
+  entra uma folga (até 2), gasta sozinha num dia de falta;
+- **fila:** capítulos que voltaram pelos cartões; depois, na ordem dos assuntos, cada capítulo não lido e a dose de lei
+  de cada capítulo concluído; por último, os marcados para reler. Sem nada pendente, a leitura mais antiga volta como
+  sugestão. O capítulo em que a leitura parou no meio vem antes de tudo;
+- **ordem dos assuntos:** grupo (comum aos dois concursos, só Cofen, só ANPD), disciplina (`ORDEM_DISC`, em `app.js`) e
+  a ordem do edital. Depois da prova de um concurso, o que só ele cobra vai para o fim;
+- **cartões:** nascem com volta no dia seguinte; "Lembrei" sobe de caixa (3, 7, 15, 30 e 60 dias); "Não lembrei" volta
+  para o começo (1 dia). A rodada tem até 15 cartões. A medalha nova espera o fim da rodada;
+- **capítulo de volta à fila:** quando mais da metade dos cartões dele tem a última resposta "não lembrei". Reler o
+  capítulo zera essa conta;
+- **cobertura:** assuntos concluídos sobre assuntos do edital, sem peso;
+- **pontos:** 30 por capítulo concluído, 3 por conceito lembrado, 10 por dose de lei seca, 20 por dia que valeu e 50 por
+  medalha. Tudo sai dos dados, então acompanha a sincronização.
 
-### A ponte das provas
+### Como escrever cartões
 
-O texto das provas não fica no repositório. O site da banca também não deixa o app buscar o PDF sozinho (bloqueio de
-CORS). Por isso existe a ponte, operada pelo Claude no navegador do Bruno (Claude in Chrome), sem trabalho para ele:
+Na apostila, dentro do trecho (`###`) que responde: `? <letra> | pergunta :: resposta`. A letra é única no capítulo e
+não muda depois de publicada (é o `id` do cartão nos dados de quem usa). O cartão pergunta um conceito, com as palavras
+da apostila; não imita item de prova. Todo número é conferido no texto da lei em `leis/<id>.json`.
 
-1. abre-se uma página de `cdn.cebraspe.org.br` e, nela, carregam-se o pdf.js 3.11.174 e `instrutor/leitor-de-prova.js`;
-2. `enviarProvaAoApp(pdfjsLib, id, endereço do caderno, primeiro item, último item)` lê o PDF e confere se achou todos os itens;
-3. a página segue para o app com a prova no endereço (`#prova=...`, que não vai para servidor nenhum);
-4. o app só aceita se a página anterior for o site da banca e se os itens baterem com o gabarito cadastrado em `provas.js`; então guarda em `textos`. Com a sincronização ligada, os outros aparelhos recebem.
+### Como o instrutor grava uma correção
 
-**De um aparelho para outro:** com a sincronização ligada, o texto acompanha os dados. Sem ela, usa-se o **arquivo das
-provas** (`estudo-facil-provas.json`): em Cadernos → Provas do Cebraspe, "Baixar arquivo das provas" no aparelho que já
-tem as questões e "Abrir arquivo das provas" no outro. O arquivo fica com quem usa; não entra no repositório.
-
-Itens anulados e itens que dependem de figura (sem texto) ficam fora dos cadernos. A leitura é automática: confira no
-caderno oficial quando um item parecer truncado.
-
-### Como o instrutor grava uma resposta
-
-`instrutor/respostas.json` é um objeto: a chave é o `id` da questão (ou `pv:<prova>:<item>` para item de prova oficial,
-`disc:<tema>` para a correção de uma discursiva, ou `geral`) e o valor, uma lista de
-`{ "em": "16/11/2026", "p": "a dúvida, resumida", "r": "a resposta" }`. Só texto simples: o app protege tudo antes de
+`instrutor/respostas.json` é um objeto: a chave é `disc:<tema>` e o valor, uma lista de
+`{ "em": "16/11/2026", "p": "o pedido, resumido", "r": "a correção" }`. Só texto simples: o app protege tudo antes de
 mostrar. O arquivo é público: não entra nome, e-mail nem nada pessoal.
 
 ## Exceções ao padrão
@@ -177,13 +171,12 @@ mostrar. O arquivo é público: não entra nome, e-mail nem nada pessoal.
 | Exceção | Por quê |
 |---|---|
 | Código dividido em vários `.js`, carregados com `?v=<versão>` | Regras do Estudo Fácil, Art. 5º (exceção já aprovada) |
-| **Fase de testes fechada (desde a 1.1.0, provisória):** o app é de uso exclusivo do Bruno e só dos concursos dele (ANPD e, desde a 1.13.0, Cofen); a página pede para não entrar em buscadores (`noindex`) e os outros apps não devem listá-lo em "Outros apps da família" | Decisão do Bruno em 16/11/2026. Exceção ao Código, Art. 10 (app feito para o mercado), e às Regras do Estudo Fácil, Art. 1º (controle de estudos geral). No futuro o app volta a ser publicado para o público geral. Registrada no Painel do Integrador (Art. 5º, III); a mudança no Kit, que só o Integrador faz, está no D18 do Painel |
-| **Sem guia (desde a 1.3.0, provisória):** o guia sai da tela e a função nova (cadernos) não entra nele | Decisão do Bruno em 16/11/2026: na fase fechada o guia deixa o app extenso e não ajuda quem é o único usuário. Exceção ao Código, Arts. 77 a 80. Volta, refeito, quando o app for aberto ao público. Registrada no Painel do Integrador |
-| **Funções gerais fora da tela (desde a 1.3.0, provisória):** Concursos, Disciplinas, Simulados e Agenda; a barra de baixo é Hoje, Apostilas, Estudar, Medalhas e Mais (até a 1.12, Cadernos no lugar de Apostilas) | Mesma decisão. Diverge das Regras do Estudo Fácil, Arts. 6º a 9º, até o Integrador atualizar o texto (Painel do Integrador, D18). Registrada no Painel do Integrador |
+| **Fase de testes fechada (desde a 1.1.0, provisória):** o app é de uso exclusivo do Bruno e só dos concursos dele (ANPD e Cofen); a página pede para não entrar em buscadores (`noindex`) e os outros apps não devem listá-lo em "Outros apps da família" | Decisão do Bruno em 16/11/2026. Exceção ao Código, Art. 10 (app feito para o mercado), e às Regras do Estudo Fácil, Art. 1º (controle de estudos geral). No futuro o app volta a ser publicado para o público geral. Registrada no Painel do Integrador (Art. 5º, III) |
+| **Sem guia (desde a 1.3.0, provisória)** | Decisão do Bruno em 16/11/2026: na fase fechada o guia deixa o app extenso e não ajuda quem é o único usuário. Exceção ao Código, Arts. 77 a 80. Volta, refeito, quando o app for aberto ao público. Registrada no Painel do Integrador |
+| **Desenho "estudo no ônibus" (desde a 1.14.0):** a barra de baixo é Hoje, Apostilas, Estudar (a leitura sugerida), Relembrar e Mais; não há cadastro de editais nem de disciplinas; as guias próprias dos Ajustes são Rotina e Medalhas e apresentação | Escopo fechado com o Bruno em 26/11/2026. Diverge das Regras do Estudo Fácil, Arts. 6º a 10, até o texto das Regras ser atualizado (pendência para o Bruno e para o Painel do Integrador, D18) |
 
-**Peças próprias do app** (não substituem peça do Kit; Código, Art. 72, § 4º): a medalha em 3D (`jogo.js`), o modo foco, o treino
-de questões e a festa de fim de sessão, que são telas cheias de marca (Art. 68, § 4º). O que pode virar padrão está no Painel do
-Integrador (D18).
+**Peças próprias do app** (não substituem peça do Kit; Código, Art. 72, § 4º): a medalha em 3D (`jogo.js`) e a festa do
+dia, que é uma tela cheia de marca (Art. 68, § 4º).
 
 ## Serviços externos e configuração
 
@@ -191,13 +184,14 @@ Integrador (D18).
 |---|---|---|---|
 | GitHub (gist) | sincronização entre aparelhos | gratuito | nada no projeto; cada pessoa usa a própria conta |
 | Firebase (projeto `conta-facil-2c1f9`, compartilhado pelo projeto) | receber as avaliações | plano gratuito | regra de [`comum/regras-firestore-feedback.txt`](comum/regras-firestore-feedback.txt) publicada |
-| Cebraspe (`cdn.cebraspe.org.br`) | enunciados e padrões de resposta da discursiva, abertos por link (e os cadernos e gabaritos, com `?questoes=1`) | gratuito | nada; o app não baixa nem guarda os arquivos |
+| Tec Concursos (`tecconcursos.com.br`) | resolver questões: o app só abre o site, em outra aba | por conta de quem usa | nada; o app não entra na conta, não automatiza o site e não copia nada de lá |
+| Cebraspe (`cdn.cebraspe.org.br`) | enunciados e padrões de resposta da discursiva, abertos por link | gratuito | nada; o app não baixa nem guarda os arquivos |
 | Google Fonts, cdnjs | fontes (Atkinson Hyperlegible e Fraunces) e o QR code do apoio | gratuito | nada |
 
 ## Publicação
 
 GitHub Pages a partir da branch `main`, pasta raiz. Antes de publicar: `npm run verificar` e os testes da parte que mudou
-(o guia inteiro só roda quando a mudança mexe no guia). Confira o app no celular e no computador, no claro e no escuro.
+Confira o app no celular e no computador, no claro e no escuro.
 Se o app abrir com erro no ar, desfaça o envio na hora (`git revert`) e só depois investigue.
 O que mudou em cada versão está no [`CHANGELOG.md`](CHANGELOG.md).
 

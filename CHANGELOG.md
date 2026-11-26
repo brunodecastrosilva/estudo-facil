@@ -3,6 +3,31 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.14.0 · 2026-11-26
+
+O app foi refeito no desenho combinado com o Bruno em 26/11/2026: estudar no caminho, pelo celular, sem relógio.
+
+- **Hoje limpo:** a sequência, a semana, uma leitura sugerida e um botão. Sem relógio, porcentagem ou contagem regressiva. Uma data só aparece ali quando está a até 7 dias e pede uma ação, como o fim da inscrição.
+- **Capítulo concluído é a unidade de estudo:** cada capítulo abre numa tela só dele. No fim: Entendi ou Quero reler depois. Em seguida vêm a lei seca do capítulo, o próximo capítulo e um atalho que só abre o Tec Concursos.
+- **Continua de onde parou:** o app guarda o ponto em que a leitura ficou, e a tela Hoje oferece continuar.
+- **Lei seca na fila:** depois do capítulo, uma dose só com os artigos daquele assunto, no texto do Planalto, sem alteração.
+- **Relembrar:** cartões de conceito de cada capítulo voltam dias depois (1, 3, 7, 15, 30 e 60 dias). Frente pergunta, verso responde: Lembrei ou Não lembrei. Não são questões de banca.
+- **Não lembrou?** O app abre na hora só o trecho do capítulo que responde, e o cartão volta no dia seguinte. O capítulo inteiro só volta à fila quando mais da metade dos cartões dele não foi lembrada.
+- **Cartões da LGPD:** 103 cartões nos 19 capítulos, escritos com as palavras da apostila. Os números foram conferidos no texto da lei que está no app.
+- **Sequência:** o dia vale com um capítulo concluído ou com a revisão dos cartões. Sábado e domingo são livres: não quebram e, com estudo, somam.
+- **Fila de leitura:** primeiro o que serve aos dois concursos; depois contratos e o resto do Cofen; o que é só da ANPD, depois da prova do Cofen (28/02/2027).
+- **Edital virou painel:** cobertura em porcentagem, contagem para cada prova e as datas importantes. É lá que os números ficam. O assunto estudado por outro material pode ser marcado à mão.
+- **Resumo semanal:** o que você fez em cada semana (capítulos, cartões, doses de lei e dias). É registro, não é meta.
+- **Medalhas e níveis refeitos:** 30 medalhas sobre dias seguidos, capítulos concluídos, conceitos lembrados e disciplina fechada. A medalha nova espera o fim da rodada de cartões.
+- **Discursiva continua**, com o envio do texto para correção dentro dela. A tela Instrutor saiu.
+- **Nova barra de baixo:** Hoje, Apostilas, Estudar (abre a leitura sugerida), Relembrar e Mais. Em Mais: Edital, Medalhas, Resumo semanal, Leis e Discursiva.
+- **Ajustes:** as guias do app passam a ser Rotina (dias de estudo) e Medalhas e apresentação.
+- **Saíram de vez:** cronômetro e modo foco, meta de tempo, meta de 50 questões, missões do dia, lançamento de acertos e erros, plano do dia por blocos, revisões de 1, 7 e 30 dias, a tela Evolução e as medalhas de horas, questões, acertos e simulados.
+- **Dados de quem já usava:** vêm o nome, os capítulos já concluídos (com os cartões deles), os dias da sequência e os textos da discursiva. Sessões, tempo, medalhas antigas e respostas de questões não têm lugar no desenho novo; a cópia antiga fica guardada no aparelho.
+- **App mais leve:** o código das questões, das telas gerais e do guia saiu do repositório (fica no histórico, commit `537c861`). A página carrega cerca de 285 KB a menos de código (de 507 KB para 221 KB, fora o Kit).
+- **Ainda faltam:** as apostilas de Direito Administrativo e de Português; a segunda passada na da LGPD (os três níveis por trecho e os arts. 25, 30, 40, 55-L, 55-M e 60 a 65); e o levantamento de mais provas, que depende do computador do Bruno ligado.
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou). Rodaram a verificação do padrão, os testes do app (reescritos para o desenho novo), a varredura de acessibilidade nos temas claro e escuro e o leitor de provas. O teste do guia saiu junto com o guia.
+
 ## 1.13.0 · 2026-11-26
 
 - **Questões fora do app:** cadernos, treino, flashcards, desafio do dia e provas do Cebraspe saíram da tela. As questões são resolvidas no Tec Concursos; no app, a opção Questões abre o cronômetro, e você marca os acertos e os erros. O tempo continua contando no assunto e na meta do dia.

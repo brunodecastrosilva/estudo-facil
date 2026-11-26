@@ -1,7 +1,7 @@
-/* Estudo Fácil · níveis, medalhas (em 3D, que giram com o dedo) e a festa de fim de sessão.
-   Quase tudo sai dos dados de estudo (que sincronizam): pontos, nível, sequência e medalhas. Medalha ganha fica
-   guardada em `marcos`, então não se perde se a sequência quebrar. Nada aqui premia virar a noite: o que conta é
-   constância, revisão e acerto. */
+/* Estudo Fácil · níveis, medalhas (em 3D, que giram com o dedo) e a festa do dia.
+   Tudo sai dos dados de estudo (que sincronizam): pontos, nível, sequência e medalhas. Medalha ganha fica guardada em
+   `marcos`, então não se perde se a sequência quebrar. O que conta é o que o app mede: dias seguidos, capítulos
+   concluídos, conceitos lembrados e disciplina fechada (escopo de 26/11/2026). Nada aqui premia tempo nem volume. */
 "use strict";
 
 const jogoLigado = () => cfg().jogo !== false;
@@ -10,22 +10,23 @@ const vibrar = p => { if (cfg().vibra !== false) KitFacil.jogo.vibrar(p); };
 /* ---------- níveis ---------- */
 const NIVEIS = [
   { nome: 'Primeira página', xp: 0 },
-  { nome: 'Caderno aberto', xp: 150 },
-  { nome: 'Ritmo firme', xp: 500 },
-  { nome: 'Mente afiada', xp: 1200 },
-  { nome: 'Fera do edital', xp: 2500 },
-  { nome: 'Acima da média', xp: 4500 },
-  { nome: 'Nota de corte', xp: 7500 },
-  { nome: 'Entre os classificados', xp: 12000 },
-  { nome: 'Nome na lista', xp: 18000 },
-  { nome: 'Lenda do concurso', xp: 26000 },
+  { nome: 'Caderno aberto', xp: 100 },
+  { nome: 'Ritmo firme', xp: 300 },
+  { nome: 'Mente afiada', xp: 700 },
+  { nome: 'Fera do edital', xp: 1300 },
+  { nome: 'Acima da média', xp: 2200 },
+  { nome: 'Nota de corte', xp: 3500 },
+  { nome: 'Entre os classificados', xp: 5200 },
+  { nome: 'Nome na lista', xp: 7500 },
+  { nome: 'Lenda do concurso', xp: 10500 },
 ];
 
-/* ---------- medalhas: séries em quatro metais (bronze, prata, ouro e diamante), mais as avulsas e uma por disciplina ---------- */
+/* ---------- medalhas: cinco séries em quatro metais (bronze, prata, ouro e diamante) e uma avulsa: 30 ao todo ---------- */
 const METAIS = { bronze: ['#E7AC78', '#A5622F', '#5E3414'], prata: ['#EEF1F6', '#A2ABBE', '#5B657A'], ouro: ['#FFE38F', '#DCA51E', '#8A5F06'], diamante: ['#E8FBFF', '#86D3F0', '#2C7BA3'] };
 const METAL_ORDEM = ['bronze', 'prata', 'ouro', 'diamante'], METAL_NOME = { bronze: 'Bronze', prata: 'Prata', ouro: 'Ouro', diamante: 'Diamante' };
-const ESMALTES = { constancia: ['#4F6BFF', '#1B2E9C'], questoes: ['#F0795C', '#A2361C'], edital: ['#8FB312', '#4C6606'], disciplinas: ['#17A398', '#0B5F58'], app: ['#8B5CF6', '#4C2A9E'] };
-const FAMILIAS = { constancia: 'Constância', questoes: 'Questões', edital: 'Edital', disciplinas: 'Disciplinas', app: 'App' };
+const ESMALTES = { constancia: ['#4F6BFF', '#1B2E9C'], capitulos: ['#8FB312', '#4C6606'], memoria: ['#F0795C', '#A2361C'], disciplinas: ['#17A398', '#0B5F58'], app: ['#8B5CF6', '#4C2A9E'] };
+const FAMILIAS = { constancia: 'Dias seguidos', capitulos: 'Capítulos', memoria: 'Conceitos lembrados', disciplinas: 'Disciplina fechada', app: 'App' };
+
 const MED_IC = {
   pagina: 'M7 3.500h7l4 4V19a1.500 1.500 0 0 1-1.500 1.500H7A1.500 1.500 0 0 1 5.500 19V5A1.500 1.500 0 0 1 7 3.500zM14 3.500V8h4M9 12h6M9 15.500h4',
   chama: 'M12 21a6.500 6.500 0 0 1-6.500-6.500c0-3 1.800-4.600 3-6.500.4 1.600 1.300 2.500 2.300 2.900C10.600 7.500 12 5 14 3c.3 2.600 1.600 4.200 2.800 5.800 1 1.400 1.700 3 1.700 5.700A6.500 6.500 0 0 1 12 21z',
@@ -50,88 +51,53 @@ const MED_IC = {
 };
 const ROMANOS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'], nBR = n => n.toLocaleString('pt-BR');
 const SERIES = [
-  { id: 'seq', nome: 'Chama', fam: 'constancia', ic: 'chama', k: 'recorde', alvos: [3, 7, 14, 30, 60, 100, 200, 365], como: n => `Bata a meta ${n} dias seguidos.` },
-  { id: 'dia', nome: 'Meta batida', fam: 'constancia', ic: 'check', k: 'dias', alvos: [1, 10, 30, 60, 100, 200], como: n => n === 1 ? 'Bata a meta de estudo de um dia.' : `Bata a meta de estudo em ${n} dias.` },
-  { id: 'perf', nome: 'Dia perfeito', fam: 'constancia', ic: 'estrela', k: 'perfeitos', alvos: [1, 7, 30], como: n => n === 1 ? 'Cumpra as três missões num mesmo dia.' : `Tenha ${n} dias perfeitos.` },
-  { se: () => QUEST, id: 'des', nome: 'Relâmpago', fam: 'constancia', ic: 'raio', k: 'desafios', alvos: [1, 7, 30, 100], como: n => n === 1 ? 'Conclua um desafio do dia.' : `Conclua ${n} desafios do dia.` },
-  { id: 'ses', nome: 'Caderno cheio', fam: 'constancia', ic: 'pagina', k: 'sessoes', alvos: [10, 50, 100, 250, 500], como: n => `Conclua ${n} sessões de estudo.` },
-  { id: 'pts', nome: 'Pontuador', fam: 'constancia', ic: 'estrela', k: 'pontos', alvos: [500, 2500, 7500, 15000, 30000], como: n => `Some ${nBR(n)} pontos de estudo, fora os das medalhas.` },
-  { id: 'h', nome: 'Maratona', fam: 'constancia', ic: 'relogio', k: 'horas', alvos: [10, 25, 50, 100, 200, 300, 500], como: n => `Some ${n} horas de estudo.` },
-  { id: 'q', nome: 'Resolvedor', fam: 'questoes', ic: 'questoes', k: 'questoes', alvos: [50, 100, 250, 500, 1000, 2500, 5000, 10000], como: n => `Resolva ${nBR(n)} questões.` },
-  { id: 'ac', nome: 'Mira', fam: 'questoes', ic: 'alvo', k: 'acertos', alvos: [50, 250, 1000, 2500, 5000], como: n => `Acerte ${nBR(n)} questões.` },
-  { se: () => QUEST, id: 'cb', nome: 'Combo', fam: 'questoes', ic: 'raio', k: 'combo', alvos: [5, 10, 15, 20], como: n => `Acerte ${n} questões seguidas num treino.` },
-  { se: () => QUEST, id: 'pv', nome: 'Prova real', fam: 'questoes', ic: 'simulado', k: 'blocos', alvos: [1, 5, 15, 40], como: n => n === 1 ? 'Corrija um bloco de prova do Cebraspe.' : `Corrija ${n} blocos de provas do Cebraspe.` },
-  { id: 'red', nome: 'Redator', fam: 'questoes', ic: 'marca', k: 'redacoes', alvos: [1, 3, 6], como: n => n === 1 ? 'Envie uma discursiva ao instrutor.' : `Envie ${n} discursivas ao instrutor.` },
-  { se: () => QUEST, id: 'fc', nome: 'Baralho', fam: 'questoes', ic: 'cartas', k: 'flash', alvos: [10, 50, 100, 500, 1000], como: n => `Reveja ${nBR(n)} flashcards.` },
-  { id: 'as', nome: 'Grifo', fam: 'edital', ic: 'marca', k: 'assuntos', alvos: [1, 10, 25, 50, 100], como: n => n === 1 ? 'Grife o seu primeiro assunto.' : `Grife ${n} assuntos do edital.` },
-  { id: 'rev', nome: 'Memória', fam: 'edital', ic: 'revisar', k: 'revisoes', alvos: [10, 25, 50, 100, 250], como: n => `Faça ${n} revisões.` },
-  { id: 'ed', nome: 'Edital', fam: 'edital', ic: 'trofeu', k: 'prontidao', alvos: [10, 25, 50, 75, 90], como: n => `Chegue a ${n}% de prontidão para a prova.` },
-  { id: 'df', nome: 'Disciplina fechada', fam: 'edital', ic: 'livro', k: 'discFechadas', alvos: [1, 3, 6, 12], como: n => n === 1 ? 'Grife todos os assuntos de uma disciplina.' : `Grife todos os assuntos de ${n} disciplinas.` },
-  { id: 'sim', nome: 'Ensaio geral', fam: 'edital', ic: 'simulado', k: 'simulados', alvos: [1, 5, 10], como: n => n === 1 ? 'Registre um simulado.' : `Registre ${n} simulados.` },
+  { id: 'seq', nome: 'Chama', fam: 'constancia', ic: 'chama', k: 'recorde', alvos: [3, 5, 10, 20, 40, 60, 100], como: n => `Estude ${n} dias seguidos.` },
+  { id: 'dia', nome: 'Presença', fam: 'constancia', ic: 'calendario', k: 'dias', alvos: [1, 10, 25, 50, 100], como: n => n === 1 ? 'Faça um dia valer: um capítulo concluído ou a revisão.' : `Faça ${n} dias valerem.` },
+  { id: 'cap', nome: 'Capítulo', fam: 'capitulos', ic: 'livro', k: 'caps', alvos: [1, 5, 10, 25, 50, 100, 150], como: n => n === 1 ? 'Conclua o seu primeiro capítulo.' : `Conclua ${n} capítulos.` },
+  { id: 'mem', nome: 'Memória', fam: 'memoria', ic: 'cartas', k: 'lembrados', alvos: [10, 50, 100, 250, 500, 1000], como: n => `Lembre ${nBR(n)} conceitos nos cartões.` },
+  { id: 'df', nome: 'Disciplina fechada', fam: 'disciplinas', ic: 'trofeu', k: 'discFechadas', alvos: [1, 2, 4, 8], como: n => n === 1 ? 'Conclua todos os capítulos de uma disciplina.' : `Conclua todos os capítulos de ${n} disciplinas.` },
 ];
 const AVULSAS = [
   { id: 'nome', nome: 'Prazer em conhecer', como: 'Diga como chamam você.', fam: 'app', metal: 'bronze', ic: 'pessoa', ok: s => s.nome },
-  { id: 'primeira', nome: 'Primeira página', como: 'Conclua a sua primeira sessão de estudo.', fam: 'constancia', metal: 'bronze', ic: 'pagina', ok: s => s.sessoes >= 1 },
-  { id: 'cedo', nome: 'Cedo no caderno', como: 'Comece uma sessão antes das 8 da manhã.', fam: 'constancia', metal: 'bronze', ic: 'sol', ok: s => s.cedo },
-  { id: 'pr80', nome: 'Precisão', como: 'Acerte 80% ou mais numa sessão com 20 questões.', fam: 'questoes', metal: 'prata', ic: 'alvo', ok: s => s.pr80 },
-  { id: 'pr90', nome: 'Precisão fina', como: 'Acerte 90% ou mais numa sessão com 30 questões.', fam: 'questoes', metal: 'ouro', ic: 'alvo', ok: s => s.pr90 },
-  { id: 'gab', nome: 'Gabaritou', como: 'Acerte todas as questões de um treino de 10 ou mais.', fam: 'questoes', metal: 'ouro', ic: 'estrela', ok: s => s.gab, se: () => QUEST },
-  { id: 'inst', nome: 'Quem pergunta aprende', como: 'Leve uma dúvida ao instrutor.', fam: 'app', metal: 'bronze', ic: 'balao', ok: s => s.instrutor },
-  { id: 'guia', nome: 'Leu o manual', como: 'Veja o guia do app até o fim.', fam: 'app', metal: 'bronze', ic: 'livro', ok: s => s.guia, se: () => GERAL },
-  { id: 'cad1', nome: 'Caderno fechado', como: 'Resolva todas as questões de um caderno.', fam: 'questoes', metal: 'prata', ic: 'livro', ok: s => s.cadFechados >= 1, se: () => QUEST },
-  { id: 'cadm', nome: 'Caderno sob medida', como: 'Monte um caderno seu.', fam: 'app', metal: 'bronze', ic: 'pagina', ok: s => s.cadMeus >= 1, se: () => QUEST },
-  { id: 'nuvem', nome: 'Em todo lugar', como: 'Ligue a sincronização entre aparelhos.', fam: 'app', metal: 'bronze', ic: 'nuvem', ok: s => s.sync },
 ];
 const MEDALHAS = [
   ...SERIES.flatMap(S => S.alvos.map((n, i) => ({ id: S.id + n, serie: S.id, grau: i + 1, nome: `${S.nome} ${ROMANOS[i]}`, como: S.como(n), fam: S.fam, ic: S.ic,
-    metal: METAL_ORDEM[Math.min(3, Math.floor(i * 4 / S.alvos.length))], ok: s => (s[S.k] || 0) >= n, prog: s => [Math.min(Math.floor(s[S.k] || 0), n), n] , se: S.se }))),
+    metal: METAL_ORDEM[Math.min(3, Math.floor(i * 4 / S.alvos.length))], ok: s => (s[S.k] || 0) >= n, prog: s => [Math.min(Math.floor(s[S.k] || 0), n), n] }))),
   ...AVULSAS,
-  // uma medalha por disciplina do plano da ANPD: todos os assuntos grifados
-  ...(typeof EDITAL_ANPD !== 'undefined' ? EDITAL_ANPD.materias : []).map(m => ({ id: 'd-' + m.id, nome: m.nome.replace(/\s*\(.*\)$/, ''), como: `Grife todos os assuntos de ${m.nome.replace(/\s*\(.*\)$/, '')}.`, fam: 'disciplinas', ic: 'livro',
-    metal: m.topicos.length >= 12 ? 'diamante' : m.topicos.length >= 8 ? 'ouro' : 'prata', ok: s => { const p = s.disc[m.id]; return !!p && p[1] > 0 && p[0] >= p[1]; }, prog: s => s.disc[m.id] || [0, m.topicos.length], se: () => !!materia(m.id) })),
 ];
-const medalhasDoApp = () => MEDALHAS.filter(m => !m.se || m.se());
+const medalhasDoApp = () => MEDALHAS;
 
 /* ---------- o que os dados dizem ---------- */
 let jogoMemo = { ver: -1 };
 function jogoEstado() {
-  const h = hojeISO(), sync = !!(SY && SY.ligada());
-  if (jogoMemo.ver === VER && jogoMemo.h === h && jogoMemo.sync === sync) return jogoMemo.s;
+  const h = hojeISO();
+  if (jogoMemo.ver === VER && jogoMemo.h === h) return jogoMemo.s;
   const T = totais(), S = sequencia();
-  const s = { ...T, horas: T.min / 60, pontos: pontosBase(), recorde: S.recorde, seq: S.n, nome: !!cfg().nome, sync, guia: temMarco('f:guia'),
-    cedo: DB.sessoes.some(x => !x.manual && new Date(x.ini).getHours() < 8 && new Date(x.ini).getHours() >= 4),
-    pr80: DB.sessoes.some(x => (x.ac || 0) + (x.er || 0) >= 20 && x.ac / (x.ac + x.er) >= .8),
-    pr90: DB.sessoes.some(x => (x.ac || 0) + (x.er || 0) >= 30 && x.ac / (x.ac + x.er) >= .9),
-    gab: DB.sessoes.some(x => x.gab || ((x.ac || 0) >= 10 && !(x.er || 0))), instrutor: temMarco('f:instrutor'), cadMeus: DB.cadernos.filter(c => c.itens).length,
-    cadFechados: typeof cadernoDe === 'function' ? DB.cadernos.map(c => cadernoDe(c.id)).filter(Boolean).filter(C => cadernoEstado(C).prox < 0).length : 0,
-    disc: Object.fromEntries(DB.materias.map(m => { const L = topicosDe(m.id); return [m.id, [L.filter(t => t.teoria).length, L.length]]; })),
-    perfeitos: DB.marcos.filter(m => String(m.id).startsWith('p:')).length, simulados: DB.simulados.length,
-    prontidao: Math.max(0, ...DB.concursos.map(c => prontidao(c))),
+  const s = { ...T, pontos: pontosBase(), recorde: S.recorde, seq: S.n, nome: !!cfg().nome,
+    // disciplina fechada: todos os assuntos concluídos, numa disciplina com pelo menos três
     discFechadas: DB.materias.filter(m => { const L = topicosDe(m.id); return L.length >= 3 && L.every(t => t.teoria); }).length };
-  const L = medalhasDoApp();
-  s.ganhas = L.filter(m => temMarco('m:' + m.id) || (() => { try { return !!m.ok(s); } catch { return false; } })()).map(m => m.id);
-  s.total = L.length;
-  s.xp = pontosBase() + s.ganhas.length * PONTOS.medalha;
+  s.ganhas = MEDALHAS.filter(m => temMarco('m:' + m.id) || (() => { try { return !!m.ok(s); } catch { return false; } })()).map(m => m.id);
+  s.total = MEDALHAS.length;
+  s.xp = s.pontos + s.ganhas.length * PONTOS.medalha;
   const nv = KitFacil.jogo.nivel(s.xp, NIVEIS); s.nivel = nv.nivel; s.nivelNome = nv.nome; s.prox = nv.prox;
-  jogoMemo = { ver: VER, h, sync, s };
+  jogoMemo = { ver: VER, h, s };
   return s;
 }
+// a medalha não interrompe a rodada de cartões: espera o fim dela
+const jogoOcupado = () => festaAberta || KitFacil.dialogo.aberto() || (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof REL !== 'undefined' && !!REL && REL.fase !== 'fim' && tab === 'relembrar');
 // medalhas ganhas que a pessoa ainda não viu; ao conferir, ficam guardadas (e passam a valer para sempre)
 function jogoConferir({ silencioso = false } = {}) {
-  if (semSalvar) return [];
-  const s = jogoEstado(), novas = medalhasDoApp().filter(m => s.ganhas.includes(m.id) && !temMarco('m:' + m.id));
-  if (missoes().perfeito) marcar('p:' + hojeISO());
-  if (!novas.length) { if (jogoMemo.ver !== VER) salvar({ quieto: true }); return []; }
+  const s = jogoEstado(), novas = MEDALHAS.filter(m => s.ganhas.includes(m.id) && !temMarco('m:' + m.id));
+  if (!novas.length) return [];
   novas.forEach(m => marcar('m:' + m.id)); salvar({ quieto: true });
   if (silencioso || !jogoLigado()) return novas;
-  if (festaAberta || KitFacil.dialogo.aberto() || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof focoAberto === 'function' && focoAberto()) || (typeof treinoAberto === 'function' && treinoAberto())) { medalhaFila.push(...novas); return novas; }
+  if (jogoOcupado()) { medalhaFila.push(...novas); return novas; }
   medalhaNova(novas);
   return novas;
 }
 let medalhaFila = [];
-// a medalha nunca abre por cima do treino, do cronômetro em tela cheia ou da abertura: espera a vez
-function medalhaFilaMostrar() { if (!medalhaFila.length || festaAberta || KitFacil.dialogo.aberto() || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof focoAberto === 'function' && focoAberto()) || (typeof treinoAberto === 'function' && treinoAberto())) return; const l = medalhaFila; medalhaFila = []; medalhaNova(l); }
-function jogoMarcar(flag) { if (marcar('f:' + flag)) { salvar({ quieto: true }); setTimeout(() => jogoConferir({ silencioso: typeof guiaAtivo === 'function' && guiaAtivo() }), 400); } }
+// a medalha nunca abre por cima de uma janela, da festa, da abertura ou dos cartões: espera a vez
+function medalhaFilaMostrar() { if (!medalhaFila.length || jogoOcupado()) return; const l = medalhaFila; medalhaFila = []; medalhaNova(l); }
 
 /* ---------- medalha desenhada (lista e festa) ---------- */
 let medSeq = 0;
@@ -321,37 +287,29 @@ function chamaHTML(acesa, cls = '') {
     <path class="chama-dentro" d="M32 70c-7 0-12-5-12-12 0-6 4-9 7-14 1 4 3 6 5 7 0-5 2-9 5-13 1 5 3 8 5 11 2 3 2 6 2 9 0 7-5 12-12 12z" fill="url(#${k}b)"/></svg>`;
 }
 
-/* ---------- festa de fim de sessão: o momento de marca do app (tela cheia; Código, Art. 68, § 4º) ---------- */
+/* ---------- festa do dia: o momento de marca do app (tela cheia; Código, Art. 68, § 4º) ----------
+   Aparece uma vez por dia, quando o dia passa a valer: no primeiro capítulo concluído ou no fim da revisão.
+   antes: jogoEstado() de antes de gravar; o = { rotulo: o que fez o dia valer, linhas: [[rótulo, valor]] }. */
 let festaAberta = false;
-// antes: jogoEstado() e sequencia() de antes de guardar a sessão; fez: o que registrarSessao devolveu
-function festa(fez, antes, { aoFechar } = {}) {
+function festa(antes, { rotulo = '', linhas = [], aoFechar } = {}) {
   const raiz = $('#festa'); if (!raiz || !jogoLigado()) { aoFechar && aoFechar(); return false; }
-  const s = jogoEstado(), S = sequencia(), novas = jogoConferir({ silencioso: true }), s2 = novas.length ? jogoEstado() : s;
-  const ganho = s2.xp - antes.s.xp, subiu = s2.nivel > antes.s.nivel, ses = fez.sessao, top = ses.t && topico(ses.t), mat = materia(ses.m);
-  const min = minutosDoDia(hojeISO()), meta = cfg().metaMin, mis = missoes();
-  const de = antes.s.prox ? antes.s.prox.pct : 100, para = subiu ? 100 : (s2.prox ? s2.prox.pct : 100);
-  const titulo = fez.dia ? (S.n > 1 ? `${S.n} dias seguidos!` : 'Meta do dia batida!') : subiu ? `Nível ${s2.nivel}!` : fez.teoria ? 'Assunto grifado!' : ses.ac + ses.er >= 5 && !ses.er ? 'Gabaritou!' : 'Sessão concluída';
-  const linhas = [];
-  linhas.push(['Estudo', `${fmtMin(Math.max(1, ses.seg / 60))}${top ? '' : ''}`]);
-  if (ses.ac + ses.er) linhas.push(['Questões', `${ses.ac} de ${ses.ac + ses.er} certas (${pct(ses.ac, ses.ac + ses.er)}%)`]);
-  if (fez.teoria) linhas.push(['Assunto', `grifado · ${plural(fez.revisoes, 'revisão marcada', 'revisões marcadas')}`]);
-  if (fez.revisao) linhas.push(['Revisão', 'feita']);
-  (fez.extra || []).forEach(x => linhas.push(x));
-  linhas.push(['Hoje', `${fmtMin(min)} de ${fmtMin(meta)}`]);
+  const S = sequencia(), novas = jogoConferir({ silencioso: true }), s2 = jogoEstado();
+  const ganho = Math.max(0, s2.xp - antes.xp), subiu = s2.nivel > antes.nivel;
+  const de = antes.prox ? antes.prox.pct : 100, para = subiu ? 100 : (s2.prox ? s2.prox.pct : 100);
+  const titulo = S.n > 1 ? `${S.n} dias seguidos!` : 'O dia valeu!';
   festaAberta = true;
   raiz.innerHTML = `<div class="festa" data-kf-tela-cheia role="dialog" aria-modal="true" aria-labelledby="festa-t"><div class="festa-in">
-      <div class="festa-arte" aria-hidden="true">${fez.dia ? chamaHTML(true, 'festa-chama') : `<span class="festa-check">${I.check}</span>`}</div>
+      <div class="festa-arte" aria-hidden="true">${chamaHTML(true, 'festa-chama')}</div>
       <h2 class="festa-t" id="festa-t" tabindex="-1">${esc(titulo)}</h2>
-      <p class="festa-sub">${fez.rotulo ? esc(fez.rotulo) : top ? esc(top.nome) : mat ? esc(mat.nome) : 'Estudo livre'}</p>
-      <p class="festa-pts"><span class="festa-mais" id="festa-pts" data-de="0" data-para="${ganho}">+${ganho}</span> <span>pontos</span></p>
-      <dl class="resumo festa-res">${linhas.map(([a, b]) => `<div><dt>${a}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>
+      <p class="festa-sub">${esc(rotulo)}</p>
+      <p class="festa-pts"><span class="festa-mais" id="festa-pts">+${ganho}</span> <span>pontos</span></p>
+      ${linhas.length ? `<dl class="resumo festa-res">${linhas.map(([a, b]) => `<div><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>` : ''}
       <div class="festa-nivel">${seloNivelHTML(s2)}<span class="nivel-tx"><b>${subiu ? `Nível ${s2.nivel}: ${esc(s2.nivelNome)}` : esc(s2.nivelNome)}</b><span class="barra"><i id="festa-barra" style="width:${Math.max(4, de)}%"></i></span><small>${s2.prox ? `Faltam ${s2.prox.falta.toLocaleString('pt-BR')} pontos para ${esc(s2.prox.nome)}` : 'Nível máximo'}</small></span></div>
-      ${mis.perfeito && !antes.perfeito ? `<p class="festa-perfeito"><span class="grifo">Dia perfeito</span> As três missões de hoje estão cumpridas.</p>` : ''}
       ${novas.length ? `<div class="festa-meds">${novas.map((m, i) => `<span class="festa-med" style="--i:${i}">${medalhaSVG(m)}<small>${esc(m.nome)}</small></span>`).join('')}</div>` : ''}
       <div class="festa-acoes"><button type="button" class="kf-btn kf-comecar bloco" id="festa-ok">Continuar</button></div>
     </div></div>`;
   const cx = $('.festa', raiz), ant = document.activeElement;
-  const fechar = () => { if (!festaAberta) return; festaAberta = false; document.removeEventListener('keydown', tecla, true); cx.classList.add('sai'); cx.style.pointerEvents = 'none'; setTimeout(() => { if (cx.isConnected && !festaAberta) raiz.innerHTML = ''; }, semMovimento() ? 0 : KitFacil.movimento.ms); try { ant && ant.focus && ant.focus({ preventScroll: true }); } catch {} aoFechar && aoFechar(); };
+  const fechar = () => { if (!festaAberta) return; festaAberta = false; document.removeEventListener('keydown', tecla, true); cx.classList.add('sai'); cx.style.pointerEvents = 'none'; setTimeout(() => { if (cx.isConnected && !festaAberta) raiz.innerHTML = ''; }, semMovimento() ? 0 : KitFacil.movimento.ms); try { ant && ant.isConnected && ant.focus && ant.focus({ preventScroll: true }); } catch {} aoFechar && aoFechar(); };
   const tecla = e => { if (e.key === 'Escape') { e.preventDefault(); fechar(); } if (e.key === 'Tab') { e.preventDefault(); $('#festa-ok', raiz).focus(); } };
   document.addEventListener('keydown', tecla, true);
   $('#festa-ok', raiz).onclick = fechar;
@@ -359,10 +317,10 @@ function festa(fez, antes, { aoFechar } = {}) {
     $('#festa-t', raiz)?.focus({ preventScroll: true });
     // os pontos contam de zero até o ganho e a barra do nível anda
     const el = $('#festa-pts', raiz), t0 = performance.now(), dur = semMovimento() ? 0 : 900;
-    const passo = t => { if (!el.isConnected) return; const k = dur ? Math.min(1, (t - t0) / dur) : 1; el.textContent = '+' + Math.round(ganho * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(passo); };
+    const passo = t => { if (!el || !el.isConnected) return; const k = dur ? Math.min(1, (t - t0) / dur) : 1; el.textContent = '+' + Math.round(ganho * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(passo); };
     requestAnimationFrame(passo);
     setTimeout(() => { const b = $('#festa-barra', raiz); if (b) b.style.width = Math.max(4, para) + '%'; }, 700);
   });
-  if (fez.dia || subiu || novas.length) { KitFacil.jogo.confete(cx, 40, ['#DFF65C', '#2742D3', '#6F8BFF', '#FFFFFF', '#17A398', '#F2B33D']); vibrar([20, 60, 20]); } else vibrar(20);
+  KitFacil.jogo.confete(cx, 40, ['#DFF65C', '#2742D3', '#6F8BFF', '#FFFFFF', '#17A398', '#F2B33D']); vibrar([20, 60, 20]);
   return true;
 }

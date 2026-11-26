@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.8 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas do app, nos temas claro e escuro.
+/* Estudo Fácil 1.14 · varredura automática de acessibilidade (WCAG 2.2 A e AA) nas telas do app, nos temas claro e escuro.
    Usa o axe-core pelo pacote de desenvolvimento @axe-core/playwright (npm install). Sem ele, o teste é pulado com aviso:
    não conta como aprovado. Substitui, neste app, comum/testes/acessibilidade.test.mjs (os Ajustes ficam na tela Mais). */
 import { test, before, after } from 'node:test';
@@ -20,63 +20,53 @@ async function varrer(page, onde) {
 }
 
 for (const tema of ['light', 'dark']) {
-  test(`acessibilidade (WCAG 2.2 AA): abertura, telas, treino, flashcards, foco, festa e Ajustes, tema ${tema === 'light' ? 'claro' : 'escuro'}`, async t => {
+  test(`acessibilidade (WCAG 2.2 AA): abertura, Hoje, leitura, lei seca, cartões, festa, Edital, medalhas e Ajustes, tema ${tema === 'light' ? 'claro' : 'escuro'}`, async t => {
     if (!AxeBuilder) { t.skip('axe não instalado: rode npm install (pacote @axe-core/playwright)'); return; }
-    const a = await aparelho(amb, { viewport: { width: 390, height: 844 }, caminho: '?hoje=2026-11-16&questoes=1', antes: () => { window.EF_TESTE_ABERTURA = true; } });
+    const a = await aparelho(amb, { viewport: { width: 390, height: 844 }, caminho: '?hoje=2026-11-23', antes: () => { window.EF_TESTE_ABERTURA = true; } });
     const p = a.page, nome = tema === 'light' ? 'claro' : 'escuro';
     await p.emulateMedia({ colorScheme: tema, reducedMotion: 'reduce' });
     await p.locator('.kf-abertura').waitFor();
-    for (let i = 0; i < 4; i++) { await varrer(p, `abertura ${i + 1} (${nome})`); if (i < 3) await p.click('#kf-ab-prox'); }
+    for (let i = 0; i < 4; i++) { if (i === 2) await p.click('[data-ab-virar]'); await varrer(p, `abertura ${i + 1} (${nome})`); if (i < 3) await p.click('#kf-ab-prox'); }
     await p.click('#kf-ab-prox'); await p.locator('.kf-abertura').waitFor({ state: 'detached' });
-    // um pouco de história: sessões, revisões, um simulado e um compromisso
-    await p.evaluate(() => { const L = topicosDe('anpd-lgpd'); for (let d = 4; d >= 1; d--) { const dia = maisDias(hojeISO(), -d); registrarSessao({ t: L[4 - d].id, seg: 65 * 60, ac: 9, er: 3, teoria: true, dia, ini: deISO(dia).getTime() + 9 * 36e5 }); }
-      DB.simulados.push({ id: 's1', c: 'anpd-2027', nome: 'Simulado 1', data: hojeISO(), r: { gerais: { ac: 20, tot: 50 }, esp: { ac: 20, tot: 70 } } }); DB.eventos.push({ id: 'e1', titulo: 'Aula', data: hojeISO(), hora: '19:00' }); salvar(); jogoConferir({ silencioso: true }); render(); });
+    await p.waitForFunction(() => apPronta('anpd-lgpd'));
+    // um pouco de história: dias que valeram, capítulos concluídos, um para reler e uma data perto
+    await p.evaluate(() => { DB.dias = ['2026-11-18', '2026-11-19', '2026-11-20'].map(id => ({ id, cap: 1, car: 4, lei: 0, vale: true })); for (const id of ['anpd-lgpd-02', 'anpd-lgpd-03']) { const t = topico(id); t.teoria = t.lido = agora() - 4 * 864e5; cartoesAtivar(id); } topico('anpd-lgpd-03').reler = 1; for (const c of DB.cartoes) c.due = hojeISO();
+      DB.concursos[1].datas.push({ id: 'x1', tipo: 'aviso', titulo: 'Cofen: data de teste', ini: maisDias(hojeISO(), 2), acao: true }); salvar(); jogoConferir({ silencioso: true }); render(); });
     await varrer(p, `Hoje (${nome})`);
-    await p.evaluate(() => irPara('plano')); await p.locator('#view [data-disc="anpd-lgpd"] summary').click(); await p.waitForTimeout(200); await varrer(p, `Plano (${nome})`);
-    await p.locator('#view [data-act="assunto"]').first().click(); await p.locator('#af-estudar').waitFor(); await varrer(p, `ficha do assunto (${nome})`); await p.keyboard.press('Escape');
-    await p.click('#kf-nav-medalhas'); await p.waitForTimeout(200); await varrer(p, `Medalhas (${nome})`);
-    await p.locator('#view .medalhas [data-act="medalha"]').first().click(); await p.locator('.kf-dlg .med3d').waitFor(); await varrer(p, `ficha da medalha (${nome})`); await p.keyboard.press('Escape');
+    await p.click('#view [data-act="sobre-sequencia"]'); await p.locator('.kf-dlg').waitFor(); await varrer(p, `como funciona a sequência (${nome})`); await p.keyboard.press('Escape');
+    await p.click('#kf-nav-apostilas'); await p.waitForTimeout(200); await varrer(p, `Apostilas (${nome})`);
+    await p.click('#view [data-act="abrir-apostila"]'); await p.locator('#view .ap-caps').waitFor(); await varrer(p, `Apostila (${nome})`);
+    await p.click('#view [data-act="abrir-cap"][data-id="anpd-lgpd-01"]'); await p.locator('#view .ap-folha').waitFor(); await varrer(p, `Capítulo (${nome})`);
+    await p.click('#cap-entendi'); await p.locator('#festa-ok').waitFor(); await varrer(p, `festa do dia (${nome})`);
+    await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
+    for (let i = 0; i < 4; i++) { const b = p.locator('#mn-ok'); if (await b.count()) { if (!i) await varrer(p, `medalha nova (${nome})`); await b.click(); await p.waitForTimeout(500); } else await p.waitForTimeout(250); }
+    await varrer(p, `Capítulo concluído (${nome})`);
+    await p.click('#view [data-act="abrir-dose"]'); await p.locator('#view .lei-folha p').first().waitFor(); await varrer(p, `Lei seca (${nome})`);
+    await p.click('#dose-lida'); await p.locator('#dose-lida[aria-pressed="true"]').waitFor(); await varrer(p, `Lei seca lida (${nome})`);
+    await p.evaluate(() => { capId = 'anpd-lgpd-03'; topico('anpd-lgpd-03').volta = 1; irPara('capitulo'); }); await p.locator('#view .ap-folha').waitFor(); await varrer(p, `Capítulo que voltou (${nome})`);
+    // cartões: frente, verso, trecho e fim da rodada
+    await p.click('#kf-nav-relembrar'); await p.locator('#rel-ver').waitFor(); await varrer(p, `cartão, frente (${nome})`);
+    await p.click('#rel-ver'); await varrer(p, `cartão, verso (${nome})`);
+    await p.click('#rel-nao'); await p.locator('#rel-seguir').waitFor(); await varrer(p, `cartão, trecho do capítulo (${nome})`);
+    await p.click('#rel-seguir');
+    for (let i = 0; i < 40; i++) { await p.locator('#rel-ver, #view .rel-fim').first().waitFor(); if (await p.locator('#view .rel-fim').count()) break; await p.click('#rel-ver'); await p.click('#rel-sim'); }
+    await p.locator('#view .rel-fim').waitFor(); for (let i = 0; i < 4; i++) { const b = p.locator('#mn-ok'); if (await b.count()) { await b.click(); await p.waitForTimeout(500); } else await p.waitForTimeout(250); }
+    await varrer(p, `fim da revisão (${nome})`);
+    await p.evaluate(() => { REL = null; irPara('hoje'); irPara('relembrar'); }); await p.waitForTimeout(200); await varrer(p, `Relembrar, sem cartões para hoje (${nome})`);
     await p.click('#kf-nav-mais'); await p.waitForTimeout(200); await varrer(p, `Mais (${nome})`);
-    // provas do Cebraspe (antes e depois de corrigir um bloco) e discursiva
-    await p.evaluate(() => irPara('provas')); await p.waitForTimeout(200); await varrer(p, `Provas (${nome})`);
-    await p.click('#view [data-act="abrir-prova"][data-id="anm24-cg4"]'); await p.waitForTimeout(200); await p.click('#view [data-item="14"][data-v="C"]'); await p.click('#view [data-item="15"][data-v="C"]'); await varrer(p, `Prova, folha de respostas (${nome})`);
-    await p.evaluate(() => corrigirBloco(PROVA.get('anm24-cg4'), blocosDoEdital(PROVA.get('anm24-cg4'))[2])); await p.locator('.kf-dlg [data-kf-ok]').click(); await p.locator('#festa-ok').click(); await p.locator('.festa').waitFor({ state: 'detached' });
-    for (let i = 0; i < 4; i++) { const b = p.locator('#mn-ok'); if (await b.count()) { await b.click(); await p.waitForTimeout(500); } else await p.waitForTimeout(250); }
-    await varrer(p, `Prova, bloco corrigido (${nome})`);
+    await p.click('#view [data-kf-ir="edital"]'); await p.locator('#view [data-disc="anpd-lgpd"] summary').click(); await p.waitForTimeout(200); await varrer(p, `Edital da ANPD (${nome})`);
+    await p.locator('#view [data-disc="anpd-lgpd"] [data-act="assunto"]').first().click(); await p.locator('#af-feito').waitFor(); await varrer(p, `ficha do assunto (${nome})`); await p.keyboard.press('Escape');
+    await p.click('#ed-conc [data-v="cofen-2027"]'); await p.waitForTimeout(200); await varrer(p, `Edital do Cofen (${nome})`);
+    await p.evaluate(() => irPara('medalhas')); await p.waitForTimeout(200); await varrer(p, `Medalhas (${nome})`);
+    await p.locator('#view .medalhas [data-act="medalha"]').first().click(); await p.locator('.kf-dlg .med3d').waitFor(); await varrer(p, `ficha da medalha (${nome})`); await p.keyboard.press('Escape');
+    await p.evaluate(() => irPara('semanas')); await p.waitForTimeout(200); await varrer(p, `Resumo semanal (${nome})`);
     await p.evaluate(() => irPara('discursivas')); await p.waitForTimeout(200); await varrer(p, `Discursivas (${nome})`);
     await p.click('#view [data-act="abrir-red"][data-id="anm24-lgpd"]'); await p.locator('#ds-txt').waitFor(); await p.fill('#ds-txt', 'A segurança acompanha o tratamento desde a concepção. '.repeat(8)); await p.click('#view [aria-labelledby="ds-es"] summary'); await p.waitForTimeout(200); await varrer(p, `Discursiva (${nome})`);
-    // cadernos: lista, caderno com respostas certas e erradas e a janela de novo caderno
-    await p.click('#kf-nav-cadernos'); await p.waitForTimeout(200); await varrer(p, `Cadernos (${nome})`);
-    await p.evaluate(() => { cadernoMarcar('m:anpd-dc', QID.get('dc-001'), 'E'); cadernoMarcar('m:anpd-dc', QID.get('dc-002'), 'E'); salvar(); cadId = 'm:anpd-dc'; irPara('caderno'); }); await p.waitForTimeout(200); await varrer(p, `Caderno (${nome})`);
-    await p.click('#kf-nav-cadernos'); await p.click('#cad-novo'); await p.locator('#nc-ok').waitFor(); await varrer(p, `Novo caderno (${nome})`); await p.keyboard.press('Escape');
-    // questão oficial (texto inventado): comando, texto de apoio e a resposta
-    await p.evaluate(() => { const itens = {}; for (let n = 1; n <= 50; n++) itens[n] = 'Item inventado ' + n + ', com \u0001destaque\u0002.'; DB.textos = [{ id: 'anatel24-cb1', itens, grupos: [{ de: 1, cmd: 'Julgue os itens a seguir, relativos ao texto CB1.', apoio: 'Texto CB1\nParágrafo inventado.' }], em: 1 }]; salvar(); treinoAbrir({ caderno: 'p:anatel24-cb1', i: 0 }); });
-    await p.locator('#treino.dentro').waitFor(); await p.click('#treino .tr-apoio summary'); await varrer(p, `Questão oficial (${nome})`);
-    await p.click('#treino [data-resp="C"]'); await p.locator('#tr-prox').waitFor(); await varrer(p, `Questão oficial respondida (${nome})`); await p.evaluate(() => treinoFechar()); await p.waitForTimeout(300);
-    await p.evaluate(() => irPara('apostilas')); await p.waitForTimeout(200); await varrer(p, `Apostilas (${nome})`);
-    await p.evaluate(() => apostilaAbrirEm('anpd-lgpd')); await p.locator('#view .ap-cap').first().waitFor(); await varrer(p, `Apostila (${nome})`);
-    await p.evaluate(() => { planoConc = 'cofen-2027'; irPara('plano'); }); await p.waitForTimeout(200); await varrer(p, `Edital do Cofen (${nome})`); await p.evaluate(() => { planoConc = null; });
     await p.evaluate(() => irPara('leis')); await p.waitForTimeout(200); await varrer(p, `Leis (${nome})`);
     await p.evaluate(() => { leiId = 'l12813'; irPara('lei'); }); await p.locator('#view .lei-folha p').first().waitFor(); await varrer(p, `Lei (${nome})`);
-    for (const tela of ['evolucao', 'instrutor', 'revisoes']) { await p.evaluate(t => { concId = 'anpd-2027'; discId = 'anpd-lgpd'; irPara(t); }, tela); await p.waitForTimeout(200); await varrer(p, `${tela} (${nome})`); }
-    // treino de questões: antes e depois da resposta, com a aula aberta e a resposta do instrutor; a pergunta e os flashcards
-    await p.evaluate(() => { INSTRUTOR = { 'lgpd-016': [{ em: '16/11/2026', r: 'O art. 11 não traz o legítimo interesse.' }] }; DB.respostas.push({ id: 'lgpd-004', n: 1, ac: 0, ok: false, em: agora(), cx: 0, due: hojeISO(), rv: 0 }); salvar(); irPara('hoje'); treinoAbrir({ lista: [QID.get('lgpd-016'), QID.get('lgpd-017'), QID.get('lgpd-018')] }); });
-    await p.locator('#treino.dentro').waitFor(); await varrer(p, `treino, pergunta (${nome})`);
-    await p.click('#treino [data-resp="C"]'); await p.waitForTimeout(200); await varrer(p, `treino, errou (${nome})`);
-    await p.click('#tr-perguntar'); await p.locator('#in-ok').waitFor(); await varrer(p, `perguntar ao instrutor (${nome})`); await p.keyboard.press('Escape');
-    await p.click('#tr-prox'); await p.click('#treino [data-resp="C"]'); await p.click('#tr-prox'); await p.click('#treino [data-resp="C"]'); await p.waitForTimeout(200); await varrer(p, `treino, acertou com combo (${nome})`);
-    await p.click('#tr-prox'); await p.locator('#festa-ok').waitFor(); await varrer(p, `festa do treino (${nome})`); await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
-    for (let i = 0; i < 4; i++) { const b = p.locator('#mn-ok'); if (await b.count()) { await b.click(); await p.waitForTimeout(500); } else await p.waitForTimeout(250); }
-    await p.click('#view [data-act="flashcards"]'); await p.locator('#fc-ver').waitFor(); await varrer(p, `flashcard, frente (${nome})`);
-    await p.click('#fc-ver'); await varrer(p, `flashcard, verso (${nome})`); await p.keyboard.press('Escape');
-    await p.click('#kf-nav-hoje'); await p.click('#hoje-estudar'); await p.locator('#es-ok').waitFor(); await varrer(p, `Estudar (${nome})`);
-    await p.evaluate(() => { const e = document.querySelector('#es-m'); e.value = 'anpd-da'; e.dispatchEvent(new Event('change', { bubbles: true })); }); await p.click('#es-tipo [data-v="teoria"]');
-    await p.click('#es-ok'); await p.locator('#foco.dentro').waitFor(); await varrer(p, `modo foco (${nome})`);
-    await p.evaluate(() => { DB.ativa.acum = 61 * 60; DB.ativa.tocou = true; }); await p.click('#foco-fim'); await p.locator('#fs-ok').waitFor(); await varrer(p, `fechar a sessão (${nome})`);
-    await p.click('#fs-ok'); await p.locator('#festa-ok').waitFor(); await varrer(p, `festa (${nome})`);
-    await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
     await p.click('#kf-nav-mais'); await p.locator('#view [data-kf="ajustes"]').click(); await p.locator('.kf-aj-h').waitFor(); await varrer(p, `Ajustes (${nome})`);
-    for (const g of ['rotina', 'revisoes', 'medalhas', 'conta', 'notificacoes', 'privacidade']) { await p.evaluate(g => KitFacil.ajustes.ir(g), g); await p.waitForTimeout(200); await varrer(p, `Ajustes, ${g} (${nome})`); }
+    for (const g of ['rotina', 'medalhas', 'conta', 'notificacoes', 'privacidade']) { await p.evaluate(g => KitFacil.ajustes.ir(g), g); await p.waitForTimeout(200); await varrer(p, `Ajustes, ${g} (${nome})`); }
+    assert.deepEqual(a.erros, []);
     await a.fechar();
   });
 }

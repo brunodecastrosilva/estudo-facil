@@ -4,6 +4,8 @@
 ## anpd-lgpd-01 | Para quem a lei vale e para quem não vale (arts. 1º a 4º)
 
 ### A ideia, sem juridiquês
+? a | Quem a LGPD protege, e quem ela obriga? :: Protege a pessoa natural. Obriga quem trata dados: pessoa natural e pessoa jurídica, de direito público ou privado.
+? b | A LGPD vale só para o meio digital? :: Não. O art. 1º diz "inclusive nos meios digitais": o papel também conta.
 Toda vez que alguém anota, guarda, consulta ou repassa uma informação sobre você, está fazendo o que a lei chama de **tratamento de dados pessoais**. A LGPD é a lei que diz quando isso pode ser feito e com que cuidados.
 Ela protege a **pessoa natural**, ou seja, gente de carne e osso. Empresa não tem dado pessoal: quem tem é o dono, o funcionário, o cliente.
 E ela obriga **todo mundo que trata dados**: pessoa física, empresa privada e também o governo (União, estados, Distrito Federal e municípios).
@@ -11,6 +13,7 @@ E ela obriga **todo mundo que trata dados**: pessoa física, empresa privada e t
 Repare no "inclusive": a lei vale para o papel também. Ficha de academia preenchida a caneta é dado pessoal.
 
 ### Os fundamentos (art. 2º)
+? c | O que é a autodeterminação informativa, um dos fundamentos da lei? :: É a pessoa decidir o que fazem com os dados dela.
 São as sete ideias que sustentam a lei. Não precisa decorar a ordem, mas precisa reconhecer a lista:
 - respeito à privacidade;
 - autodeterminação informativa (você decide o que fazem com os seus dados);
@@ -22,6 +25,7 @@ São as sete ideias que sustentam a lei. Não precisa decorar a ordem, mas preci
 Note que a lista mistura proteção da pessoa com economia. A LGPD não é contra o uso de dados: ela organiza o uso.
 
 ### Onde a lei alcança (art. 3º)
+? d | Quais são os três ganchos que fazem a LGPD valer (art. 3º)? :: Tratamento feito no Brasil; oferta de bens ou serviços a quem está no Brasil, ou tratamento de dados de quem está aqui; dados coletados no Brasil.
 Não importa o meio, o país da sede da empresa nem o país onde os dados estão guardados. A lei vale se acontecer **uma** destas três coisas:
 - o tratamento é feito no Brasil;
 - o objetivo é oferecer bens ou serviços a quem está no Brasil, ou tratar dados de quem está no Brasil;
@@ -29,6 +33,8 @@ Não importa o meio, o país da sede da empresa nem o país onde os dados estão
 ex: Uma loja com sede na Irlanda e servidores nos Estados Unidos vende para clientes em Fortaleza. A LGPD vale, porque a oferta é para quem está no Brasil.
 
 ### Onde a lei não entra (art. 4º)
+? e | Fins exclusivamente acadêmicos estão totalmente fora da LGPD? :: Não. A lei não se aplica, mas as bases legais dos arts. 7º e 11 continuam valendo.
+? f | Que palavra acompanha as exceções do art. 4º? :: "Exclusivamente" (ou "exclusivos"): fins particulares e não econômicos, jornalísticos e artísticos, acadêmicos, de segurança pública.
 A lei **não se aplica** ao tratamento:
 - feito por pessoa natural para fins **exclusivamente particulares e não econômicos** (a sua agenda de contatos);
 - para fins **exclusivamente jornalísticos e artísticos**;
@@ -53,6 +59,8 @@ E: O tratamento de dados para fins acadêmicos está inteiramente fora do alcanc
 O art. 5º é o dicionário da LGPD. Metade dos itens errados da banca nasce da troca de uma definição pela vizinha. Se você souber este artigo, lê o resto da lei sem tropeçar.
 
 ### Os tipos de dado
+? a | O que é dado pessoal? :: Informação relacionada a pessoa natural identificada ou identificável.
+? b | Dado financeiro é dado sensível? :: Não. Sensível é lista fechada: origem racial ou étnica, convicção religiosa, opinião política, filiação a sindicato ou a organização religiosa, filosófica ou política, saúde, vida sexual, dado genético e dado biométrico.
 - **Dado pessoal:** informação relacionada a pessoa natural **identificada ou identificável**. Nome e CPF identificam direto. Placa do carro e endereço de IP podem identificar: também contam.
 - **Dado pessoal sensível:** uma lista fechada. Origem racial ou étnica, convicção religiosa, opinião política, filiação a sindicato ou a organização religiosa, filosófica ou política, saúde, vida sexual, dado genético e dado biométrico.
 - **Dado anonimizado:** dado de alguém que **não pode ser identificado**, considerados os meios técnicos razoáveis e disponíveis na ocasião do tratamento.
@@ -60,6 +68,9 @@ ex: "Maria Souza, CPF tal, mora na rua tal" é dado pessoal. "Maria é diabétic
 Atenção ao que **não** está na lista de sensíveis: dado financeiro, endereço, salário e número de telefone são dados pessoais comuns.
 
 ### As pessoas da história
+? c | Qual a diferença entre controlador e operador? :: O controlador decide sobre o tratamento. O operador trata os dados em nome do controlador: executa, não decide.
+? d | Quem são os agentes de tratamento? :: Só o controlador e o operador. O encarregado não é agente de tratamento.
+? e | O que faz o encarregado? :: É o canal de comunicação entre o controlador, os titulares e a ANPD.
 - **Titular:** a pessoa natural a quem os dados se referem. Você.
 - **Controlador:** quem **decide** sobre o tratamento. Pode ser pessoa natural ou jurídica, pública ou privada.
 - **Operador:** quem trata os dados **em nome do controlador**. Executa, não decide.
@@ -70,6 +81,8 @@ ex: Uma clínica contrata uma empresa de nuvem para guardar os prontuários. A c
 Mudança recente: desde a Lei 15.352/2026, o texto diz que o encarregado é a pessoa indicada "pelo controlador e operador", e a sigla ANPD passou a significar **Agência** Nacional de Proteção de Dados.
 
 ### As operações
+? f | Bloqueio e eliminação são a mesma coisa? :: Não. Bloqueio é suspensão temporária do tratamento, guardando o dado. Eliminação é a exclusão do dado.
+? g | Como o consentimento tem de ser, pela definição da lei? :: Livre, informado e inequívoco, para uma finalidade determinada.
 - **Tratamento:** toda operação feita com dados pessoais. Coletar, guardar, consultar, usar, transmitir, apagar: tudo é tratamento.
 - **Anonimização:** uso de meios técnicos pelos quais o dado **perde** a possibilidade de ser associado a alguém.
 - **Consentimento:** manifestação **livre, informada e inequívoca** do titular, para uma finalidade determinada.
@@ -92,9 +105,12 @@ E: O bloqueio consiste na exclusão definitiva do dado pessoal armazenado em ban
 ## anpd-lgpd-03 | Os dez princípios do tratamento (art. 6º)
 
 ### A ideia
+? a | Os princípios valem quando há consentimento do titular? :: Sim. Valem sempre, qualquer que seja a base legal. Antes deles, o artigo ainda exige boa-fé.
 Princípio é regra de comportamento que vale sempre, qualquer que seja a base legal. Mesmo com o seu consentimento, a empresa continua presa aos dez princípios. Antes deles, o artigo ainda exige **boa-fé**.
 
 ### Os dez, um por um
+? b | O que exige o princípio da responsabilização e prestação de contas? :: Que o agente demonstre que adotou medidas eficazes para cumprir a lei.
+? c | Que limite a transparência respeita? :: Os segredos comercial e industrial.
 - **Finalidade:** tratar para propósitos legítimos, específicos, explícitos e **informados ao titular**. Nada de usar depois para outra coisa incompatível.
 - **Adequação:** o tratamento tem de ser **compatível** com a finalidade que foi informada.
 - **Necessidade:** só o **mínimo necessário**. Dados pertinentes, proporcionais e não excessivos.
@@ -108,6 +124,8 @@ Princípio é regra de comportamento que vale sempre, qualquer que seja a base l
 ex: Uma farmácia pede o seu CPF para dar desconto. Finalidade: dizer para que serve. Adequação: usar só para o desconto. Necessidade: não pedir também o nome da sua mãe. Transparência: explicar isso de forma clara. Livre acesso: deixar você consultar o que ela guarda, sem cobrar.
 
 ### Como não confundir os parecidos
+? d | Finalidade, adequação e necessidade: que pergunta cada um responde? :: Finalidade: "para quê?". Adequação: "o que estão fazendo combina com o que foi dito?". Necessidade: "precisava de tudo isso?".
+? e | Livre acesso ou transparência: qual trata de consultar os próprios dados? :: O livre acesso (consulta facilitada e gratuita). Transparência é receber informações claras sobre o tratamento.
 - Finalidade responde "para quê?". Adequação responde "o que estão fazendo combina com o que foi dito?". Necessidade responde "precisava de tudo isso?".
 - Livre acesso é sobre **consultar os seus dados**. Transparência é sobre **receber informações** a respeito do tratamento.
 - Segurança é proteger agora. Prevenção é evitar o dano antes. Responsabilização é conseguir provar depois.
@@ -124,10 +142,14 @@ E: O princípio do livre acesso garante ao titular consulta facilitada sobre seu
 ## anpd-lgpd-04 | As dez portas de entrada: as bases legais (art. 7º)
 
 ### A ideia
+? a | O consentimento é a base legal mais forte? :: Não. É uma entre dez hipóteses do art. 7º. Basta uma, e ele não é mais forte que as outras.
 Ninguém pode tratar dado pessoal "porque sim". É preciso encaixar o tratamento em uma das dez hipóteses do art. 7º, chamadas de **bases legais**. Basta uma. O consentimento é só uma delas, e não é mais forte que as outras.
 > Art. 7º: o tratamento de dados pessoais "somente poderá ser realizado" nas hipóteses que o artigo lista.
 
 ### As dez
+? b | Quem pode usar a base "políticas públicas"? :: A administração pública, para políticas previstas em lei, regulamento, contrato ou convênio.
+? c | Quem pode tratar dados com base na tutela da saúde? :: Só profissionais de saúde, serviços de saúde ou autoridade sanitária.
+? d | Quando o legítimo interesse não serve como base? :: Quando prevalecem direitos e liberdades fundamentais do titular.
 - **Consentimento** do titular.
 - **Obrigação legal ou regulatória** do controlador. Ex.: a empresa guarda dados do empregado porque a lei trabalhista manda.
 - **Políticas públicas**, pela **administração pública**, previstas em lei, regulamento, contrato ou convênio.
@@ -141,11 +163,13 @@ Ninguém pode tratar dado pessoal "porque sim". É preciso encaixar o tratamento
 ex: O hospital que atende alguém desacordado no pronto-socorro não precisa de consentimento: a base é a proteção da vida. O banco que consulta o seu histórico antes de emprestar usa a proteção do crédito.
 
 ### Dados que já são públicos
+? e | O titular tornou o dado manifestamente público. Precisa de consentimento para tratar? :: Não. Mas os direitos do titular e os princípios continuam valendo.
 - Dado de **acesso público**: pode ser tratado, mas considerando a finalidade, a boa-fé e o interesse público que justificaram a divulgação.
 - Dado **tornado manifestamente público pelo próprio titular**: dispensa o consentimento, mas os direitos do titular e os princípios continuam valendo.
 - Para usar esses dados em **novas finalidades**, é preciso propósito legítimo e específico e respeito aos direitos do titular.
 
 ### Dois lembretes que caem
+? f | O controlador obteve consentimento e quer compartilhar os dados com outro controlador. O que falta? :: Consentimento específico para isso, salvo as hipóteses de dispensa.
 - O controlador que obteve consentimento e quer **compartilhar** os dados com outros controladores precisa de **consentimento específico** para isso, salvo as hipóteses de dispensa.
 - Dispensa de consentimento **não é dispensa da lei**: os princípios e os direitos do titular continuam valendo.
 
@@ -162,6 +186,10 @@ E: A dispensa do consentimento desobriga o agente de tratamento de observar os p
 ## anpd-lgpd-05 | Consentimento e o dever de informar (arts. 8º e 9º)
 
 ### Como o consentimento tem de ser
+? a | O consentimento precisa ser por escrito? :: Não. Vale por escrito ou por outro meio que demonstre a vontade. Se for escrito, vem em cláusula destacada.
+? b | Quem prova que o consentimento foi obtido conforme a lei? :: O controlador.
+? c | "Autorizo o uso dos meus dados para qualquer fim." Vale? :: Não. Autorização genérica é nula.
+? d | O que acontece com o que foi feito antes da revogação do consentimento? :: Continua válido. A revogação pode ser feita a qualquer momento, por procedimento gratuito e facilitado, mas não volta no tempo.
 Pela definição do art. 5º, o consentimento é **livre, informado e inequívoco**, para uma **finalidade determinada**. O art. 8º diz como isso funciona na prática:
 - pode ser **por escrito ou por outro meio** que demonstre a vontade do titular. Não precisa ser no papel;
 - se for por escrito, tem de vir em **cláusula destacada** das outras;
@@ -182,6 +210,8 @@ O titular tem direito a acesso facilitado a informações claras, adequadas e os
 - os direitos do titular, com menção explícita aos do art. 18.
 
 ### Três regras do art. 9º que a banca gosta
+? e | A informação dada ao titular era enganosa ou abusiva. O que acontece com o consentimento? :: É nulo.
+? f | A finalidade mudou de modo incompatível com o consentimento original. O que o controlador faz? :: Avisa o titular antes, e ele pode revogar o consentimento.
 - Se a informação dada ao titular for **enganosa ou abusiva**, ou não tiver sido apresentada antes com transparência, o consentimento é **nulo**.
 - Se a **finalidade mudar** de modo incompatível com o consentimento original, o controlador tem de **avisar antes**, e o titular pode revogar.
 - Se o tratamento for **condição** para receber um produto ou serviço, o titular tem de ser informado **com destaque** sobre isso.
@@ -204,6 +234,7 @@ C: A revogação do consentimento pode ocorrer a qualquer momento, por procedime
 Pense numa balança. De um lado, o interesse de quem trata. Do outro, os direitos e as liberdades fundamentais do titular. Se o lado do titular pesar mais, o legítimo interesse não serve.
 
 ### O que a lei diz
+? a | O legítimo interesse serve para qualquer finalidade? :: Não. Só para finalidades legítimas, consideradas a partir de situações concretas.
 > Art. 10: o legítimo interesse "somente poderá fundamentar tratamento de dados pessoais para finalidades legítimas, consideradas a partir de situações concretas".
 A lei dá dois exemplos, e avisa que a lista não é fechada ("incluem, mas não se limitam a"):
 - apoio e promoção de atividades do controlador;
@@ -211,12 +242,16 @@ A lei dá dois exemplos, e avisa que a lista não é fechada ("incluem, mas não
 ex: Uma livraria manda para quem já comprou lá um aviso de lançamento do mesmo autor. É promoção da própria atividade, e o cliente não se espanta de receber. Se a livraria vendesse a lista de clientes a uma financeira, a expectativa do cliente seria quebrada.
 
 ### Os três freios
+? b | Quais são os três freios do legítimo interesse? :: Só os dados estritamente necessários; transparência sobre o tratamento; e a ANPD pode solicitar o relatório de impacto.
+? c | A ANPD tem de exigir sempre o relatório de impacto no legítimo interesse? :: Não. Ela pode solicitar.
+? d | O que o art. 37 manda fazer, especialmente quando a base é o legítimo interesse? :: Manter registro das operações de tratamento.
 - **Só o estritamente necessário:** apenas os dados indispensáveis para a finalidade.
 - **Transparência:** o controlador tem de adotar medidas para deixar claro esse tratamento.
 - **Relatório de impacto:** a ANPD **pode solicitar** ao controlador o relatório de impacto à proteção de dados quando a base for o legítimo interesse.
 Além disso, o art. 37 manda manter registro das operações, **especialmente** quando a base for o legítimo interesse.
 
 ### O que o legítimo interesse não alcança
+? e | Dá para tratar dado sensível com base no legítimo interesse? :: Não. A lista de bases do art. 11 não traz o legítimo interesse.
 A lista de bases para **dados sensíveis** (art. 11) não traz o legítimo interesse. Para dado sensível, é preciso outra base.
 
 banca: A banca tenta transformar o legítimo interesse em cheque em branco: "qualquer finalidade", "todos os dados", "sem dever de transparência". Também troca "poderá solicitar" por "deverá exigir sempre", ou diz que o relatório de impacto é dispensado nessa base.
@@ -235,6 +270,8 @@ E: O legítimo interesse do controlador prevalece ainda que estejam em jogo dire
 Dado sensível é o que pode gerar discriminação: saúde, religião, política, raça, vida sexual, genética, biometria. Por isso a lei fecha mais a porta. As bases do art. 7º **não valem** aqui: valem as do art. 11.
 
 ### As bases para dado sensível (art. 11)
+? a | Como tem de ser o consentimento para tratar dado sensível? :: Específico e destacado, para finalidades específicas.
+? b | Que bases do art. 7º não existem para dado sensível, e qual aparece só nele? :: Não há legítimo interesse nem proteção do crédito. Aparece a prevenção à fraude e segurança do titular, na identificação e autenticação de cadastro em sistemas eletrônicos.
 **Com consentimento:** tem de ser **específico e destacado**, para **finalidades específicas**.
 **Sem consentimento**, só quando for **indispensável** para:
 - cumprir obrigação legal ou regulatória;
@@ -248,14 +285,17 @@ Compare com o art. 7º: aqui **não há** legítimo interesse nem proteção do 
 ex: O banco usa a sua digital para liberar o aplicativo. Biometria é dado sensível, e a base é a prevenção à fraude na autenticação. A mesma digital não pode ser usada para mandar propaganda.
 
 ### Dados de saúde e dinheiro
+? c | Operadora de plano de saúde pode usar dados de saúde para seleção de riscos? :: Não, nem na contratação nem na exclusão de beneficiários.
 - É **vedado** comunicar ou compartilhar dados de saúde entre controladores para obter **vantagem econômica**. As exceções são a prestação de serviços de saúde, de assistência farmacêutica e de assistência à saúde, em benefício do titular, para permitir a portabilidade pedida por ele ou as transações financeiras e administrativas desses serviços.
 - As **operadoras de planos de saúde** não podem usar dados de saúde para **seleção de riscos**, nem na contratação nem na exclusão de beneficiários.
 
 ### Anonimizado não é dado pessoal, até deixar de ser (art. 12)
+? d | Quando o dado anonimizado volta a ser dado pessoal? :: Quando a anonimização é revertida com meios próprios, ou pode ser revertida com esforços razoáveis.
 O dado anonimizado fica **fora** da lei. Mas volta a ser dado pessoal se a anonimização for **revertida** com meios próprios, ou puder ser revertida com **esforços razoáveis**. O que é razoável se mede por custo, tempo e tecnologia disponível.
 O dado usado para formar o **perfil comportamental** de uma pessoa, se ela for identificada, também pode ser considerado dado pessoal.
 
 ### Pseudonimização (art. 13)
+? e | Qual a diferença entre anonimizar e pseudonimizar? :: No dado anonimizado, a pessoa não pode ser identificada. No pseudonimizado, a ligação volta com uma informação adicional, guardada separadamente pelo controlador em ambiente seguro.
 Na pesquisa em saúde pública, os órgãos de pesquisa podem acessar bases de dados pessoais, dentro do órgão e só para o estudo. A lei define ali a **pseudonimização**: o dado perde a ligação com a pessoa, **a não ser** pelo uso de uma informação adicional guardada **separadamente** pelo controlador, em ambiente seguro.
 ex: Anonimizar é rasgar a etiqueta com o nome e jogar fora. Pseudonimizar é trocar o nome por um código e guardar a tabela de códigos num cofre. Quem tem a tabela consegue voltar.
 Duas proibições duras do art. 13: a divulgação do estudo **em nenhuma hipótese** pode revelar dados pessoais, e **não se permite, em circunstância alguma**, transferir os dados a terceiro.
@@ -274,9 +314,11 @@ C: É vedado às operadoras de planos privados de assistência à saúde o trata
 ## anpd-lgpd-08 | Dados de crianças e de adolescentes (art. 14)
 
 ### A ideia
+? a | Qual é a regra geral para dados de crianças e de adolescentes? :: O tratamento tem de ser feito no melhor interesse deles.
 Criança e adolescente não avaliam risco como um adulto. Por isso, a regra geral é uma só: o tratamento tem de ser feito **no melhor interesse** deles. Quem é criança e quem é adolescente está no Estatuto da Criança e do Adolescente (Lei 8.069/1990).
 
 ### O consentimento dos pais
+? b | De quem é o consentimento para tratar dados de crianças, e como ele tem de ser? :: De pelo menos um dos pais ou do responsável legal. Específico e em destaque.
 > Art. 14, § 1º: o tratamento de dados pessoais de crianças deve ser realizado com o consentimento "específico e em destaque dado por pelo menos um dos pais ou pelo responsável legal".
 Repare em três detalhes:
 - o parágrafo fala em **crianças**;
@@ -284,6 +326,8 @@ Repare em três detalhes:
 - basta **um** dos pais, ou o responsável legal.
 
 ### Quando dá para coletar sem esse consentimento
+? c | Em que situações dá para coletar dados de criança sem o consentimento dos pais? :: Para contatar os pais ou o responsável (uma única vez, sem armazenar) ou para a proteção da criança.
+? d | O dado coletado sem consentimento pode ser repassado a terceiro? :: Em nenhum caso, sem o consentimento dos pais.
 Só em duas situações:
 - para **contatar os pais ou o responsável**: os dados são usados **uma única vez** e **não ficam armazenados**;
 - para a **proteção** da criança.
@@ -291,6 +335,7 @@ Em **nenhum caso** os dados podem ser repassados a terceiro sem o consentimento 
 ex: Uma criança se perde no shopping. O segurança pergunta o nome e o telefone da mãe para chamá-la. Pode: é para contatar a responsável, uma única vez, e ele não guarda o número.
 
 ### Deveres de quem trata
+? e | O que não se pode exigir para a criança participar de um jogo ou aplicativo? :: Dados além do estritamente necessário à atividade.
 - **Manter pública** a informação sobre os tipos de dados coletados, como são usados e como exercer os direitos.
 - **Não condicionar** a participação em jogos, aplicativos ou outras atividades ao fornecimento de dados além do **estritamente necessário**.
 - Fazer **todos os esforços razoáveis**, com a tecnologia disponível, para conferir que quem consentiu foi mesmo o responsável.
@@ -312,6 +357,7 @@ E: O controlador pode condicionar a participação de crianças em jogos ao forn
 Dado pessoal não é para guardar para sempre. O tratamento tem começo, meio e **fim**. Quando acaba, a regra é **eliminar**.
 
 ### As quatro hipóteses de término (art. 15)
+? a | Quais são as quatro hipóteses de término do tratamento? :: Finalidade alcançada (ou dados que deixaram de ser necessários); fim do período; comunicação do titular, inclusive revogando o consentimento; determinação da ANPD.
 - A **finalidade foi alcançada**, ou os dados deixaram de ser necessários ou pertinentes.
 - Acabou o **período** de tratamento.
 - O **titular comunicou** que quer o fim, inclusive revogando o consentimento, resguardado o interesse público.
@@ -319,6 +365,9 @@ Dado pessoal não é para guardar para sempre. O tratamento tem começo, meio e 
 ex: Você participou de um sorteio de loja. O sorteio aconteceu e o prêmio foi entregue. A finalidade foi alcançada: a loja não tem mais motivo para manter o seu cadastro do sorteio.
 
 ### A regra e as quatro exceções (art. 16)
+? b | O que se faz com os dados quando o tratamento termina? :: A regra é eliminar.
+? c | Para que os dados podem ser conservados depois do término? :: Obrigação legal ou regulatória; estudo por órgão de pesquisa; transferência a terceiro; uso exclusivo do controlador.
+? d | No "uso exclusivo do controlador", quais são as duas condições? :: É vedado o acesso por terceiro, e os dados têm de estar anonimizados.
 > Art. 16: os dados pessoais "serão eliminados após o término de seu tratamento", no âmbito e nos limites técnicos das atividades.
 A conservação é autorizada para:
 - cumprir **obrigação legal ou regulatória** do controlador;
@@ -328,6 +377,7 @@ A conservação é autorizada para:
 ex: A empresa desliga um funcionário, mas guarda a ficha dele pelo prazo que a legislação trabalhista e a previdenciária exigem. É conservação por obrigação legal.
 
 ### A ligação com os direitos do titular
+? e | O titular pediu a eliminação dos dados tratados com consentimento. O controlador é sempre obrigado a eliminar? :: Não. O direito não alcança as hipóteses de conservação do art. 16.
 O direito de pedir a eliminação dos dados tratados com consentimento (art. 18, VI) tem uma ressalva: **exceto nas hipóteses do art. 16**. Ou seja, mesmo com o pedido do titular, o controlador pode conservar nesses quatro casos.
 
 banca: Duas trocas clássicas. A primeira transforma a regra em absoluta: "os dados serão sempre eliminados". A segunda mexe na última exceção: tira a anonimização ou libera o acesso de terceiros no "uso exclusivo do controlador".
@@ -342,10 +392,12 @@ C: A comunicação do titular, inclusive no exercício do direito de revogar o c
 ## anpd-lgpd-10 | Os direitos do titular (arts. 17 a 22)
 
 ### A ideia
+? a | Quando e como o titular exerce os direitos do art. 18? :: A qualquer momento, mediante requisição ao controlador.
 Os dados são seus. O art. 17 diz que toda pessoa natural tem assegurada a **titularidade** de seus dados. O art. 18 lista o que você pode exigir do controlador.
 > Art. 18: o titular tem direito a obter do controlador, "a qualquer momento e mediante requisição", os direitos que o artigo lista.
 
 ### Os nove direitos do art. 18
+? b | Para que dados vale o direito de anonimização, bloqueio ou eliminação? :: Para dados desnecessários, excessivos ou tratados em desconformidade com a lei.
 - **Confirmação** de que existe tratamento.
 - **Acesso** aos dados.
 - **Correção** de dados incompletos, inexatos ou desatualizados.
@@ -358,6 +410,9 @@ Os dados são seus. O art. 17 diz que toda pessoa natural tem assegurada a **tit
 ex: Você descobre que uma operadora de telefonia tem o seu endereço antigo. Pode pedir a correção. Se ela guarda também a sua religião, sem necessidade nenhuma, pode pedir a eliminação desse dado excessivo.
 
 ### Como se exerce
+? c | Exercer os direitos tem custo para o titular? :: Não. É sem custos.
+? d | A portabilidade inclui os dados anonimizados? :: Não inclui os dados já anonimizados pelo controlador.
+? e | A quem o titular pode peticionar contra o controlador? :: À ANPD e aos organismos de defesa do consumidor.
 - Por **requerimento expresso** do titular ou de representante legalmente constituído.
 - **Sem custos** para o titular.
 - O titular pode **peticionar à ANPD** contra o controlador, e também aos **organismos de defesa do consumidor**.
@@ -366,6 +421,7 @@ ex: Você descobre que uma operadora de telefonia tem o seu endereço antigo. Po
 - A portabilidade **não inclui** dados já anonimizados pelo controlador.
 
 ### Os prazos do art. 19
+? f | Quais são os prazos para a confirmação de existência e o acesso? :: Em formato simplificado: imediatamente. Por declaração clara e completa: em até 15 dias, contados do requerimento.
 A confirmação de existência e o acesso são dados:
 - em **formato simplificado, imediatamente**; ou
 - por **declaração clara e completa**, em **até 15 dias**, contados da data do requerimento.
@@ -393,6 +449,7 @@ C: O direito de peticionar contra o controlador pode ser exercido perante a auto
 Hoje, muita decisão sobre a sua vida é tomada por um programa, sem ninguém olhar: aprovar ou negar crédito, filtrar currículo, definir o preço de um seguro. O art. 20 dá a você o direito de **pedir a revisão** dessas decisões.
 
 ### Quando o direito existe
+? a | Que decisões o titular pode pedir para rever? :: As tomadas unicamente com base em tratamento automatizado de dados pessoais que afetem os interesses dele.
 > Art. 20: o titular tem direito a solicitar a revisão de decisões tomadas "unicamente com base em tratamento automatizado" de dados pessoais que afetem seus interesses.
 São três condições juntas:
 - a decisão foi tomada **unicamente** por tratamento automatizado;
@@ -402,12 +459,15 @@ A lei inclui aqui as decisões que definem o seu **perfil pessoal, profissional,
 ex: Você pede um cartão pelo aplicativo e a recusa chega em dois segundos. Nenhuma pessoa analisou. Você pode pedir a revisão e perguntar que critérios foram usados.
 
 ### O que o controlador deve entregar
+? b | O que o controlador deve informar sobre a decisão automatizada? :: Os critérios e os procedimentos usados, de forma clara e adequada, respeitados os segredos comercial e industrial.
 Sempre que solicitado, o controlador deve dar **informações claras e adequadas** sobre os **critérios e os procedimentos** usados na decisão, respeitados os segredos comercial e industrial.
 
 ### E se ele alegar segredo?
+? c | O controlador negou a informação alegando segredo comercial. O que a ANPD pode fazer? :: Realizar auditoria para verificar se há aspectos discriminatórios no tratamento automatizado.
 Se o controlador se recusar a informar com base no segredo comercial e industrial, a **ANPD pode realizar auditoria** para verificar se há **aspectos discriminatórios** no tratamento automatizado.
 
 ### Um detalhe que derruba muita gente
+? d | A lei garante que a revisão seja feita por uma pessoa? :: Não. O art. 20 em vigor fala em solicitar a revisão; não diz que ela tem de ser feita por pessoa natural.
 O texto em vigor fala em "solicitar a revisão". Ele **não diz** que a revisão tem de ser feita por uma pessoa. Se o item afirmar que a lei garante revisão "por pessoa natural", desconfie: essas palavras não estão no art. 20.
 
 banca: A banca joga com o "unicamente": troca por "ainda que parcialmente" e o item fica errado. Também transforma o "poderá realizar auditoria" em dever automático, ou diz que o segredo comercial impede qualquer verificação.
@@ -425,17 +485,21 @@ E: A LGPD assegura ao titular que a revisão de decisão automatizada seja reali
 Órgão público trata dado o tempo todo: saúde, escola, imposto, benefício. A LGPD vale para ele, com regras próprias. O ponto de partida é que o tratamento público tem de servir à **finalidade pública**, ao **interesse público** e às **competências legais** do órgão.
 
 ### As duas condições do art. 23
+? a | Que duas condições o art. 23 impõe ao poder público? :: Informar as hipóteses em que trata dados, de preferência no site, e indicar um encarregado.
 - **Informar** as hipóteses em que trata dados, com informações claras e atualizadas sobre a previsão legal, a finalidade, os procedimentos e as práticas, em veículos de fácil acesso, **preferencialmente no site**.
 - **Indicar um encarregado**.
 Os prazos e os procedimentos para o titular exercer seus direitos perante o poder público seguem a legislação específica: Lei do Habeas Data, Lei 9.784/1999 (processo administrativo) e Lei de Acesso à Informação.
 
 ### Quem é tratado como poder público
+? b | Como a LGPD trata a estatal que atua em concorrência? E a que operacionaliza políticas públicas? :: Em concorrência: como empresa privada. Operacionalizando políticas públicas: como poder público.
+? c | Como a LGPD trata os cartórios? :: Como as pessoas jurídicas de direito público.
 - **Cartórios** (serviços notariais e de registro): mesmo tratamento das pessoas jurídicas de direito público.
 - **Empresas públicas e sociedades de economia mista** que atuam em **concorrência**: mesmo tratamento das **empresas privadas**.
 - As mesmas estatais, quando estão **operacionalizando políticas públicas**: mesmo tratamento do **poder público**.
 ex: Um banco estatal, quando vende seguro e disputa cliente com os bancos privados, segue as regras do setor privado. Quando paga um benefício social do governo, segue as regras do poder público.
 
 ### Compartilhar dados com empresas privadas (art. 26)
+? d | O poder público pode transferir a entidades privadas os dados das suas bases? :: A regra é a vedação. As exceções: execução descentralizada de atividade pública; dados acessíveis publicamente; previsão legal ou contrato e convênio; prevenção de fraudes ou proteção do titular.
 A regra é a **vedação**: o poder público não pode transferir a entidades privadas os dados das bases a que tem acesso. As exceções são:
 - **execução descentralizada** de atividade pública que exija a transferência, só para esse fim;
 - dados **acessíveis publicamente**;
@@ -445,6 +509,7 @@ Os contratos e os convênios devem ser **comunicados à ANPD**.
 Pelo art. 27, a comunicação de dados de órgão público a pessoa privada é **informada à ANPD** e depende de **consentimento do titular**, salvo nas hipóteses de dispensa de consentimento, quando houver publicidade na forma do art. 23, ou nas exceções do art. 26.
 
 ### O que a ANPD pode fazer com um órgão público
+? e | Órgão público pode levar multa pela LGPD? :: Não. Cabem advertência, publicização, bloqueio, eliminação, as duas suspensões e a proibição.
 - **Solicitar** informações sobre o tratamento e emitir parecer técnico (art. 29).
 - **Enviar informe** com medidas para fazer cessar a violação (art. 31).
 - **Solicitar a publicação** de relatórios de impacto e **sugerir** boas práticas (art. 32).
@@ -467,6 +532,9 @@ C: Os contratos e os convênios que respaldam a transferência de dados pessoais
 Quando os seus dados vão para outro país, eles saem do alcance direto da lei brasileira. Por isso a transferência internacional **só é permitida** nos casos que a lei lista. A pergunta de fundo é sempre: lá fora, o dado continua protegido?
 
 ### As hipóteses do art. 33
+? a | A transferência internacional só pode ir para país com proteção adequada? :: Não. Essa é uma das hipóteses do art. 33; há outras, como as garantias oferecidas pelo controlador e o consentimento específico.
+? b | Que formas de garantia o controlador pode oferecer? :: Cláusulas contratuais específicas, cláusulas-padrão contratuais, normas corporativas globais, ou selos, certificados e códigos de conduta.
+? c | Como tem de ser o consentimento para a transferência internacional? :: Específico e em destaque, com informação prévia sobre o caráter internacional da operação.
 - O destino é **país ou organismo internacional com proteção adequada**.
 - O controlador **oferece e comprova garantias**, na forma de: cláusulas contratuais específicas, **cláusulas-padrão contratuais**, **normas corporativas globais**, ou selos, certificados e códigos de conduta.
 - **Cooperação jurídica internacional** entre órgãos de inteligência, investigação e persecução.
@@ -479,6 +547,8 @@ Quando os seus dados vão para outro país, eles saem do alcance direto da lei b
 ex: Uma empresa brasileira usa um sistema de folha de pagamento hospedado em outro país. Ela pode se apoiar em cláusulas-padrão contratuais com o fornecedor: é um modelo de contrato que obriga o fornecedor a proteger os dados como a LGPD exige.
 
 ### O papel da ANPD
+? d | Quem avalia se um país tem nível de proteção adequado? :: A ANPD.
+? e | Quem define o conteúdo das cláusulas-padrão contratuais? :: A ANPD.
 - É a **ANPD que avalia** se um país tem nível de proteção adequado. Ela considera as leis do país, a natureza dos dados, os princípios e direitos, as medidas de segurança e as garantias judiciais e institucionais (art. 34).
 - É a **ANPD que define** o conteúdo das cláusulas-padrão e **verifica** as cláusulas específicas, as normas corporativas globais e os selos e certificados (art. 35).
 - A ANPD pode designar **organismos de certificação**, que ficam sob a sua fiscalização; os atos deles podem ser revistos ou anulados por ela.
@@ -496,17 +566,22 @@ C: O consentimento do titular para a transferência internacional deve ser espec
 ## anpd-lgpd-14 | Os agentes, o registro, o relatório de impacto e o encarregado (arts. 37 a 41)
 
 ### Controlador e operador na prática
+? a | Quem tem de manter registro das operações de tratamento? :: O controlador e o operador, especialmente quando a base for o legítimo interesse.
+? b | Como o operador deve tratar os dados? :: Segundo as instruções do controlador, que verifica se elas estão sendo seguidas.
 - Os dois têm de **manter registro** das operações de tratamento que fazem, **especialmente** quando a base for o legítimo interesse (art. 37).
 - O **operador** trata os dados **segundo as instruções do controlador**, e o controlador **verifica** se as instruções e as normas estão sendo seguidas (art. 39).
 ex: O escritório de contabilidade (operador) processa a folha de pagamento de uma padaria (controladora). O escritório não pode aproveitar os dados dos padeiros para oferecer empréstimo: isso está fora das instruções.
 
 ### Relatório de impacto à proteção de dados pessoais (art. 38)
+? c | Quem elabora o relatório de impacto à proteção de dados pessoais? :: O controlador. A ANPD pode determinar que ele elabore.
 É o documento em que o controlador descreve os tratamentos que podem gerar risco e as medidas para reduzi-lo.
 - Quem elabora: o **controlador**.
 - A ANPD **pode determinar** que ele elabore, inclusive sobre dados sensíveis.
 - Conteúdo mínimo: a descrição dos **tipos de dados** coletados, a **metodologia** da coleta e da segurança, e a **análise do controlador** sobre medidas, salvaguardas e mecanismos de mitigação de risco.
 
 ### O encarregado (art. 41)
+? d | Onde a identidade e o contato do encarregado devem ser divulgados? :: Publicamente, de forma clara e objetiva, de preferência no site do controlador.
+? e | A indicação de encarregado pode ser dispensada? :: A ANPD pode prever hipóteses de dispensa, conforme a natureza e o porte da entidade ou o volume de operações.
 > Art. 41: "O controlador deverá indicar encarregado pelo tratamento de dados pessoais."
 - A **identidade e o contato** do encarregado devem ser divulgados **publicamente**, de forma clara e objetiva, **preferencialmente no site** do controlador.
 - As atividades dele: aceitar reclamações e comunicações dos titulares, prestar esclarecimentos e adotar providências; receber comunicações da ANPD e adotar providências; orientar funcionários e contratados; executar as demais atribuições que o controlador determinar ou que as normas complementares fixarem.
@@ -530,10 +605,13 @@ C: O controlador e o operador devem manter registro das operações de tratament
 ## anpd-lgpd-15 | Quem paga pelo dano: responsabilidade e ressarcimento (arts. 42 a 45)
 
 ### A regra
+? a | Que tipos de dano o art. 42 manda reparar? :: Patrimonial, moral, individual ou coletivo.
 > Art. 42: o controlador ou o operador que causar a outrem "dano patrimonial, moral, individual ou coletivo", em violação à legislação de proteção de dados, "é obrigado a repará-lo".
 Guarde os quatro adjetivos: **patrimonial, moral, individual ou coletivo**.
 
 ### Quem responde junto (solidariedade)
+? b | Quando o operador responde solidariamente? :: Quando descumpre a legislação ou não segue as instruções lícitas do controlador.
+? c | Quem pagou a reparação fica sozinho com o prejuízo? :: Não. Tem direito de regresso contra os outros responsáveis, na medida da participação de cada um.
 Responder solidariamente quer dizer que a vítima pode cobrar tudo de qualquer um dos responsáveis.
 - O **operador** responde solidariamente quando **descumpre a legislação** ou quando **não segue as instruções lícitas** do controlador. Nesses casos, ele é equiparado ao controlador.
 - Os **controladores diretamente envolvidos** no tratamento que causou o dano respondem solidariamente.
@@ -541,9 +619,11 @@ Responder solidariamente quer dizer que a vítima pode cobrar tudo de qualquer u
 ex: Uma loja (controladora) contrata uma empresa de marketing (operadora) para enviar promoções. A empresa de marketing, por conta própria, vende a lista de clientes. Ela desobedeceu às instruções: passa a responder como se fosse controladora.
 
 ### A prova
+? d | Em que situações o juiz pode inverter o ônus da prova a favor do titular? :: Alegação verossímil, hipossuficiência para produzir a prova, ou prova excessivamente onerosa para o titular.
 O juiz **pode inverter o ônus da prova** a favor do titular em três situações: quando a alegação for **verossímil**, quando houver **hipossuficiência** para produzir a prova, ou quando a prova for **excessivamente onerosa** para o titular.
 
 ### As três saídas do art. 43
+? e | Quais são as três excludentes de responsabilidade, e quem as prova? :: Não realizou o tratamento; realizou, mas não houve violação da lei; culpa exclusiva do titular ou de terceiro. Quem prova é o agente.
 Os agentes **só não** são responsabilizados quando **provarem** que:
 - **não realizaram** o tratamento que lhes é atribuído;
 - realizaram, mas **não houve violação** à legislação de proteção de dados;
@@ -573,6 +653,7 @@ C: Aquele que reparar o dano ao titular tem direito de regresso contra os demais
 Não basta ter motivo para tratar o dado: é preciso **proteger** o dado. Segurança é dever dos dois agentes de tratamento.
 
 ### O dever de segurança (art. 46)
+? a | Desde quando as medidas de segurança devem ser observadas? :: Desde a fase de concepção do produto ou do serviço até a sua execução.
 Os agentes devem adotar **medidas de segurança, técnicas e administrativas**, para proteger os dados de acessos não autorizados e de destruição, perda, alteração, comunicação ou qualquer tratamento inadequado ou ilícito.
 - **Técnica** é senha, criptografia, cópia de segurança.
 - **Administrativa** é regra interna, treinamento, controle de quem pode ver o quê.
@@ -580,9 +661,13 @@ Os agentes devem adotar **medidas de segurança, técnicas e administrativas**, 
 Essa frase é a **privacidade desde a concepção** (em inglês, privacy by design): a proteção nasce junto com o produto, não é remendo posto depois.
 
 ### O sigilo continua depois (art. 47)
+? b | O dever de segurança acaba quando o tratamento termina? :: Não. Continua mesmo após o término.
 Os agentes, **ou qualquer outra pessoa** que participe de alguma fase do tratamento, têm de garantir a segurança dos dados **mesmo após o término** do tratamento.
 
 ### Incidente de segurança (art. 48)
+? c | Quem comunica o incidente de segurança, e a quem? :: O controlador, à ANPD e ao titular.
+? d | Todo incidente de segurança precisa ser comunicado? :: Não. Só o que puder acarretar risco ou dano relevante aos titulares.
+? e | A LGPD fixa em dias o prazo para comunicar o incidente? :: Não. Fala em prazo razoável, conforme definido pela ANPD.
 Incidente é quando algo dá errado com os dados: vazamento, invasão, perda.
 - Quem comunica: o **controlador**.
 - A quem: à **ANPD e ao titular**.
@@ -598,6 +683,7 @@ A comunicação deve trazer, no mínimo:
 ex: Um laboratório descobre que alguém copiou os resultados de exames de milhares de pacientes. São dados de saúde e o risco é relevante: ele tem de comunicar à ANPD e aos pacientes.
 
 ### O que a ANPD faz ao receber a comunicação
+? f | O que conta a favor do controlador na avaliação da gravidade do incidente? :: Provar que os dados estavam ininteligíveis para terceiros, por exemplo, criptografados.
 Ela avalia a gravidade e pode determinar providências, como a **ampla divulgação do fato** em meios de comunicação e **medidas para reverter ou mitigar** os efeitos. No juízo de gravidade, conta a favor do controlador provar que os dados estavam **ininteligíveis** para terceiros (por exemplo, criptografados).
 
 ### Sistemas (art. 49)
@@ -617,6 +703,7 @@ C: A obrigação de garantir a segurança da informação em relação aos dados
 ## anpd-lgpd-17 | Boas práticas e governança (arts. 50 e 51)
 
 ### A ideia
+? a | Formular regras de boas práticas e de governança é obrigação? :: Não. A lei diz "poderão": é faculdade, exercida individualmente ou por associações.
 A lei não quer só punir depois: quer que a organização se arrume antes. Este capítulo trata das regras internas que controladores e operadores **podem** criar para tratar dados do jeito certo.
 > Art. 50: controladores e operadores "poderão formular regras de boas práticas e de governança".
 A palavra é **poderão**. É faculdade, não obrigação. Eles podem fazer isso sozinhos ou por meio de **associações**.
@@ -626,6 +713,7 @@ Condições de organização, regime de funcionamento, procedimentos (inclusive 
 Ao criá-las, leva-se em conta a natureza, o escopo e a finalidade do tratamento, e a probabilidade e a gravidade dos riscos e dos benefícios.
 
 ### O programa de governança em privacidade
+? b | Cite três dos oito requisitos mínimos do programa de governança em privacidade. :: Comprometimento do controlador; valer para todo o conjunto de dados; adaptação à estrutura e à sensibilidade dos dados; avaliação de impactos e riscos; confiança com o titular; integração à governança geral; planos de resposta a incidentes; atualização constante.
 O controlador pode implementar um programa que, **no mínimo**:
 - demonstre o **comprometimento** do controlador com processos e políticas internas;
 - valha para **todo o conjunto de dados** sob seu controle, não importa como foram coletados;
@@ -639,10 +727,12 @@ O controlador deve conseguir **demonstrar a efetividade** do programa, em especi
 ex: Um hospital cria uma política de privacidade interna, treina os funcionários todo ano, define quem responde quando há vazamento e revê tudo a cada seis meses. Isso é um programa de governança em privacidade.
 
 ### Publicar e reconhecer
+? c | As regras de boas práticas precisam de aprovação da ANPD para valer? :: Não. Devem ser publicadas e atualizadas periodicamente, e podem ser reconhecidas e divulgadas pela ANPD.
 As regras de boas práticas **devem ser publicadas e atualizadas periodicamente**, e **podem ser reconhecidas e divulgadas** pela ANPD.
 Pelo art. 51, a ANPD **estimula** a adoção de padrões técnicos que facilitem o controle dos dados pelos titulares.
 
 ### Por que vale a pena para a organização
+? d | Que vantagem tem quem adota política de boas práticas e governança? :: A ANPD considera isso na hora de aplicar a sanção.
 Na hora de aplicar uma sanção, a ANPD considera a **adoção de política de boas práticas e governança** (art. 52, § 1º, IX). Quem se organizou antes é tratado com menos rigor.
 
 banca: A armadilha é o "deverão" no lugar do "poderão": o item transforma faculdade em obrigação. A outra é dizer que as boas práticas só valem depois de aprovadas pela ANPD. A discursiva da ANM 2025 (cargo 13) cobrou governança em privacidade e boas práticas: saber a lista do programa rende pontos.
@@ -660,6 +750,8 @@ C: O programa de governança em privacidade deve contar, entre outros requisitos
 Quem descumpre a LGPD pode ser punido pela ANPD. As punições administrativas estão numa lista. Decore a lista e, principalmente, **os números da multa**.
 
 ### A lista do art. 52
+? a | Quais são os números da multa simples? :: Até 2% do faturamento no Brasil no último exercício, excluídos os tributos, limitada a R$ 50 milhões por infração.
+? b | Por quanto tempo valem as duas suspensões? :: Por no máximo 6 meses, prorrogável por igual período.
 - **Advertência**, com prazo para medidas corretivas.
 - **Multa simples**, de **até 2% do faturamento** da pessoa jurídica de direito privado, grupo ou conglomerado **no Brasil**, no **último exercício**, **excluídos os tributos**, limitada a **R$ 50 milhões por infração**.
 - **Multa diária**, respeitado o mesmo limite total.
@@ -672,11 +764,15 @@ Quem descumpre a LGPD pode ser punido pela ANPD. As punições administrativas e
 ex: Uma empresa faturou R$ 10 bilhões no Brasil no último exercício. Dois por cento disso seriam R$ 200 milhões. Mas a multa simples para em R$ 50 milhões por infração: vale o teto.
 
 ### Como a sanção é aplicada
+? c | Como as sanções são aplicadas? :: Depois de procedimento administrativo com ampla defesa, de forma gradativa, isolada ou cumulativa.
 - Só depois de **procedimento administrativo** com **ampla defesa**.
 - De forma **gradativa, isolada ou cumulativa**, conforme o caso concreto.
 - Considerando, entre outros critérios: gravidade e natureza da infração, boa-fé, vantagem obtida ou pretendida, condição econômica, reincidência, grau do dano, cooperação, mecanismos internos para minimizar o dano, política de boas práticas, pronta adoção de medidas corretivas e proporcionalidade.
 
 ### As regras especiais
+? d | Quando as suspensões e a proibição podem ser aplicadas? :: Só depois de já imposta, no mesmo caso, ao menos uma destas: multa simples, multa diária, publicização, bloqueio ou eliminação.
+? e | Para onde vai o dinheiro das multas? :: Para o Fundo de Defesa de Direitos Difusos.
+? f | Que sanção não se aplica a órgãos e entidades públicos? :: A multa.
 - **Órgãos e entidades públicos:** podem receber advertência, publicização, bloqueio, eliminação, as duas suspensões e a proibição. **Multa, não.**
 - **As três sanções mais pesadas** (as duas suspensões e a proibição) só podem ser aplicadas **depois** de já ter sido imposta, no mesmo caso, ao menos uma destas: multa simples, multa diária, publicização, bloqueio ou eliminação.
 - As sanções da LGPD **não substituem** as sanções administrativas, civis ou penais do Código de Defesa do Consumidor e de legislação específica.
@@ -701,6 +797,8 @@ C: As sanções administrativas da LGPD são aplicadas após procedimento admini
 ## anpd-lgpd-19 | A ANPD e o Conselho Nacional (arts. 55-A a 58-B)
 
 ### O que é a ANPD hoje
+? a | Qual é a natureza da ANPD hoje? :: É agência: autarquia de natureza especial, vinculada ao Ministério da Justiça e Segurança Pública.
+? b | Vinculada quer dizer subordinada? :: Não. O ministério não manda nas decisões dela. A ANPD tem autonomia funcional, técnica, decisória, administrativa e financeira.
 > Art. 55-A, na redação em vigor: a ANPD é a "Agência Nacional de Proteção de Dados", "autarquia de natureza especial vinculada ao Ministério da Justiça e Segurança Pública".
 Traduzindo:
 - **Autarquia** é uma entidade pública com personalidade própria, criada por lei para cuidar de um assunto. Faz parte da administração **indireta**.
@@ -719,6 +817,8 @@ A ANPD já foi órgão da Presidência da República. Esse texto antigo ainda ap
 - Unidades administrativas e unidades especializadas.
 
 ### O Conselho Diretor (arts. 55-D e 55-E)
+? c | Quantos diretores tem o Conselho Diretor, e qual é o mandato? :: Cinco, incluído o Diretor-Presidente, com mandato de quatro anos.
+? d | Como os diretores são escolhidos? :: São escolhidos e nomeados pelo Presidente da República, depois de aprovação pelo Senado Federal.
 - **Cinco diretores**, incluído o Diretor-Presidente.
 - Escolhidos e nomeados pelo **Presidente da República**, depois de **aprovação pelo Senado Federal**.
 - Brasileiros, de reputação ilibada, com nível superior e elevado conceito na área.
@@ -726,6 +826,7 @@ A ANPD já foi órgão da Presidência da República. Esse texto antigo ainda ap
 - Só perdem o cargo por **renúncia**, **condenação judicial transitada em julgado** ou **demissão** em processo administrativo disciplinar.
 
 ### O que a ANPD faz (art. 55-J)
+? e | O que deve vir antes dos regulamentos e das normas da ANPD? :: Consulta e audiência públicas e análise de impacto regulatório.
 A lista é longa. O que mais cai:
 - **zelar** pela proteção dos dados pessoais;
 - **elaborar diretrizes** para a Política Nacional de Proteção de Dados Pessoais e da Privacidade;
@@ -742,9 +843,11 @@ Três regras de conduta da própria ANPD:
 - deve **coordenar-se** com os outros reguladores setoriais.
 
 ### Só a ANPD pune pela LGPD (art. 55-K)
+? f | Quem aplica as sanções da LGPD? :: Exclusivamente a ANPD.
 A aplicação das sanções da LGPD compete **exclusivamente** à ANPD. Em proteção de dados, as competências dela **prevalecem** sobre as de outros órgãos. Ela é o **órgão central de interpretação** da lei.
 
 ### O Conselho Nacional de Proteção de Dados Pessoais e da Privacidade (arts. 58-A e 58-B)
+? g | O que faz o Conselho Nacional de Proteção de Dados Pessoais e da Privacidade, e quantos representantes ele tem? :: Propõe, sugere e estuda; não pune. Tem 23 representantes.
 É um colegiado que **propõe, sugere e estuda**. Quem decide e pune é a ANPD.
 São **23 representantes**:
 - 5 do Poder Executivo federal;
