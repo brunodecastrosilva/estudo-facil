@@ -138,3 +138,18 @@ desconfiança, mas não decidem sozinhas: ANATEL 50 traz "sempre" e está certo,
 - Cursos de formação da ANA, da ANTAQ, da ANS e da ANATEL, que cobram Lei 13.848 e AIR.
 - Mais provas com LGPD: FUNPRESP-EXE 2024, SEPLAG-CE 2024, SUSEP 2025 e Câmara dos Deputados 2025.
 - Português e Inglês: mapear os tipos de item (inferência, reescrita, regência, pontuação, vocabulário).
+
+## 8. Apostilas (1.13.0, 26/11/2026)
+
+- As questões saíram do app (o Bruno resolve no Tec). O caderno da banca passa a guiar as **apostilas**: cada capítulo
+  tem o bloco "Como o Cebraspe cobra", com a armadilha da seção 3 que mais pega naquele assunto e a referência da prova
+  (órgão, ano e número do item, sem o texto), e modelos de item certo e errado escritos pelo instrutor.
+- Regras de escrita: leitor leigo (cada termo explicado onde aparece), frases curtas, um exemplo do dia a dia por
+  ideia; todo número, prazo e artigo conferido no texto da lei que está em `leis/` no dia da escrita; o que não pôde
+  ser conferido fica de fora ou é apontado para a norma certa (ex.: o prazo de comunicação de incidente está em
+  resolução da ANPD, não na LGPD). Modelo de item nunca reescreve item de prova.
+- Feita: LGPD (`apostilas/anpd-lgpd.md`, 19 capítulos, base: Planalto, cópia de 16/11/2026, com a Lei 15.352/2026).
+- Fila, pela ordem do peso: Português, Direito Administrativo, Regulamentos da ANPD, Direito Constitucional,
+  Regulação, e as demais; do Cofen, contratos administrativos primeiro.
+- **O Cofen é do Instituto Quadrix**, não do Cebraspe. As apostilas são escritas para o Cebraspe (foco: ANPD). Antes de
+  escrever material só do Cofen, levantar provas do Quadrix e anotar aqui o jeito de a banca escrever.

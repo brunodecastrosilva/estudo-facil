@@ -265,4 +265,214 @@ const EDITAL_ANPD = {
   ]
 };
 
-const BIBLIOTECA = [EDITAL_ANPD];
+/* Cofen 2026 · Analista Técnico (código 406), banca Instituto Quadrix. Edital nº 1, publicado em 25/11/2026.
+   Conferido em 26/11/2026 no edital: página oficial do Cofen (banca, tipo de item, pontuação, notas mínimas, duração,
+   discursiva, requisito do cargo e disciplinas) e PDF do edital (número de itens por bloco, cronograma do Anexo I,
+   vagas e a lista de assuntos). O edital só dá o total de itens de cada bloco (40, 30 e 50): a divisão por disciplina
+   é ESTIMATIVA do app.
+   Integração: o que o Cofen cobra e a ANPD também cobra usa a MESMA disciplina e o MESMO assunto (pelo nome). Assunto que
+   só o Cofen cobra entra com id próprio ({ id, nome }), dentro da disciplina comum ou numa disciplina nova. */
+const daAnpd = (m, ...is) => { const T = EDITAL_ANPD.materias.find(x => x.id === m).topicos; return is.length ? is.map(i => T[i]) : [...T]; };
+const soCofen = (pre, nomes) => nomes.map((nome, i) => ({ id: `cofen-${pre}-${String(i + 1).padStart(2, '0')}`, nome }));
+const EDITAL_COFEN = {
+  id: "cofen-2027",
+  base: "cofen",
+  previsto: false,
+  conferido: "2026-11-26",
+  sigla: "Cofen",
+  orgao: "Conselho Federal de Enfermagem",
+  cargo: "Analista Técnico (código 406)",
+  banca: "Instituto Quadrix",
+  site: "https://quadrix.org.br/informacoes/3002/",
+  vagas: "1 imediata (ampla concorrência) e cadastro de reserva: 25 de ampla concorrência, 2 para pessoas com deficiência, 10 para pessoas negras, 1 para indígenas e 1 para quilombolas",
+  lotacao: "Brasília/DF",
+  dataEdital: "2026-11-25",
+  dataProva: "2027-02-28",
+  notaPesos: "120 itens de certo ou errado, 1 ponto cada; errado desconta 1 ponto. O edital dá o total de cada bloco (40 básicos, 30 complementares e 50 específicos); a divisão por disciplina é estimativa do Estudo Fácil. Notas mínimas: 10 em básicos, 8 em complementares, 12 em específicos e 34 no total.",
+  fatos: [
+    ["Edital", "Edital nº 1, publicado em 25/11/2026"],
+    ["Banca", "Instituto Quadrix (não é o Cebraspe)"],
+    ["Requisito", "Graduação em qualquer curso, reconhecido pelo MEC"],
+    ["Vagas", "1 imediata e 39 de cadastro de reserva, em Brasília/DF"],
+    ["Inscrições", "De 26/11/2026 a 11/01/2027; taxa de R$ 100,00, paga até 12/01/2027"],
+    ["Prova objetiva", "120 itens de certo ou errado: 40 básicos, 30 complementares e 50 específicos; errado desconta 1 ponto"],
+    ["Notas mínimas", "10 em básicos, 8 em complementares, 12 em específicos e 34 no total"],
+    ["Discursiva", "Texto de 20 a 30 linhas sobre conhecimentos específicos; vale 10 pontos, mínimo de 5"],
+    ["Dia da prova", "28/02/2027, à tarde, com 4 horas para a objetiva e a discursiva"],
+    ["Títulos", "Até 10 pontos, só para classificar"]
+  ],
+  fases: [
+    { id: "f2", nome: "Cobrir o edital", ini: "2026-11-26", fim: "2027-01-28", ate: "até 30 dias antes da prova",
+      foco: "Primeiro o que a ANPD também cobra: Português, Direito Administrativo, Constitucional e LGPD. Depois, o que é só do Cofen.",
+      metas: [
+        "Feche contratos administrativos e gestão de contratos: é o maior bloco dos específicos.",
+        "Leia a Lei 5.905/1973, o Decreto 94.406/1987 e as três resoluções do Cofen.",
+        "Raciocínio lógico e informática: sessões curtas, com muitas questões no Tec.",
+        "Resolva questões do Instituto Quadrix a cada assunto estudado."
+      ] },
+    { id: "f3", nome: "Reta final", ini: "2027-01-29", fim: "2027-02-28", ate: "últimos 30 dias",
+      foco: "Revisão, lei seca e questões da banca. Nada de assunto novo.",
+      metas: [
+        "Releia a legislação do Cofen e a parte de contratos da Lei 14.133/2021.",
+        "Refaça no Tec as questões que você errou.",
+        "Escreva duas discursivas de 30 linhas sobre gestão de contratos ou de projetos."
+      ] }
+  ],
+  fontes: [
+    ["Edital nº 1/2026, na página do Cofen", "https://www.cofen.gov.br/edital-no-1-2026-concurso-publico-para-provimento-de-vagas-e-formacao-de-cadastro-dereserva-para-cargos-de-nivel-superior/"],
+    ["Página do concurso no Instituto Quadrix", "https://quadrix.org.br/informacoes/3002/"]
+  ],
+  prova: {
+    minPct: 28,
+    naoZerar: true,
+    grupos: [
+      { id: "basicos", nome: "Conhecimentos básicos", q: 40, valor: 1 },
+      { id: "compl", nome: "Conhecimentos complementares", q: 30, valor: 1 },
+      { id: "esp", nome: "Conhecimentos específicos", q: 50, valor: 1 }
+    ]
+  },
+  datas: [
+    { id: "c01", tipo: "publicacao", titulo: "Cofen: edital publicado", ini: "2026-11-25" },
+    { id: "c02", tipo: "aviso", titulo: "Cofen: último dia de inscrição", ini: "2027-01-11", acao: true },
+    { id: "c03", tipo: "aviso", titulo: "Cofen: último dia para pagar a inscrição", ini: "2027-01-12", acao: true },
+    { id: "c04", tipo: "aviso", titulo: "Cofen: locais e horários de prova", ini: "2027-02-23" },
+    { id: "c05", tipo: "prova", titulo: "Cofen: provas objetiva e discursiva (à tarde)", ini: "2027-02-28", acao: true },
+    { id: "c06", tipo: "aviso", titulo: "Cofen: gabarito preliminar", ini: "2027-03-01" },
+    { id: "c07", tipo: "aviso", titulo: "Cofen: resultado definitivo da objetiva", ini: "2027-04-02" },
+    { id: "c08", tipo: "aviso", titulo: "Cofen: resultado definitivo da discursiva", ini: "2027-04-20" }
+  ],
+  materias: [
+    /* ----- conhecimentos básicos (40 itens) ----- */
+    { id: "anpd-lp", grupo: "basicos", nome: "Língua Portuguesa", q: 16,
+      topicos: [...daAnpd("anpd-lp"), ...soCofen("lp", [
+        "Figuras de linguagem, denotação e conotação",
+        "Significado das palavras: sinônimos, antônimos e sentido no contexto",
+        "Adequação da linguagem aos contextos"
+      ])] },
+    { id: "cofen-rlm", grupo: "basicos", nome: "Raciocínio Lógico e Matemática", q: 12, cor: 2,
+      dica: "Pouca teoria e muito treino: aprenda o método de cada tipo de conta e repita no Tec.",
+      topicos: [
+        "Operações com conjuntos numéricos",
+        "Razão, proporção, porcentagem e regra de três simples e composta",
+        "Funções e equações do 1º e do 2º grau",
+        "Progressões aritmética e geométrica",
+        "Princípios de contagem: arranjos, combinações e permutações",
+        "Noções de probabilidade",
+        "Estruturas lógicas e argumentação: dedução e indução",
+        "Diagramas lógicos",
+        "Proposições e conectivos",
+        "Raciocínio verbal, matemático e sequencial",
+        "Orientação no espaço e no tempo",
+        "Estatística básica: média, moda e mediana",
+        "Interpretação de gráficos e tabelas",
+        "Juros simples e compostos",
+        "Descontos e taxas"
+      ] },
+    { id: "cofen-info", grupo: "basicos", nome: "Noções de Informática", q: 12, cor: 5,
+      dica: "A banca cobra o uso do dia a dia: atalhos, menus e conceitos. Abra os programas e confira.",
+      topicos: [
+        "Hardware, software e periféricos",
+        "Editores de texto, planilhas e apresentações (Microsoft 365 e Google Workspace)",
+        "Ferramentas de comunicação (Teams e Meet)",
+        "Noções de Windows 10 e 11",
+        "Sistemas móveis: Android e iOS",
+        "Conceitos básicos de redes, internet e intranet",
+        "Navegadores: Chrome, Firefox e Edge",
+        "E-mail (Outlook e webmail) e sites de busca",
+        "Organização de arquivos e pastas",
+        "Armazenamento em nuvem: OneDrive e Google Drive",
+        "Segurança: vírus, antivírus e firewall",
+        "Procedimentos de backup",
+        "Conceitos básicos de inteligência artificial e de computação em nuvem"
+      ] },
+    /* ----- conhecimentos complementares (30 itens) ----- */
+    { id: "cofen-enf", grupo: "compl", nome: "Legislação do Cofen e da enfermagem", q: 8, cor: 4,
+      dica: "É a lei da casa: toda prova de conselho cobra a lei que o criou. Leia as cinco normas mais de uma vez.",
+      topicos: [
+        "Lei 5.905/1973: criação do Conselho Federal e dos Conselhos Regionais de Enfermagem",
+        "Decreto 94.406/1987: regulamento do exercício da enfermagem",
+        "Resolução Cofen nº 507/2016",
+        "Resolução Cofen nº 726/2023",
+        "Resolução Cofen nº 751/2024"
+      ] },
+    { id: "anpd-lgpd", grupo: "compl", nome: "LGPD (Lei 13.709/2018)", q: 4, topicos: daAnpd("anpd-lgpd") },
+    { id: "anpd-dc", grupo: "compl", nome: "Direito Constitucional", q: 8,
+      topicos: [...daAnpd("anpd-dc", 0, 1, 5, 6), ...soCofen("dc", [
+        "Supremacia da Constituição e hierarquia das normas",
+        "Direitos sociais",
+        "Separação dos Poderes e Poder Judiciário",
+        "Funções essenciais à Justiça",
+        "Ordem social: saúde (arts. 196 a 200)"
+      ])] },
+    { id: "anpd-da", grupo: "compl", nome: "Direito Administrativo", q: 10,
+      topicos: [...daAnpd("anpd-da", 0, 1, 2, 3, 4, 5, 6, 8, 9, 10), ...soCofen("da", [
+        "Conceito, características e fontes do Direito Administrativo",
+        "Conselhos de fiscalização profissional: natureza jurídica, poder de polícia, autonomia e controle do TCU",
+        "Empregado público e o regime dos empregados dos conselhos profissionais",
+        "Sindicância e processo administrativo disciplinar"
+      ])] },
+    /* ----- conhecimentos específicos do Analista Técnico (50 itens) ----- */
+    { id: "cofen-ct", grupo: "esp", nome: "Contratos administrativos e gestão de contratos", q: 18, cor: 0,
+      dica: "O coração do cargo: o Analista Técnico acompanha contratos. Estude com a Lei 14.133/2021 aberta, do art. 89 em diante.",
+      topicos: [
+        "Contratos administrativos: características e particularidades",
+        "Cláusulas necessárias e cláusulas exorbitantes",
+        "Elaboração e formalização dos contratos",
+        "Duração e prorrogação dos contratos",
+        "Alterações contratuais: quantitativas e qualitativas",
+        "Equilíbrio econômico-financeiro: reajuste, repactuação e reequilíbrio",
+        "Execução e inexecução contratual",
+        "Sanções administrativas e extinção do contrato",
+        "Gestores e fiscais de contrato: designação e atribuições",
+        "Fiscalização técnica e administrativa",
+        "Recebimento do objeto",
+        "Acompanhamento da execução contratual",
+        "Procedimentos para pagamento",
+        "Aditamentos contratuais",
+        "Aplicação de penalidades",
+        "Processos de rescisão",
+        "Boas práticas na gestão de contratos públicos"
+      ] },
+    { id: "cofen-proj", grupo: "esp", nome: "Gestão de projetos", q: 9, cor: 3,
+      dica: "Decore o ciclo de vida e o que cada área do gerenciamento faz. A banca troca uma pela outra.",
+      topicos: [
+        "Gestão de projetos: conceitos e fundamentos",
+        "Ciclo de vida de projetos",
+        "Elaboração, análise e avaliação de projetos",
+        "Gerenciamento de escopo, tempo, custos e recursos",
+        "Gerenciamento de riscos",
+        "Gerenciamento da qualidade",
+        "Monitoramento e controle de projetos",
+        "Ferramentas de gestão de projetos"
+      ] },
+    { id: "cofen-adm", grupo: "esp", nome: "Administração pública e gestão", q: 9, cor: 6,
+      dica: "Teoria da administração em versão curta: estrutura, as funções do administrador, processos e qualidade.",
+      topicos: [
+        "Organizações formais modernas: tipos de estrutura organizacional, natureza e finalidades",
+        "Processo organizacional: planejamento, direção, comunicação, controle e avaliação",
+        "Gestão de processos",
+        "Gestão da qualidade"
+      ] },
+    { id: "cofen-arq", grupo: "esp", nome: "Organização e controle de documentos", q: 5, cor: 9,
+      dica: "Arquivologia de concurso é vocabulário: aprenda as classificações e os métodos pelo nome.",
+      topicos: [
+        "Noções de arquivologia",
+        "Tipos de arquivos e métodos de arquivamento",
+        "Gestão eletrônica de documentos",
+        "Digitalização de documentos"
+      ] },
+    { id: "cofen-dh", grupo: "esp", nome: "Direitos humanos", q: 5, cor: 10,
+      dica: "Leia os dois documentos inteiros: são curtos, e a banca cobra o texto.",
+      topicos: [
+        "Direitos humanos na Constituição Federal",
+        "Declaração Universal dos Direitos Humanos",
+        "Convenção Americana sobre Direitos Humanos"
+      ] },
+    { id: "anpd-etica", grupo: "esp", nome: "Ética, integridade e acesso à informação", q: 4,
+      topicos: [...daAnpd("anpd-etica", 2), ...soCofen("etica", [
+        "Ética na função pública: conceito e princípios da Administração Pública"
+      ])] }
+  ]
+};
+
+const BIBLIOTECA = [EDITAL_ANPD, EDITAL_COFEN];

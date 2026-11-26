@@ -623,3 +623,29 @@ body.kf-com-guia .festa{bottom:var(--kf-pe)}
 .lei-topo{position:fixed;right:16px;bottom:calc(96px + env(safe-area-inset-bottom));z-index:20;box-shadow:var(--kf-sombra,0 6px 18px rgba(0,0,0,.18));opacity:0;pointer-events:none;transition:opacity var(--kf-ms) var(--kf-curva)}
 .lei-topo.visivel{opacity:1;pointer-events:auto}
 @media (min-width:900px){.lei-topo{bottom:24px}}
+
+/* ---------- apostilas (1.13.0): a leitura usa a folha do caderno; cada bloco tem rótulo, nunca só cor ---------- */
+.ap-folha{display:block;padding:18px 16px 22px 32px}
+.ap-cap{display:flex;flex-direction:column;gap:12px;padding:6px 0 26px;scroll-margin-top:84px}
+.ap-cap+.ap-cap{border-top:1.5px dashed var(--line);padding-top:22px}
+/* o capítulo recebe o foco só por programa (tabindex -1), para o leitor de tela: não é parada do teclado */
+.ap-cap:focus,.ap-cap:focus-visible{outline:none}
+.ap-t{font-family:var(--ef-titulo,inherit);font-size:22px;line-height:1.25;font-weight:800;overflow-wrap:anywhere}
+.ap-h{font-size:17.5px;font-weight:800;padding-top:8px}
+.ap-folha p,.ap-folha li{font-size:16.5px;line-height:1.65;overflow-wrap:anywhere}
+.ap-folha strong{font-weight:800}
+.ap-lista{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.ap-lei,.ap-ex,.ap-banca,.ap-item,.ap-resumo{margin:0;border-radius:var(--kf-r-md);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.ap-lei{background:var(--pen-soft);border-left:4px solid var(--pen)}
+.ap-ex{border:1.5px solid var(--line)}
+.ap-banca{border:1.5px solid var(--pen)}
+.ap-item{border:1.5px dashed var(--line)}
+.ap-item .etiqueta{align-self:flex-start;gap:4px}
+.ap-item .etiqueta .i{width:14px;height:14px}
+.ap-af{font-weight:700}
+.ap-resumo{background:var(--hl);color:var(--hl-ink);box-shadow:inset 0 0 0 1.5px var(--hl-borda)}
+.ap-resumo .rotulo-mini{color:var(--hl-ink)}
+.ap-estudar{align-self:flex-start}
+.ap-fim{padding-top:4px}
+.ap-fila{padding:6px 16px}
+.ap-fila li{padding:8px 0;font-size:15.5px}

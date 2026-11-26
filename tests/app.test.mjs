@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.11 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.13 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    O guia inteiro fica em tests/guia.test.mjs e a varredura de acessibilidade, em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -15,6 +15,9 @@ const HOJE = '2026-11-16'; // uma segunda-feira
 const abrir = (o = {}) => aparelho(amb, { caminho: '?hoje=' + HOJE, ...o });
 // as funções gerais (Concursos, Disciplinas, Simulados e Agenda) estão fora da fase fechada; ?geral=1 as liga nos testes
 const abrirGeral = (o = {}) => abrir({ caminho: '?hoje=' + HOJE + '&geral=1', ...o });
+// as questões dentro do app (cadernos, treino, flashcards, provas) saíram da tela na 1.13.0; ?questoes=1 as liga nos testes
+// esses testes foram escritos para o plano só da ANPD: o Cofen fica em espera neles
+const abrirQ = async (o = {}) => { const [q, h] = (o.caminho || '?hoje=' + HOJE).split('#'); const a = await abrir({ ...o, caminho: q + '&questoes=1' + (h ? '#' + h : '') }); await a.page.evaluate(() => { const c = DB.concursos.find(x => x.id === 'cofen-2027'); if (c) { c.situacao = 'espera'; salvar({ quieto: true }); render(); } }); return a; };
 const TELAS = [[{ width: 320, height: 568 }, 'celular mínimo (zoom 400%)'], [{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
 const nav = (p, id) => p.locator(`#kf-nav-${id}:visible, #kf-trilho-${id}:visible`).first().click();
 const semJanela = p => p.locator('.kf-dlg').first().waitFor({ state: 'detached' }).catch(() => {});
@@ -30,23 +33,21 @@ test('abre sem erros em celular, tablet e computador, sem rolagem lateral, com o
     assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${nome}`);
     const topo = await conferirTopo(a.page); assert.deepEqual(topo.erros, [], `barra de cima em ${nome}`);
     const navAj = await conferirNavAjustes(a.page); assert.deepEqual(navAj.erros, [], `navegação em ${nome}`);
-    for (const t of ['cadernos', 'medalhas', 'mais']) { await nav(a.page, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
-    for (const t of ['plano', 'caderno', 'evolucao', 'instrutor', 'provas', 'prova', 'discursivas', 'discursiva']) { await a.page.evaluate(t => { provaId = 'dataprev23-seg'; redId = 'antt24-sandbox'; cadId = 'm:anpd-lgpd'; irPara(t); }, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
-    await a.page.evaluate(() => treinoAbrir({ t: 'anpd-lgpd-01' })); await a.page.locator('#treino.dentro').waitFor(); await a.page.click('#treino [data-resp="E"]'); await a.page.locator('#tr-prox').waitFor();
-    assert.ok(await a.page.evaluate(() => { const e = document.querySelector('#treino'); return e.scrollWidth <= e.clientWidth + 1; }), `rolagem lateral no treino, ${nome}`); await a.page.keyboard.press('Escape'); await a.page.locator('#festa-ok').click();
+    for (const t of ['apostilas', 'medalhas', 'mais']) { await nav(a.page, t); await a.page.waitForTimeout(150); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
+    for (const t of ['plano', 'apostila', 'evolucao', 'instrutor', 'leis', 'discursivas', 'discursiva']) { await a.page.evaluate(t => { redId = 'antt24-sandbox'; apId = 'anpd-lgpd'; planoConc = 'cofen-2027'; irPara(t); }, t); await a.page.waitForTimeout(150); if (t === 'apostila') await a.page.locator('#view .ap-cap').first().waitFor(); assert.ok(await semRolagemLateral(a.page), `rolagem lateral em ${t}, ${nome}`); }
     assert.deepEqual(a.erros, [], `erros no console em ${nome}`);
     await a.fechar();
   }
   const a = await abrir();
   const d = await a.page.evaluate(() => ({ c: DB.concursos.map(c => [c.id, c.situacao, c.previsto, c.disc.length, c.banca]), m: DB.materias.length, t: DB.topicos.length, v: DB.v, bib: BIBLIOTECA.map(e => e.id), robos: document.querySelector('meta[name="robots"]').content }));
-  assert.deepEqual(d, { c: [['anpd-2027', 'ativo', true, 12, 'Cebraspe']], m: 12, t: 119, v: 3, bib: ['anpd-2027'], robos: 'noindex, nofollow' }, 'teste fechado: só a ANPD, banca Cebraspe, fora dos buscadores');
+  assert.deepEqual(d, { c: [['anpd-2027', 'ativo', true, 12, 'Cebraspe'], ['cofen-2027', 'ativo', false, 13, 'Instituto Quadrix']], m: 20, t: 201, v: 3, bib: ['anpd-2027', 'cofen-2027'], robos: 'noindex, nofollow' }, 'teste fechado: ANPD (Cebraspe) e Cofen (Quadrix), fora dos buscadores');
   // quem já tinha o plano de fábrica com a banca a definir recebe a banca nova
   await a.page.evaluate(() => { const c = DB.concursos[0]; c.banca = 'A definir'; c.datas = c.datas.filter(x => x.id !== 'd03b'); salvar(); });
   await a.page.reload(); await a.page.locator('#view .hoje-folha').waitFor();
   // fase fechada: as funções gerais e o guia ficam fora da tela
-  const f = await a.page.evaluate(() => { const r = []; for (const t of ['concursos', 'concurso', 'disciplinas', 'disciplina', 'simulados', 'agenda']) { irPara(t); r.push(tab); } irPara('mais'); return { r, mais: [...document.querySelectorAll('#view .kf-mais-lin')].map(e => e.dataset.kfIr || e.dataset.kf || e.dataset.act), guia: !!document.querySelector('#ma-guia'), medGuia: medalhasDoApp().some(m => m.id === 'guia'), nav: [...document.querySelectorAll('#tabs [id^="kf-nav-"]')].map(e => e.id.slice(7)) }; });
-  assert.deepEqual(f.r, Array(6).fill('hoje'), 'telas gerais não abrem'); assert.deepEqual(f.mais, ['plano', 'evolucao', 'leis', 'provas', 'discursivas', 'flashcards', 'revisoes', 'instrutor', 'ajustes']); assert.deepEqual([f.guia, f.medGuia], [false, false]);
-  assert.deepEqual(f.nav, ['hoje', 'cadernos', 'estudar', 'medalhas', 'mais']);
+  const f = await a.page.evaluate(() => { const r = []; for (const t of ['concursos', 'concurso', 'disciplinas', 'disciplina', 'simulados', 'agenda', 'cadernos', 'caderno', 'provas', 'prova']) { irPara(t); r.push(tab); } irPara('mais'); return { r, mais: [...document.querySelectorAll('#view .kf-mais-lin')].map(e => e.dataset.kfIr || e.dataset.kf || e.dataset.act), guia: !!document.querySelector('#ma-guia'), medGuia: medalhasDoApp().some(m => m.id === 'guia'), nav: [...document.querySelectorAll('#tabs [id^="kf-nav-"]')].map(e => e.id.slice(7)) }; });
+  assert.deepEqual(f.r, Array(10).fill('hoje'), 'telas gerais e telas das questões não abrem'); assert.deepEqual(f.mais, ['plano', 'evolucao', 'leis', 'discursivas', 'revisoes', 'instrutor', 'ajustes']); assert.deepEqual([f.guia, f.medGuia], [false, false]);
+  assert.deepEqual(f.nav, ['hoje', 'apostilas', 'estudar', 'medalhas', 'mais']);
   assert.deepEqual(await a.page.evaluate(() => [DB.concursos[0].banca, DB.concursos[0].datas.filter(x => x.id === 'd03b').length]), ['Cebraspe', 1]);
   await a.fechar();
 });
@@ -63,8 +64,8 @@ test('edital da ANPD: itens somam as áreas, pesos somam 100% e os fatos trazem 
   await a.fechar();
 });
 
-test('plano do dia: dois blocos, o primeiro de questões da LGPD; revisões vencidas vêm antes', async () => {
-  const a = await abrir(), p = a.page;
+test('(com ?questoes=1) plano do dia: dois blocos, o primeiro de questões da LGPD; revisões vencidas vêm antes', async () => {
+  const a = await abrirQ(), p = a.page;
   let pl = await p.evaluate(() => planoDoDia().itens.map(i => [i.tipo, i.m, i.nq || i.min]));
   assert.equal(pl.length, 2); assert.deepEqual(pl[0], ['questoes', 'anpd-lgpd', 36], 'a LGPD completa o que a outra disciplina não tem'); assert.equal(pl[0][2] + pl[1][2], 50, 'o plano traz questões que somam a meta do dia, em duas disciplinas'); assert.notEqual(pl[1][1], 'anpd-lgpd');
   await estudar(p, { dia: '2026-11-15', min: 40 });
@@ -76,14 +77,14 @@ test('plano do dia: dois blocos, o primeiro de questões da LGPD; revisões venc
   await a.fechar();
 });
 
-test('sessão no cronômetro (assunto sem questões do app): foco, acertos, teoria concluída, festa, revisões e pontos', async () => {
+test('sessão no cronômetro (teoria sem apostila e questões do Tec): foco, acertos, teoria concluída, festa, revisões e pontos', async () => {
   const a = await abrir(), p = a.page;
   await p.click('#hoje-estudar'); await p.locator('#es-ok').waitFor();
   assert.ok(await semCampoEmFoco(p), 'a janela de Estudar abriu com um campo em foco');
   assert.match(await p.locator('.kf-dlg .sugestao').innerText(), /Aplicação da lei/);
-  assert.equal(await p.locator('#es-alvo-c').isVisible(), false, 'no treino de questões não se escolhe o tempo');
+  assert.equal(await p.locator('#es-alvo-c').isVisible(), true, 'sem questões no app, toda sessão é no cronômetro'); assert.match(await p.locator('#es-banco').innerText(), /Abre a apostila/);
   await p.evaluate(() => { const ev = () => new Event('change', { bubbles: true }), m = document.querySelector('#es-m'), t = document.querySelector('#es-t'); m.value = 'anpd-reg'; m.dispatchEvent(ev()); t.value = 'anpd-reg-07'; t.dispatchEvent(ev()); });
-  assert.match(await p.locator('#es-banco').innerText(), /Sem questões do app/); await p.click('#es-tipo [data-v="teoria"]'); assert.equal(await p.locator('#es-alvo-c').isVisible(), true);
+  assert.match(await p.locator('#es-banco').innerText(), /apostila deste assunto ainda não foi escrita/); await p.click('#es-tipo [data-v="questoes"]'); assert.match(await p.locator('#es-banco').innerText(), /Resolva no Tec Concursos/); await p.click('#es-tipo [data-v="teoria"]'); assert.equal(await p.locator('#es-alvo-c').isVisible(), true);
   await p.click('#es-ok'); await p.locator('#foco.dentro').waitFor();
   assert.equal(await p.evaluate(() => !!DB.ativa && focoAberto()), true);
   for (let i = 0; i < 4; i++) await p.click('#foco [data-q="ac"][data-d="1"]');
@@ -111,8 +112,8 @@ test('sessão no cronômetro (assunto sem questões do app): foco, acertos, teor
   await a.fechar();
 });
 
-test('treino de questões pela tela: certo ou errado, comentário, aula, combo, assunto grifado e flashcard do erro', async () => {
-  const a = await abrir(), p = a.page;
+test('(com ?questoes=1) treino de questões pela tela: certo ou errado, comentário, aula, combo, assunto grifado e flashcard do erro', async () => {
+  const a = await abrirQ(), p = a.page;
   await p.click('#hoje-estudar'); await p.locator('#es-ok').waitFor();
   assert.match(await p.locator('#es-banco').innerText(), /3 questões do app/);
   await p.click('#es-ok'); await p.locator('#treino.dentro').waitFor();
@@ -145,8 +146,8 @@ test('treino de questões pela tela: certo ou errado, comentário, aula, combo, 
   await a.fechar();
 });
 
-test('cadernos de questões: por disciplina, andamento próprio, refazer as erradas, zerar e caderno montado', async () => {
-  const a = await abrir(), p = a.page;
+test('(com ?questoes=1) cadernos de questões: por disciplina, andamento próprio, refazer as erradas, zerar e caderno montado', async () => {
+  const a = await abrirQ(), p = a.page;
   const b = await p.evaluate(() => ({ n: QUESTOES.length, ids: new Set(QUESTOES.map(q => q.id)).size, ok: QUESTOES.every(q => topico(q.t) && AULAS[q.t] && q.e && q.c && q.f && 'CE'.includes(q.g) && q.e.split(' ').length <= 40), disc: materiasComBanco().length, c: QUESTOES.filter(q => q.g === 'C').length }));
   assert.ok(b.n >= 220 && b.ids === b.n && b.ok, 'toda questão tem assunto, aula, comentário e fundamento'); assert.equal(b.disc, 12, 'as doze disciplinas têm caderno'); assert.ok(b.c / b.n > 0.4 && b.c / b.n < 0.6, 'certos e errados equilibrados');
   await nav(p, 'cadernos'); assert.equal(await p.locator('#view [aria-labelledby="cd-d"] [data-act="abrir-cad"]').count(), 12);
@@ -199,8 +200,8 @@ test('cadernos de questões: por disciplina, andamento próprio, refazer as erra
 const provaInventada = (o = {}) => { const itens = {}; for (let n = 1; n <= 50; n++) itens[n] = `Item inventado ${n}, só para o teste.`;
   itens[24] = 'A agência \u0001pode\u0002 decidir <img src=x onerror="window.__xss=1"><b id="inj">oi</b>.';
   return Buffer.from(JSON.stringify({ v: 1, prova: 'anatel24-cb1', itens, grupos: [{ de: 1, cmd: 'Julgue os itens a seguir, relativos ao texto CB1.', apoio: 'Texto CB1\nParágrafo inventado <i id="inj">x</i>.' }, { de: 16, cmd: 'Judge the following items.', apoio: 'Text CB2\nInvented paragraph.' }, { de: 24, cmd: 'Julgue os itens seguintes, acerca de \u0001regulação\u0002.', apoio: '' }, { de: 34, cmd: 'Julgue os próximos itens.', apoio: '' }], ...o })).toString('base64url'); };
-test('questões oficiais: a prova chega pela ponte, vira caderno e entra no treino, nos flashcards e na disciplina', async () => {
-  const a = await abrir({ caminho: '?hoje=' + HOJE + '#prova=' + provaInventada() }), p = a.page;
+test('(com ?questoes=1) questões oficiais: a prova chega pela ponte, vira caderno e entra no treino, nos flashcards e na disciplina', async () => {
+  const a = await abrirQ({ caminho: '?hoje=' + HOJE + '#prova=' + provaInventada() }), p = a.page;
   const fechaMedalhas = async () => { for (let i = 0; i < 4; i++) { const m = p.locator('#mn-ok'); if (await m.count()) { await m.click(); await p.waitForTimeout(700); } else await p.waitForTimeout(250); } };
   // 46 itens do edital, menos 3 anulados; o endereço fica limpo
   assert.deepEqual(await p.evaluate(() => [DB.textos.length, location.hash, oficiais().length, oficiais().filter(q => q.c).length > 5, QID.has('pv:anatel24-cb1:1'), QID.has('pv:anatel24-cb1:19'), QID.has('pv:anatel24-cb1:30')]), [1, '', 43, true, true, false, false]);
@@ -257,7 +258,7 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   await nav(p, 'cadernos'); assert.equal(await p.locator('#pv-abrir').count(), 1, 'ainda faltam provas neste aparelho');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#pv-baixar')]); assert.equal(dl.suggestedFilename(), 'estudo-facil-provas.json');
   const arq = await dl.path(), conteudo = JSON.parse(readFileSync(arq, 'utf8')); assert.deepEqual([conteudo.app, conteudo.tipo, conteudo.provas.length, conteudo.provas[0].prova, Object.keys(conteudo.provas[0].itens).length], ['estudo-facil', 'provas', 1, 'anatel24-cb1', 50]);
-  const c = await abrir(), q = c.page; await estudar(q, { min: 10 }); await nav(q, 'cadernos'); assert.equal(await q.locator('#pv-baixar').count(), 0);
+  const c = await abrirQ(), q = c.page; await estudar(q, { min: 10 }); await nav(q, 'cadernos'); assert.equal(await q.locator('#pv-baixar').count(), 0);
   await q.setInputFiles('#pv-arquivo', arq); await q.locator('#view [data-act="abrir-cad"][data-id="p:anatel24-cb1"]').waitFor();
   assert.deepEqual(await q.evaluate(() => [DB.textos.length, oficiais().length, DB.sessoes.length]), [1, 43, 1]); assert.match(await q.locator('.kf-toast').last().innerText(), /1 prova no app: 43 questões oficiais\./);
   await q.setInputFiles('#pv-arquivo', { name: 'outro.json', mimeType: 'application/json', buffer: Buffer.from('{"app":"outro"}') }); await q.locator('.kf-toast', { hasText: 'não é o das provas' }).waitFor();
@@ -266,14 +267,14 @@ test('questões oficiais: a prova chega pela ponte, vira caderno e entra no trei
   await a.fechar();
   // o que não confere com uma prova cadastrada é recusado: prova desconhecida e item faltando
   for (const ruim of [provaInventada({ prova: 'nao-existe' }), provaInventada({ itens: { 1: 'só um' } }), 'lixo']) {
-    const b = await abrir({ caminho: '?hoje=' + HOJE + '#prova=' + ruim }); assert.deepEqual(await b.page.evaluate(() => [DB.textos.length, location.hash, oficiais().length]), [0, '', 0]); assert.deepEqual(b.erros, []); await b.fechar();
+    const b = await abrirQ({ caminho: '?hoje=' + HOJE + '#prova=' + ruim }); assert.deepEqual(await b.page.evaluate(() => [DB.textos.length, location.hash, oficiais().length]), [0, '', 0]); assert.deepEqual(b.erros, []); await b.fechar();
   }
 });
 
-test('leis na íntegra: lista por disciplina, texto do Planalto sem alteração, revogados e tempo de leitura no assunto', async () => {
+test('(com ?questoes=1) leis na íntegra: lista por disciplina, texto do Planalto sem alteração, revogados e tempo de leitura no assunto', async () => {
   // o arquivo de cada lei existe, tem a fonte oficial e está ligado a um assunto do edital
   const { readdirSync } = await import('node:fs'); const arqs = readdirSync(new URL('../leis/', import.meta.url)).filter(f => f.endsWith('.json'));
-  const a = await abrir(), p = a.page;
+  const a = await abrirQ(), p = a.page;
   const L = await p.evaluate(() => LEIS.map(l => [l.id, !!topico(l.t)])); assert.equal(L.length, 24); assert.ok(L.every(x => x[1]), 'toda lei tem assunto'); assert.deepEqual(arqs.sort(), L.map(x => x[0] + '.json').sort());
   for (const f of arqs) { const j = JSON.parse(readFileSync(new URL('../leis/' + f, import.meta.url), 'utf8')); assert.match(j.fonte, /^https:\/\/www\.planalto\.gov\.br\/ccivil_03\//); assert.ok(j.p.length > 50 && j.p.every(x => typeof x.t === 'string' && x.t), f); }
   await nav(p, 'mais'); await p.click('#view [data-kf-ir="leis"]'); assert.equal(await p.locator('#view [data-act="abrir-lei"]').count(), 24);
@@ -317,8 +318,8 @@ test('leis na íntegra: lista por disciplina, texto do Planalto sem alteração,
   await a.fechar();
 });
 
-test('flashcards, desafio do dia e instrutor: o erro volta, o desafio rende bônus e a pergunta é copiada', async () => {
-  const a = await abrir(), p = a.page;
+test('(com ?questoes=1) flashcards, desafio do dia e instrutor: o erro volta, o desafio rende bônus e a pergunta é copiada', async () => {
+  const a = await abrirQ(), p = a.page;
   // um erro de ontem: o flashcard vence hoje
   await p.evaluate(() => { DB.respostas.push({ id: 'lgpd-004', n: 1, ac: 0, ok: false, em: agora() - 864e5, cx: 0, due: hojeISO(), rv: 0 }); salvar(); });
   assert.match(await p.locator('#view [data-act="flashcards"]').innerText(), /1 questão que você errou volta hoje/);
@@ -358,8 +359,8 @@ test('flashcards, desafio do dia e instrutor: o erro volta, o desafio rende bôn
   await a.fechar();
 });
 
-test('provas do Cebraspe: só fonte oficial, sem texto de prova; folha de respostas, correção pelo gabarito e comentário', async () => {
-  const a = abrir(), p = (await a).page, A = await a;
+test('(com ?questoes=1) provas do Cebraspe: só fonte oficial, sem texto de prova; folha de respostas, correção pelo gabarito e comentário', async () => {
+  const a = abrirQ(), p = (await a).page, A = await a;
   const d = await p.evaluate(() => PROVAS.map(x => ({ id: x.id, urls: [x.caderno, x.gabUrl].every(u => /^https:\/\/cdn\.cebraspe\.org\.br\/concursos\/[\w]+\/arquivos\/[\w]+\.PDF$/i.test(u)), gab: /^[CEX]+$/.test(x.gab), cobre: x.blocos.reduce((n, b) => n + b.ate - b.de + 1, 0) === x.gab.length && x.blocos.every((b, i) => b.de === (i ? x.blocos[i - 1].ate + 1 : x.de)),
     disc: x.blocos.every(b => !b.m || !!materia(b.m)), com: Object.keys(x.itens).every(n => 'CE'.includes(x.gab[n - x.de]) && x.blocos.some(b => b.m && n >= b.de && n <= b.ate)), curto: Object.values(x.itens).every(c => c.split(' ').length <= 40), doEdital: blocosDoEdital(x).reduce((n, b) => n + b.ate - b.de + 1, 0) })));
   assert.equal(d.length, 7);
@@ -421,8 +422,63 @@ test('discursiva: temas oficiais e do instrutor, contagem de linhas, rascunho gu
   await a.fechar();
 });
 
-test('medalhas: mais de cem, com ids únicos, em quatro metais e cinco famílias; a tela mostra a coleção', async () => {
+test('edital do Cofen: blocos somam, assuntos em comum com a ANPD são os mesmos e quem já usava o app recebe o edital', async () => {
   const a = await abrir(), p = a.page;
+  const d = await p.evaluate(() => { const A = DB.concursos.find(c => c.id === 'anpd-2027'), C = DB.concursos.find(c => c.id === 'cofen-2027'), tA = new Set(A.disc.flatMap(x => x.topicos)), tC = C.disc.flatMap(x => x.topicos);
+    return { g: C.prova.grupos.map(g => [g.q, C.disc.filter(x => x.grupo === g.id).reduce((s, x) => s + x.q, 0)]), soma: Math.round([...fatias(C, { fase: false }).values()].reduce((s, v) => s + v, 0) * 100), ids: [DB.topicos.length, new Set(DB.topicos.map(t => t.id)).size], orf: tC.filter(id => !topico(id)).length,
+      comuns: tC.filter(id => tA.has(id)).length, lgpd: C.disc.find(x => x.m === 'anpd-lgpd').topicos.length, so: tC.filter(id => !tA.has(id)).every(id => /^cofen-/.test(id)), foco: concursoFoco().id, prova: [C.dataProva, C.previsto, C.banca], ed: EDITAL_COFEN.conferido, leis: [leiDoAssunto('cofen-ct-05'), leiDoAssunto('cofen-dc-05')] }; });
+  assert.deepEqual(d.g, [[40, 40], [30, 30], [50, 50]], 'os itens das disciplinas somam os três blocos do edital'); assert.equal(d.soma, 100);
+  assert.equal(d.ids[0], d.ids[1], 'ids de assunto repetidos'); assert.equal(d.orf, 0); assert.equal(d.comuns, 46, 'assuntos que os dois editais cobram'); assert.equal(d.lgpd, 19); assert.ok(d.so, 'o que é só do Cofen tem id próprio');
+  assert.equal(d.foco, 'anpd-2027', 'a ANPD continua sendo o foco'); assert.deepEqual(d.prova, ['2027-02-28', false, 'Instituto Quadrix']); assert.match(d.ed, /^\d{4}-\d{2}-\d{2}$/);
+  assert.deepEqual(d.leis, [{ id: 'l14133', art: '124' }, { id: 'cf', art: '196' }], 'a lei seca do Cofen abre nas leis que o app já tem');
+  // integração: estudar um assunto em comum conta nos dois editais; um assunto só do Cofen conta só nele
+  const pr = await p.evaluate(() => { const A = DB.concursos[0], C = DB.concursos[1], f = c => soma(c.disc, x => soma(x.topicos, id => dominio(topico(id)))), r = [[f(A), f(C)]]; registrarSessao({ t: 'anpd-lp-07', seg: 1800, teoria: true }); r.push([f(A), f(C)]); registrarSessao({ t: 'cofen-ct-01', seg: 1800, teoria: true }); r.push([f(A), f(C)]); salvar(); return r; });
+  assert.ok(pr[1][0] > pr[0][0] && pr[1][1] > pr[0][1], 'Pontuação (Português) conta nos dois editais'); assert.ok(pr[2][0] === pr[1][0] && pr[2][1] > pr[1][1], 'contratos conta só no do Cofen');
+  // Hoje tem um cartão por concurso; o do Cofen abre o edital do Cofen
+  await p.evaluate(() => irPara('hoje')); assert.equal(await p.locator('#view .conc-card').count(), 2);
+  await p.click('#view .conc-card[data-id="cofen-2027"]'); await p.locator('#view .plano-capa').waitFor(); assert.match(await p.locator('#view .plano-capa').innerText(), /Analista Técnico[\s\S]*Instituto Quadrix/);
+  // quem já usava o app só com a ANPD recebe o Cofen ao abrir, uma vez, sem perder o que estudou
+  await p.evaluate(() => { const b = bancoVazio(); instalarEdital(b, EDITAL_ANPD); b.topicos.find(t => t.id === 'anpd-lp-07').teoria = 5; semSalvar = true; localStorage.setItem('estudofacil.db', JSON.stringify(b)); localStorage.removeItem('estudofacil.cofen'); });
+  await p.reload(); await p.locator('#view .hoje-folha').waitFor();
+  assert.deepEqual(await p.evaluate(() => [DB.concursos.map(c => c.id), DB.materias.length, DB.topicos.length, topico('anpd-lp-07').teoria, DB.concursos[1].disc.find(x => x.m === 'anpd-lp').topicos.includes('anpd-lp-07')]), [['anpd-2027', 'cofen-2027'], 20, 201, 5, true]);
+  await p.evaluate(() => { DB.concursos = DB.concursos.filter(c => c.id !== 'cofen-2027'); salvar(); }); await p.reload(); await p.locator('#view .hoje-folha').waitFor();
+  assert.equal(await p.evaluate(() => DB.concursos.length), 1, 'o edital não volta sozinho depois de tirado');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('apostilas: lista, leitura por capítulo, Teoria abre no assunto com a sessão contando e a teoria é marcada no capítulo', async () => {
+  const a = await abrir(), p = a.page;
+  const md = readFileSync(new URL('../apostilas/anpd-lgpd.md', import.meta.url), 'utf8');
+  const e = await p.evaluate(md => { const A = apLer(md), ids = topicosDe('anpd-lgpd').map(t => t.id); return { caps: A.caps.map(c => c.t), ids, base: A.base, itens: A.caps.map(c => [c.b.filter(b => b[0] === 'item' && b[1] === 'C').length, c.b.filter(b => b[0] === 'item' && b[1] === 'E').length, c.b.filter(b => b[0] === 'res').length, c.b.filter(b => b[0] === 'banca').length]), lista: APOSTILAS.map(x => [x.m, x.caps]), ap: [!!apostilaDoAssunto('anpd-lgpd-10'), !!apostilaDoAssunto('anpd-da-01')],
+    seguro: apBlocos(apLer('## x | <img src=x onerror=alert(1)>\n<script>alert(1)</script> **a<b>**\nE: <i>x</i> :: <u>y</u>').caps[0].b) }; }, md);
+  assert.deepEqual(e.caps, e.ids, 'um capítulo por assunto do edital, na ordem'); assert.match(e.base, /Lei 13\.709\/2018[\s\S]*Planalto[\s\S]*\d{2}\/\d{2}\/\d{4}/, 'a apostila diz de onde saíram os números');
+  for (const [i, [c, er, res, banca]] of e.itens.entries()) assert.ok(c >= 1 && er >= 2 && res >= 4 && banca >= 1, `capítulo ${i + 1}: modelos de item certo e errado, resumo e o jeito da banca`);
+  assert.deepEqual(e.lista, [['anpd-lgpd', 19]]); assert.deepEqual(e.ap, [true, false]);
+  assert.ok(!/<(img|script|i|u)[ >]/.test(e.seguro) && /&lt;script&gt;/.test(e.seguro) && /a&lt;b&gt;/.test(e.seguro), 'o texto da apostila é protegido antes de ir para a tela');
+  await nav(p, 'apostilas'); await p.locator('#view [data-act="abrir-apostila"]').waitFor();
+  assert.match(await p.locator('#view').innerText(), /LGPD para quem nunca viu[\s\S]*0 de 19 capítulos estudados[\s\S]*Ainda sem apostila/);
+  await p.click('#view [data-act="abrir-apostila"]'); await p.locator('#view .ap-cap').first().waitFor();
+  assert.equal(await p.locator('#view .ap-cap').count(), 19); assert.equal(await p.locator('#view .ap-estudar').count(), 19); assert.equal(await p.locator('#lei-sumario .lei-ir').count(), 19);
+  assert.equal(await p.evaluate(() => DB.ativa), null, 'abrir a apostila não começa sessão');
+  // Estudar → Teoria: a sessão começa e a apostila abre no capítulo do assunto
+  await nav(p, 'hoje'); await p.click('#kf-nav-estudar'); await p.locator('#es-ok').waitFor();
+  await p.evaluate(() => { const ev = () => new Event('change', { bubbles: true }), m = document.querySelector('#es-m'), t = document.querySelector('#es-t'); m.value = 'anpd-lgpd'; m.dispatchEvent(ev()); t.value = 'anpd-lgpd-18'; t.dispatchEvent(ev()); }); await p.click('#es-tipo [data-v="teoria"]');
+  assert.match(await p.locator('#es-banco').innerText(), /Abre a apostila no capítulo/); assert.equal((await p.locator('#es-ok').innerText()).trim(), 'Abrir a apostila'); await p.click('#es-ok');
+  await p.locator('#view .ap-cap').first().waitFor(); await p.waitForTimeout(3000);
+  assert.deepEqual(await p.evaluate(() => { const y = document.getElementById('ap-anpd-lgpd-18').getBoundingClientRect().top; return [tab, apId, DB.ativa.t, DB.ativa.tipo, y >= 0 && y < innerHeight / 2, document.querySelectorAll('.ap-estudar').length]; }), ['apostila', 'anpd-lgpd', 'anpd-lgpd-18', 'teoria', true, 0]);
+  assert.match(await p.locator('#ap-anpd-lgpd-18').innerText(), /até 2% do faturamento[\s\S]*R\$ 50 milhões por infração[\s\S]*Modelo de item errado[\s\S]*Para a prova/);
+  // o capítulo marca a teoria como concluída: o assunto fica grifado e as revisões entram; tem Desfazer
+  await p.click('#ap-anpd-lgpd-18 [data-act="ap-teoria"]');
+  assert.ok(await esperar(() => p.evaluate(() => !!topico('anpd-lgpd-18').teoria && DB.revisoes.filter(r => r.t === 'anpd-lgpd-18').length === 3)));
+  await p.locator('.kf-toast-acao').click(); assert.ok(await esperar(() => p.evaluate(() => !topico('anpd-lgpd-18').teoria && DB.revisoes.length === 0)), 'Desfazer devolve a teoria e tira as revisões');
+  await p.evaluate(() => descartarSessao());
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('(com ?questoes=1) medalhas: mais de cem, com ids únicos, em quatro metais e cinco famílias; a tela mostra a coleção', async () => {
+  const a = await abrirQ(), p = a.page;
   const m = await p.evaluate(() => ({ n: medalhasDoApp().length, ids: new Set(MEDALHAS.map(x => x.id)).size, todas: MEDALHAS.length, metais: [...new Set(MEDALHAS.map(x => x.metal))].sort(), fam: [...new Set(MEDALHAS.map(x => x.fam))].sort(), ic: MEDALHAS.every(x => MED_IC[x.ic]), como: MEDALHAS.every(x => x.como && x.como.split(' ').length <= 14), formas: new Set(['bronze', 'prata', 'ouro', 'diamante'].map(formaMetal)).size, antigas: ['seq3', 'seq7', 'seq14', 'seq30', 'seq100', 'h10', 'h50', 'h100', 'q100', 'q500', 'q1000', 'rev10', 'ed25', 'ed50', 'ed90', 'dia1', 'primeira', 'nome', 'cedo', 'guia', 'nuvem'].filter(i => !MEDALHAS.some(x => x.id === i)) }));
   assert.ok(m.n > 100, `são ${m.n} medalhas`); assert.equal(m.ids, m.todas, 'ids repetidos'); assert.equal(m.todas - m.n, 1, 'só a medalha do guia fica fora da fase fechada');
   assert.deepEqual(m.metais, ['bronze', 'diamante', 'ouro', 'prata']); assert.deepEqual(m.fam, ['app', 'constancia', 'disciplinas', 'edital', 'questoes']);
@@ -608,7 +664,7 @@ test('sincronização: o outro aparelho recebe sessões e medalhas; a exclusão 
   const arq = gh.arquivo('estudo-facil.json'); assert.ok(arq && !/anpd-lgpd/.test(arq.conteudo), 'o gist deveria estar criptografado');
   await ligar(B.page);
   assert.ok(await esperar(() => B.page.evaluate(() => DB.sessoes.length === 1 && cfg().nome === 'Bruno' && DB.dias.length === 1 && temMarco('m:primeira') && DB.respostas.length === 1 && DB.respostas[0].due === '2026-11-17' && DB.cadernos.length === 1 && DB.cadernos[0].r['lgpd-003'] === 'C')), 'B não recebeu sessões, dias, medalhas, respostas e o andamento do caderno');
-  assert.equal(await B.page.evaluate(() => DB.concursos.length + ':' + DB.materias.length + ':' + DB.topicos.length), '1:12:119', 'nada duplicado ao juntar');
+  assert.equal(await B.page.evaluate(() => DB.concursos.length + ':' + DB.materias.length + ':' + DB.topicos.length), '2:20:201', 'nada duplicado ao juntar');
   // B exclui a sessão; A recebe a exclusão e não regrava à toa
   // (se B já estava no meio de uma sincronização, a exclusão só sobe na seguinte: por isso espera-se B ficar em dia e A tenta de novo)
   await B.page.evaluate(() => { DB.sessoes = []; salvar(); return SY.agora({ quiet: true }); });

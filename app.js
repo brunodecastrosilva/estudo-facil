@@ -2,7 +2,7 @@
    As telas ficam em telas.js; a sessão de estudo, em estudar.js; níveis e medalhas, em jogo.js; moldura, Ajustes,
    abertura e guia, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.12.1';
+const VERSAO = '1.13.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -22,6 +22,11 @@ const HOJE_FIXO = (() => { try { const m = /[?&]hoje=(\d{4}-\d{2}-\d{2})/.exec(l
 /* Funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia): ficam fora da fase de testes
    fechada, em que o app é só da ANPD. O código continua aqui; nos testes, ?geral=1 as liga (só em localhost). */
 const GERAL = (() => { try { return /[?&]geral=1/.test(location.search) && /^(localhost|127\.0\.0\.1)$/.test(location.hostname); } catch { return false; } })();
+/* Questões dentro do app (cadernos, treino, flashcards, desafio do dia e provas do Cebraspe): saíram da tela na 1.13.0,
+   por decisão do Bruno: as questões são resolvidas no Tec Concursos e só o resultado é lançado aqui. O código e os dados
+   continuam; nos testes, ?questoes=1 liga tudo de novo (só em localhost). */
+const QUEST = (() => { try { if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return false; // a marca na sessão segura o modo quando o endereço perde o ?questoes=1 (a ponte das provas limpa o endereço)
+  if (/[?&]questoes=1/.test(location.search)) sessionStorage.setItem('ef-questoes', '1'); return sessionStorage.getItem('ef-questoes') === '1'; } catch { return false; } })();
 const agora = () => HOJE_FIXO ? deISO(HOJE_FIXO).getTime() + (Date.now() % DIA) : Date.now();
 const hojeISO = () => HOJE_FIXO || iso(new Date());
 const maisDias = (s, n) => { const d = deISO(s); d.setDate(d.getDate() + n); return iso(d); };
@@ -127,9 +132,12 @@ function instalarEdital(db, ed, { perfil = '' } = {}) {
   lista.forEach((m, k) => {
     let mat = db.materias.find(x => x.id === m.id) || db.materias.find(x => norm(x.nome) === norm(m.nome));
     if (!mat) { mat = { id: m.id, nome: m.nome, cor: CORES[(m.cor ?? db.materias.length) % CORES.length], dica: m.dica || '' }; db.materias.push(mat); }
-    const ids = m.topicos.map((nome, i) => {
-      let t = db.topicos.find(x => x.m === mat.id && norm(x.nome) === norm(nome));
-      if (!t) { t = { id: `${m.id}-${String(i + 1).padStart(2, '0')}`, m: mat.id, nome, ordem: db.topicos.filter(x => x.m === mat.id).length, teoria: 0 }; db.topicos.push(t); }
+    // o assunto vem só com o nome (o id sai da posição) ou como { id, nome }, quando entra numa disciplina que já existe
+    const ids = m.topicos.map((x, i) => {
+      const nome = typeof x === 'string' ? x : x.nome, idFixo = typeof x === 'string' ? '' : x.id;
+      let t = (idFixo && db.topicos.find(y => y.id === idFixo)) || db.topicos.find(y => y.m === mat.id && norm(y.nome) === norm(nome));
+      if (!t) { let id = idFixo || `${m.id}-${String(i + 1).padStart(2, '0')}`; if (db.topicos.some(y => y.id === id)) id = `${m.id}-${novoId()}`;
+        t = { id, m: mat.id, nome, ordem: db.topicos.filter(y => y.m === mat.id).length, teoria: 0 }; db.topicos.push(t); }
       return t.id;
     });
     disc.push({ m: mat.id, grupo: m.grupo || '', q: m.q || 0, f1: m.f1 || 1, topicos: ids });
@@ -149,11 +157,15 @@ let DB = (() => {
   if (b) {
     const c = b.concursos.find(x => x.id === 'anpd-2027');
     if (c && (!c.banca || c.banca === 'A definir')) { c.banca = 'Cebraspe'; if (!c.datas.some(d => d.id === 'd03b')) c.datas.push({ id: 'd03b', tipo: 'aviso', titulo: 'Cebraspe escolhido como banca do concurso', ini: '2026-11-14' }); LS.set('db', b); }
+    // 1.13.0: o edital do Cofen entra uma vez em quem já usava o app (os ids são fixos: dois aparelhos chegam ao mesmo resultado)
+    if (typeof EDITAL_COFEN !== 'undefined' && !LS.get('cofen', 0)) { if (!b.concursos.some(x => x.id === EDITAL_COFEN.id)) instalarEdital(b, EDITAL_COFEN); LS.set('cofen', 1); LS.set('db', b); }
     return b;
   }
   if (cru && !LS.get('db_antigo', null)) LS.set('db_antigo', cru);
   const novo = bancoVazio();
-  if (typeof EDITAL_ANPD !== 'undefined') instalarEdital(novo, EDITAL_ANPD); // de fábrica: o plano para a ANPD
+  // de fábrica: os planos da biblioteca (ANPD, o foco, e Cofen), com os assuntos em comum ligados
+  for (const ed of (typeof BIBLIOTECA !== 'undefined' ? BIBLIOTECA : [])) instalarEdital(novo, ed);
+  LS.set('cofen', 1);
   LS.set('db', novo);
   return novo;
 })();
@@ -309,7 +321,7 @@ function ordemDasDisciplinas() {
     .sort((a, b) => b.falta - a.falta || b.w - a.w);
 }
 // assunto com questões no banco do app (questoes.js): o estudo dele é pelo treino de questões
-const temBanco = tId => typeof questoesDoAssunto === 'function' && questoesDoAssunto(tId).length > 0;
+const temBanco = tId => QUEST && typeof questoesDoAssunto === 'function' && questoesDoAssunto(tId).length > 0;
 const tipoDoEstudo = (tId, tipo) => tipo === 'teoria' && temBanco(tId) ? 'questoes' : tipo;
 function planoDoDia() {
   const h = hojeISO(), c = cfg(), S = sessoesDoDia(h);
@@ -419,7 +431,13 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db' && !semSalvar) { const b = arrumarBanco(LS.get('db', null)); if (b) { if (typeof TX !== 'undefined' && TX.ok) b.textos = DB.textos; DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.12.1', itens: [
+const NOVIDADES = [{ versao: '1.13.0', itens: [
+  'As questões saíram do app: resolva no Tec Concursos e marque aqui só os acertos e os erros, com o tempo contando no assunto.',
+  'Apostilas: teoria escrita para quem nunca viu o assunto, voltada ao jeito de o Cebraspe cobrar. A primeira é a da LGPD, com 19 capítulos.',
+  'Em Estudar, Teoria abre a apostila no capítulo do assunto, com a sessão contando.',
+  'Edital do Cofen (Analista Técnico) no app, ao lado do da ANPD. O que os dois cobram conta para os dois.',
+  'Nova barra de baixo: Hoje, Apostilas, Estudar, Medalhas e Mais.',
+] }, { versao: '1.12.1', itens: [
   'O botão "Abrir arquivo das provas" voltou e agora fica sempre à vista, em Cadernos.',
 ] }, { versao: '1.12.0', itens: [
   'Expansão das provas do Cebraspe: mais de 230 cadernos e 4,7 mil questões oficiais, de 46 concursos.',
@@ -498,7 +516,7 @@ let SY = null;
 const ocupadoApp = () => (typeof aberturaAtiva === 'function' && aberturaAtiva()) || (typeof guiaAtivo === 'function' && guiaAtivo()) || (typeof focoAberto === 'function' && focoAberto()) || (typeof treinoAberto === 'function' && treinoAberto()) || (typeof festaAberta !== 'undefined' && festaAberta);
 KitFacil.iniciar({
   app: 'estudo-facil', nome: 'Estudo Fácil', versao: VERSAO, icone: 'icons/icon-192.png',
-  resumo: 'Plano de estudos para o concurso da ANPD: provas do Cebraspe, questões comentadas, flashcards, discursiva, revisões e medalhas.',
+  resumo: 'Plano de estudos para os concursos da ANPD e do Cofen: edital para grifar, apostilas voltadas ao Cebraspe, leis na íntegra, discursiva, revisões e medalhas.',
   tela: () => (typeof tab !== 'undefined' ? tab : 'hoje'), exemploDados: 'os concursos, as disciplinas, as sessões de estudo e as revisões',
   abrirAjustes: secao => { if (secao || tab !== 'ajustes') abrirAjustes(); else fecharAjustes(); },
   emAjustes: () => typeof tab !== 'undefined' && tab === 'ajustes',

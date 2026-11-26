@@ -39,6 +39,10 @@ const LEI_DO_ASSUNTO = {
   'dc-01': ['cf', '1'], 'dc-02': ['cf', '5'], 'dc-03': ['cf', '5'], 'dc-04': ['cf', '5'], 'dc-05': ['cf', '21'], 'dc-06': ['cf', '37'], 'dc-07': ['cf', '44'], 'dc-08': ['cf', '102'], 'dc-09': ['cf', '170'],
   'etica-01': ['d1171'], 'etica-02': ['l12813'], 'etica-03': ['l12527'], 'etica-04': ['l12527', '31'], 'etica-05': ['d9203'],
   'dig-01': ['l12965'], 'dig-03': ['l8078'], 'dig-08': ['lgpd', '23'], 'econ-03': ['l12529'],
+  // Cofen: contratos na Lei 14.133/2021 (do art. 89 em diante) e o que é só do Cofen em Constitucional e Ética
+  'cofen-ct-01': ['l14133', '89'], 'cofen-ct-02': ['l14133', '92'], 'cofen-ct-03': ['l14133', '89'], 'cofen-ct-04': ['l14133', '105'], 'cofen-ct-05': ['l14133', '124'], 'cofen-ct-06': ['l14133', '130'], 'cofen-ct-07': ['l14133', '115'], 'cofen-ct-08': ['l14133', '155'],
+  'cofen-ct-09': ['l14133', '117'], 'cofen-ct-10': ['l14133', '117'], 'cofen-ct-11': ['l14133', '140'], 'cofen-ct-12': ['l14133', '115'], 'cofen-ct-13': ['l14133', '141'], 'cofen-ct-14': ['l14133', '124'], 'cofen-ct-15': ['l14133', '156'], 'cofen-ct-16': ['l14133', '137'],
+  'cofen-dc-02': ['cf', '6'], 'cofen-dc-03': ['cf', '2'], 'cofen-dc-04': ['cf', '127'], 'cofen-dc-05': ['cf', '196'], 'cofen-dh-01': ['cf', '5'], 'cofen-etica-01': ['d1171'],
   'inst-01': ['l15352'], 'inst-02': ['lgpd', '55-A'], 'inst-04': ['lgpd', '58-A'], 'inst-06': ['lgpd', '55-J'], 'inst-07': ['l15211'], 'inst-08': ['l15211'], 'inst-09': ['l15211'],
 };
 function leiDoAssunto(tId) {

@@ -1,14 +1,15 @@
 # Estudo Fácil
 
-Estudo por questões para o concurso da ANPD (Especialista em Regulação de Proteção de Dados, banca Cebraspe), no celular
-e no computador. O app gira em torno de **cadernos de questões** de certo ou errado, todas escritas dentro dele e
-comentadas; transforma os erros em flashcards, traz as provas oficiais da banca com correção, treina a discursiva, lembra
-das revisões e mostra a evolução, com sequência de dias, missões e mais de cem medalhas.
+Controle de estudos para os concursos da ANPD (Especialista em Regulação de Proteção de Dados, banca Cebraspe: o foco) e
+do Cofen (Analista Técnico, banca Instituto Quadrix), no celular e no computador. O app traz os dois editais para grifar,
+com os assuntos em comum ligados, **apostilas** escritas para leigos e voltadas ao jeito de o Cebraspe cobrar, as leis na
+íntegra, o treino da discursiva, as revisões e a evolução, com sequência de dias, missões e medalhas. **As questões são
+resolvidas fora do app, no Tec Concursos:** aqui entram só o tempo, os acertos e os erros.
 
-Versão **1.12.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.13.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
-> **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno e todo voltado ao concurso
-> da ANPD. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
+> **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno; desde a 1.13.0, voltado aos
+> concursos da ANPD e do Cofen. Desde a 1.3.0, as funções gerais do app público (Concursos, Disciplinas, Simulados, Agenda e o guia) ficam
 > fora da tela. No futuro ele volta a ser publicado para o público geral. Veja "Exceções ao padrão".
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
@@ -17,6 +18,10 @@ referência do projeto (Art. 93).
 
 ## O que o app faz
 
+- **Apostilas (1.13.0):** teoria do instrutor (Claude) para quem nunca viu o assunto, voltada ao Cebraspe. O texto fica em `apostilas/<disciplina>.md`, num formato de linhas simples (veja o cabeçalho de `apostilas.js`): um capítulo por assunto do edital, com explicação, exemplo, trecho da lei, "como o Cebraspe cobra", modelos de item certo e errado (só leitura) e resumo. Abrir a apostila não conta tempo; a sessão começa no botão do capítulo ou em Estudar → Teoria, que abre a apostila no capítulo do assunto. O botão no fim do capítulo marca a teoria como concluída. Por ora existe a da LGPD (19 capítulos)
+- **Dois editais integrados (1.13.0):** ANPD e Cofen. Disciplina e assunto são globais: o edital do Cofen reaproveita os assuntos da ANPD pelo nome (`daAnpd`, em `editais.js`) e acrescenta os que são só dele com id próprio (`{ id, nome }`). O que se estuda num assunto em comum conta nos dois
+- **Questões no Tec Concursos (1.13.0):** em Estudar, a opção Questões abre o cronômetro com os contadores de acertos e de erros; "Lançar estudo" serve para o que foi feito sem o cronômetro
+- **Fora da tela desde a 1.13.0** (o código e os dados continuam; em `localhost`, `?questoes=1` liga): tudo o que está abaixo sobre cadernos, questões nativas, questões oficiais, provas em lote, folha de respostas, flashcards e desafio do dia
 - **Cadernos de questões:** um caderno por disciplina (as doze do plano), com as questões agrupadas por assunto. Cada caderno guarda o seu andamento: continuar de onde parou, abrir qualquer questão pelo número, refazer só as erradas ou zerar as respostas
 - **Atalhos:** só as que errei, nunca resolvidas e o desafio do dia
 - **Meus cadernos:** cadernos montados por disciplina, filtro (todas, nunca resolvidas ou as que errei) e tamanho
@@ -43,7 +48,7 @@ referência do projeto (Art. 93).
 - Tema claro, escuro ou automático; instalável; funciona sem internet depois da primeira visita
 
 **Fora da tela nesta fase** (o código continua no repositório): Concursos (outros editais), Disciplinas (cadastro),
-Simulados, Agenda e o guia. Em `localhost`, `?geral=1` liga essas telas, para os testes.
+Simulados, Agenda e o guia (em `localhost`, `?geral=1` liga); e, desde a 1.13.0, as questões dentro do app (`?questoes=1`).
 
 ## Como usar
 
@@ -89,7 +94,8 @@ Ao mudar a versão, atualize também o `?v=` dos arquivos no `index.html`.
 |---|---|
 | `index.html` | moldura da página: barra de cima, navegação e a política de segurança (CSP) |
 | `estilo.css` | identidade visual "caderno e marca-texto" e todas as telas |
-| `editais.js` | a biblioteca: o plano da ANPD (edital previsto, banca Cebraspe) |
+| `editais.js` | a biblioteca: o plano da ANPD (edital previsto, banca Cebraspe) e o edital do Cofen (publicado, banca Instituto Quadrix), com os assuntos em comum ligados |
+| `apostilas.js` e `apostilas/` | a lista, o leitor do formato e a tela das apostilas; o texto de cada uma, em `.md` |
 | `questoes.js` e `questoes2.js` | o banco de questões do app (questões inéditas de certo ou errado, com comentário e fundamento) e uma aula curta por assunto: LGPD no primeiro, as outras onze disciplinas no segundo |
 | `cadernos.js` | cadernos de questões: por disciplina, atalhos, cadernos montados e o andamento de cada um |
 | `app.js` | motor: dados, plano do dia, sequência, pontos, domínio, revisões e sincronização |
@@ -171,9 +177,9 @@ mostrar. O arquivo é público: não entra nome, e-mail nem nada pessoal.
 | Exceção | Por quê |
 |---|---|
 | Código dividido em vários `.js`, carregados com `?v=<versão>` | Regras do Estudo Fácil, Art. 5º (exceção já aprovada) |
-| **Fase de testes fechada (desde a 1.1.0, provisória):** o app é de uso exclusivo do Bruno e só do concurso da ANPD; a página pede para não entrar em buscadores (`noindex`) e os outros apps não devem listá-lo em "Outros apps da família" | Decisão do Bruno em 16/11/2026. Exceção ao Código, Art. 10 (app feito para o mercado), e às Regras do Estudo Fácil, Art. 1º (controle de estudos geral). No futuro o app volta a ser publicado para o público geral. Registrada no Painel do Integrador (Art. 5º, III); a mudança no Kit, que só o Integrador faz, está no D18 do Painel |
+| **Fase de testes fechada (desde a 1.1.0, provisória):** o app é de uso exclusivo do Bruno e só dos concursos dele (ANPD e, desde a 1.13.0, Cofen); a página pede para não entrar em buscadores (`noindex`) e os outros apps não devem listá-lo em "Outros apps da família" | Decisão do Bruno em 16/11/2026. Exceção ao Código, Art. 10 (app feito para o mercado), e às Regras do Estudo Fácil, Art. 1º (controle de estudos geral). No futuro o app volta a ser publicado para o público geral. Registrada no Painel do Integrador (Art. 5º, III); a mudança no Kit, que só o Integrador faz, está no D18 do Painel |
 | **Sem guia (desde a 1.3.0, provisória):** o guia sai da tela e a função nova (cadernos) não entra nele | Decisão do Bruno em 16/11/2026: na fase fechada o guia deixa o app extenso e não ajuda quem é o único usuário. Exceção ao Código, Arts. 77 a 80. Volta, refeito, quando o app for aberto ao público. Registrada no Painel do Integrador |
-| **Funções gerais fora da tela (desde a 1.3.0, provisória):** Concursos, Disciplinas, Simulados e Agenda; a barra de baixo passa a ser Hoje, Cadernos, Estudar, Medalhas e Mais | Mesma decisão. Diverge das Regras do Estudo Fácil, Arts. 6º a 9º, até o Integrador atualizar o texto (Painel do Integrador, D18). Registrada no Painel do Integrador |
+| **Funções gerais fora da tela (desde a 1.3.0, provisória):** Concursos, Disciplinas, Simulados e Agenda; a barra de baixo é Hoje, Apostilas, Estudar, Medalhas e Mais (até a 1.12, Cadernos no lugar de Apostilas) | Mesma decisão. Diverge das Regras do Estudo Fácil, Arts. 6º a 9º, até o Integrador atualizar o texto (Painel do Integrador, D18). Registrada no Painel do Integrador |
 
 **Peças próprias do app** (não substituem peça do Kit; Código, Art. 72, § 4º): a medalha em 3D (`jogo.js`), o modo foco, o treino
 de questões e a festa de fim de sessão, que são telas cheias de marca (Art. 68, § 4º). O que pode virar padrão está no Painel do
@@ -185,7 +191,7 @@ Integrador (D18).
 |---|---|---|---|
 | GitHub (gist) | sincronização entre aparelhos | gratuito | nada no projeto; cada pessoa usa a própria conta |
 | Firebase (projeto `conta-facil-2c1f9`, compartilhado pelo projeto) | receber as avaliações | plano gratuito | regra de [`comum/regras-firestore-feedback.txt`](comum/regras-firestore-feedback.txt) publicada |
-| Cebraspe (`cdn.cebraspe.org.br`) | cadernos, gabaritos, enunciados e padrões de resposta, abertos por link | gratuito | nada; o app não baixa nem guarda os arquivos |
+| Cebraspe (`cdn.cebraspe.org.br`) | enunciados e padrões de resposta da discursiva, abertos por link (e os cadernos e gabaritos, com `?questoes=1`) | gratuito | nada; o app não baixa nem guarda os arquivos |
 | Google Fonts, cdnjs | fontes (Atkinson Hyperlegible e Fraunces) e o QR code do apoio | gratuito | nada |
 
 ## Publicação

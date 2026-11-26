@@ -3,6 +3,23 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.13.0 · 2026-11-26
+
+- **Questões fora do app:** cadernos, treino, flashcards, desafio do dia e provas do Cebraspe saíram da tela. As questões são resolvidas no Tec Concursos; no app, a opção Questões abre o cronômetro, e você marca os acertos e os erros. O tempo continua contando no assunto e na meta do dia.
+- **Nada foi apagado:** as respostas e o arquivo das provas continuam guardados no aparelho. As medalhas que dependiam das questões do app (desafio, combo, flashcards, blocos de prova e cadernos) saíram da coleção.
+- **Apostilas:** teoria escrita pelo instrutor para quem nunca viu o assunto, voltada ao jeito de o Cebraspe cobrar. Cada capítulo traz explicação, exemplo, o trecho da lei, como a banca cobra, modelos de item certo e errado (só para ler) e o resumo para a prova.
+- **Primeira apostila:** LGPD, com 19 capítulos, um por assunto do edital. Os números foram conferidos no texto da lei que está no app (Planalto, cópia de 16/11/2026).
+- **Estudar, opção Teoria:** inicia a sessão e abre a apostila no capítulo do assunto. Sem apostila, usa o cronômetro.
+- **Teoria concluída no capítulo:** o botão no fim de cada capítulo grifa o assunto e marca as revisões, com Desfazer.
+- **Edital do Cofen:** Analista Técnico (código 406), banca Instituto Quadrix, prova em 28/02/2027. Entra ao lado do da ANPD, que continua sendo o foco.
+- **Editais integrados:** 46 assuntos que os dois editais cobram são os mesmos (Português, Direito Administrativo, Constitucional, LGPD e LAI). O que você estuda neles conta para os dois.
+- **Lei seca do Cofen:** os assuntos de contratos abrem a Lei 14.133/2021 no artigo certo; saúde e direitos sociais abrem a Constituição.
+- **Hoje:** um cartão por concurso, com a contagem para a prova de cada um.
+- **Nova barra de baixo:** Hoje, Apostilas, Estudar, Medalhas e Mais.
+- **Ainda faltam:** as apostilas das outras disciplinas, e as normas próprias do Cofen (Lei 5.905/1973, Decreto 94.406/1987, três resoluções do Cofen, Declaração Universal e Convenção Americana de Direitos Humanos), que entram quando o computador do Bruno estiver ligado para copiar o texto oficial.
+- **Atenção:** o edital do Cofen só dá o total de itens por bloco (40, 30 e 50). A divisão por disciplina é estimativa do app.
+- **Testes pulados nesta versão:** os testes do Kit e o do guia (desligado). Rodaram a verificação do padrão, os testes do app e a varredura de acessibilidade.
+
 ## 1.12.1 · 2026-11-16
 
 - **Correção:** o botão "Abrir arquivo das provas" sumia quando as provas antigas já estavam no aparelho. Agora fica sempre à vista, no fim de Cadernos.

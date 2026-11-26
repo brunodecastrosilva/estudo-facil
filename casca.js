@@ -3,9 +3,11 @@
 
 /* ---------- navegação ---------- */
 let tab = 'hoje', novoItem = null;
-const TELAS = { hoje: viewHoje, cadernos: viewCadernos, caderno: viewCaderno, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, leis: viewLeis, lei: viewLei, provas: viewProvas, prova: viewProva, discursivas: viewDiscursivas, discursiva: viewDiscursiva, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
-const TITULOS = { hoje: 'Hoje', cadernos: 'Cadernos', caderno: 'Caderno', plano: 'Edital', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', leis: 'Leis', lei: 'Lei', provas: 'Provas do Cebraspe', prova: 'Prova', discursivas: 'Discursiva', discursiva: 'Discursiva', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
-const PAI = { concurso: 'concursos', disciplina: 'disciplinas', prova: 'provas', discursiva: 'discursivas', caderno: 'cadernos', lei: 'leis' };
+const TELAS = { hoje: viewHoje, apostilas: viewApostilas, apostila: viewApostila, cadernos: viewCadernos, caderno: viewCaderno, plano: viewPlano, medalhas: viewMedalhas, evolucao: viewEvolucao, instrutor: viewInstrutor, leis: viewLeis, lei: viewLei, provas: viewProvas, prova: viewProva, discursivas: viewDiscursivas, discursiva: viewDiscursiva, mais: viewMais, concursos: viewConcursos, concurso: viewConcurso, disciplinas: viewDisciplinas, disciplina: viewDisciplina, revisoes: viewRevisoes, simulados: viewSimulados, agenda: viewAgenda };
+const TITULOS = { hoje: 'Hoje', apostilas: 'Apostilas', apostila: 'Apostila', cadernos: 'Cadernos', caderno: 'Caderno', plano: 'Edital', medalhas: 'Medalhas', evolucao: 'Evolução', instrutor: 'Instrutor', leis: 'Leis', lei: 'Lei', provas: 'Provas do Cebraspe', prova: 'Prova', discursivas: 'Discursiva', discursiva: 'Discursiva', mais: 'Mais', concursos: 'Concursos', concurso: 'Concurso', disciplinas: 'Disciplinas', disciplina: 'Disciplina', revisoes: 'Revisões', simulados: 'Simulados', agenda: 'Agenda', ajustes: 'Ajustes' };
+const PAI = { concurso: 'concursos', disciplina: 'disciplinas', prova: 'provas', discursiva: 'discursivas', caderno: 'cadernos', lei: 'leis', apostila: 'apostilas' };
+// telas das questões dentro do app, fora da tela desde a 1.13.0 (QUEST, em app.js)
+const TELAS_QUEST = new Set(['cadernos', 'caderno', 'provas', 'prova']);
 // telas das funções gerais, fora da fase fechada (GERAL, em app.js)
 const TELAS_GERAIS = new Set(['concursos', 'concurso', 'disciplinas', 'disciplina', 'simulados', 'agenda']);
 const DE_MAIS = new Set(['plano', 'concursos', 'concurso', 'disciplinas', 'disciplina', 'revisoes', 'simulados', 'agenda', 'instrutor', 'leis', 'lei', 'provas', 'prova', 'discursivas', 'discursiva']);
@@ -13,6 +15,7 @@ function irPara(t, { topo = true } = {}) {
   if (t === 'estudar') { abrirEstudar(); return; }
   if (t === 'ajustes') { abrirAjustes(); return; }
   if (!GERAL && TELAS_GERAIS.has(t)) t = 'hoje';
+  if (!QUEST && TELAS_QUEST.has(t)) t = 'hoje';
   sairDosAjustes(); fecharJanela(true);
   tab = t; render();
   if (topo) window.scrollTo({ top: 0 });
@@ -23,10 +26,11 @@ function pintarNav() {
   const viva = !!DB.ativa, centro = { id: 'estudar', rotulo: 'Estudar', nome: viva ? 'Voltar ao foco' : 'Estudar agora', icone: I.play, atual: false, selo: viva ? '<span class="kf-nav-selo"><span aria-hidden="true">•</span><span class="kf-so-leitor">, sessão em andamento</span></span>' : '' };
   // com as medalhas ligadas, elas ficam na barra e a Evolução vai para "Mais"; desligadas, a Evolução volta à barra
   const jogo = jogoLigado(), terceiro = jogo ? it('medalhas', 'Medalhas', I.medalha) : it('evolucao', 'Evolução', I.evolucao);
-  const html = KitFacil.nav.barra({ itens: [it('hoje', 'Hoje', I.hoje), it('cadernos', 'Cadernos', I.questoes, ['caderno']), terceiro], centro, mais: { atual: tab === 'mais' || DE_MAIS.has(tab) || (jogo && tab === 'evolucao') } });
+  const segundo = QUEST ? it('cadernos', 'Cadernos', I.questoes, ['caderno']) : it('apostilas', 'Apostilas', I.livro, ['apostila']);
+  const html = KitFacil.nav.barra({ itens: [it('hoje', 'Hoje', I.hoje), segundo, terceiro], centro, mais: { atual: tab === 'mais' || DE_MAIS.has(tab) || (jogo && tab === 'evolucao') } });
   const nav = $('#tabs'); if (nav.dataset.h !== html) { nav.innerHTML = html; nav.dataset.h = html; }
   const lado = KitFacil.nav.trilho({ destaque: { ...centro, rotulo: viva ? 'Voltar ao foco' : 'Estudar agora' },
-    itens: [it('hoje', 'Hoje', I.hoje), it('cadernos', 'Cadernos', I.questoes, ['caderno']), ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('plano', 'Edital', I.plano), it('evolucao', 'Evolução', I.evolucao), it('leis', 'Leis', I.lei, ['lei']), it('provas', 'Provas', I.simulado, ['prova']), it('discursivas', 'Discursiva', I.lapis, ['discursiva']), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar),
+    itens: [it('hoje', 'Hoje', I.hoje), segundo, ...(jogo ? [it('medalhas', 'Medalhas', I.medalha)] : []), it('plano', 'Edital', I.plano), it('evolucao', 'Evolução', I.evolucao), it('leis', 'Leis', I.lei, ['lei']), ...(QUEST ? [it('provas', 'Provas', I.simulado, ['prova'])] : []), it('discursivas', 'Discursiva', I.lapis, ['discursiva']), it('instrutor', 'Instrutor', I.balao), it('revisoes', 'Revisões', I.revisar),
       ...(GERAL ? [it('concursos', 'Concursos', I.concurso, ['concurso']), it('disciplinas', 'Disciplinas', I.disciplinas, ['disciplina']), it('simulados', 'Simulados', I.simulado), it('agenda', 'Agenda', I.agenda)] : [])], mais: { atual: tab === 'mais' } });
   const t = $('#trilho'); if (t.dataset.h !== lado) { t.innerHTML = lado; t.dataset.h = lado; }
 }
@@ -40,8 +44,10 @@ $('#marca').addEventListener('click', () => irPara('hoje'));
 /* ---------- ações das telas ---------- */
 const ACOES = {
   ...ACOES_LEI,
+  ...ACOES_AP,
   ...ACOES_CAD,
   'estudar-proximo': () => abrirEstudar(),
+  'ver-edital': b => { planoConc = b.dataset.id; irPara('plano'); },
   'estudar-item': b => { const it = planoDoDia().itens[+b.dataset.i]; if (it) abrirEstudar(it); },
   'revisar': b => { const r = DB.revisoes.find(x => x.id === b.dataset.id); if (r) abrirEstudar({ t: r.t, m: topico(r.t).m, tipo: 'revisao', min: 15, rev: r.id }); },
   'assunto': b => assuntoFicha(b.dataset.id),
@@ -91,13 +97,15 @@ function render() {
   if (tab === 'prova' && !PROVA.has(provaId)) tab = 'provas';
   if (tab === 'caderno' && !cadernoDe(cadId)) tab = 'cadernos';
   if (tab === 'lei' && !LEI.has(leiId)) tab = 'leis';
+  if (tab === 'apostila' && !AP.has(apId)) tab = 'apostilas';
+  if (!QUEST && TELAS_QUEST.has(tab)) tab = 'hoje';
   if (!GERAL && TELAS_GERAIS.has(tab)) tab = 'hoje';
   if (tab === 'discursiva' && !DISC.has(redId)) tab = 'discursivas';
   if (!TELAS[tab] && tab !== 'ajustes') tab = 'hoje';
   pintarNav();
   const v = $('#view'), tela = tab === 'ajustes' ? viewAjustes : TELAS[tab];
   $('.wrap').classList.toggle('largo', tab === 'ajustes');
-  const chaveTela = tab + (tab === 'concurso' ? concId : tab === 'disciplina' ? discId : tab === 'prova' ? provaId : tab === 'discursiva' ? redId : tab === 'caderno' ? cadId : tab === 'lei' ? leiId + (LEI_TXT[leiId] ? '' : '…') : '');
+  const chaveTela = tab + (tab === 'concurso' ? concId : tab === 'disciplina' ? discId : tab === 'prova' ? provaId : tab === 'discursiva' ? redId : tab === 'caderno' ? cadId : tab === 'lei' ? leiId + (LEI_TXT[leiId] ? '' : '…') : tab === 'apostila' ? apId + (AP_TXT[apId] && !AP_TXT[apId].erro ? '' : '…') : '');
   const trocou = v.dataset.telaAtual !== chaveTela; v.dataset.telaAtual = chaveTela;
   // as seções abertas continuam abertas depois de redesenhar
   const abertas = trocou ? null : new Set($$('details[data-chave]', v).filter(d => d.open).map(d => d.dataset.chave)), fechadas = trocou ? null : new Set($$('details[data-chave]', v).filter(d => !d.open).map(d => d.dataset.chave));
@@ -199,7 +207,7 @@ function aberturaAbrir({ rever = false } = {}) {
   const telas = [
     { arte: `<div class="ab-caderno"><div class="folha ab-folha"><span class="ab-l w70"></span><span class="ab-l w90 grifada"></span><span class="ab-l w60"></span><span class="ab-l w80 grifada"></span><span class="ab-l w50"></span></div><span class="ab-chama">${chamaHTML(true)}</span><span class="ab-anel">${anelHTML(60, 60, { tam: 84, traco: 9, centro: '<b>60</b><small>min</small>' })}</span></div>`,
       titulo: veterano && !rever ? 'O Estudo Fácil está de cara nova' : 'Estudar todo dia, do jeito fácil',
-      texto: veterano && !rever ? 'O app foi refeito do zero. Os dados da versão antiga ficaram guardados neste aparelho, mas não vieram para a nova.' : 'O app escolhe o assunto, traz questões comentadas e lembra das revisões. Você só abre e começa.' },
+      texto: veterano && !rever ? 'O app foi refeito do zero. Os dados da versão antiga ficaram guardados neste aparelho, mas não vieram para a nova.' : 'O app escolhe o assunto, abre a apostila e lembra das revisões. Você só abre e começa.' },
     { arte: () => demoHTML(), falada: true, titulo: 'O edital vira caderno', texto: 'Experimente: toque num assunto para grifar. Cada assunto estudado aumenta a sua prontidão para a prova.' },
     { arte: `<div class="ab-seq"><span class="ab-chama g">${chamaHTML(true)}</span><ol class="semana ab-sem" aria-hidden="true">${['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].map((l, i) => `<li class="dia ${i < 5 ? 'feito' : i === 5 ? 'hoje atual' : 'futuro'}"><span class="dia-l">${l}</span><span class="dia-m">${i < 5 ? I.check : ''}</span></li>`).join('')}</ol>
         <div class="ab-meds">${['seq7', 'q500', 'as50', 'cb20', 'ed90'].map((id, k) => `<span class="ab-med" style="--i:${k}">${medalhaSVG(MEDALHAS.find(m => m.id === id))}</span>`).join('')}</div></div>`,
@@ -207,7 +215,7 @@ function aberturaAbrir({ rever = false } = {}) {
     { arte: `<div class="folha ab-capa"><span class="rotulo-mini">${c ? esc(c.orgao || c.sigla) : 'Seu concurso'}</span><b class="capa-t">${c ? esc(c.cargo || c.sigla) : 'Escolha o seu edital'}</b>
         ${c ? `<dl class="resumo"><div><dt>Disciplinas</dt><dd>${c.disc.length}</dd></div><div><dt>Assuntos</dt><dd>${soma(c.disc, d => d.topicos.length)}</dd></div><div><dt>Fases até a prova</dt><dd>3</dd></div></dl>` : ''}</div>`,
       titulo: c && c.base === 'anpd' ? 'Seu plano para a ANPD está pronto' : 'Seu plano começa hoje',
-      texto: c && c.base === 'anpd' ? 'Especialista em Regulação: doze cadernos de questões, o edital para grifar e as fases até a prova.' : 'Adicione o seu concurso e o app monta o plano de cada dia.',
+      texto: c && c.base === 'anpd' ? 'Especialista em Regulação: o edital para grifar, apostilas, leis na íntegra e as fases até a prova.' : 'Adicione o seu concurso e o app monta o plano de cada dia.',
       extra: cfg().nome ? '' : `<div class="kf-campo ab-nome"><label class="kf-rotulo" for="ab-eu">Como chamam você? <span class="kf-opcional">(opcional)</span></label><input id="ab-eu" class="kf-entrada" type="text" autocapitalize="words" autocomplete="off" maxlength="40" placeholder="Seu nome ou apelido"></div>` },
   ];
   KitFacil.abertura.abrir({ telas, rever, rotulo: 'Apresentação do Estudo Fácil', fim: () => rever ? 'Concluir' : 'Começar a estudar',

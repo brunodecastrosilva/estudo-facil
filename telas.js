@@ -36,7 +36,7 @@ const linhaPlano = (it, i) => {
 };
 // Hoje: o caderno em que você parou, o desafio do dia e os flashcards que venceram
 function centralQuestoes() {
-  if (!QUESTOES.some(q => topico(q.t))) return '';
+  if (!QUEST || !QUESTOES.some(q => topico(q.t))) return '';
   const D = desafioDoDia(), fc = flashcardsDeHoje().length, feitas = DB.respostas.filter(r => QID.has(r.id)).length, and = cadernoEmAndamento(), E = and && cadernoEstado(and);
   const lin = (attrs, ic, t, sub, selo = '') => `<li><button type="button" class="lin" ${attrs}><span class="lin-ic">${ic}</span><span class="lin-tx"><b>${t}</b><small>${sub}</small></span>${selo}${I.seta}</button></li>`;
   return `<section aria-labelledby="cq-t"><div class="sec-cab"><h2 class="sec-t" id="cq-t">Questões</h2><span class="apoio">${feitas} de ${todasAsQuestoes().length} resolvidas</span></div>
@@ -78,9 +78,10 @@ const viewHoje = {
         <ul class="card lista plano-hoje" data-kf-morf="plano">${P.itens.length ? P.itens.map(linhaPlano).join('') : '<li class="pl-vazio">Nada marcado para hoje. Escolha um assunto em Estudar.</li>'}</ul>
         ${P.revisoesAMais ? `<button type="button" class="kf-btn kf-link" data-kf-ir="revisoes">Ver mais ${plural(P.revisoesAMais, 'revisão vencida', 'revisões vencidas')}</button>` : ''}</section>
 
-      ${c ? `<button type="button" class="card conc-card" data-kf-ir="plano"><span class="cc-topo"><b>${esc(c.sigla)}</b>${fase ? `<span class="etiqueta">${esc(fase.nome)}</span>` : ''}</span><span class="cc-cargo">${esc(c.cargo || '')}</span>
-        <span class="cc-pront"><span>Prontidão para a prova</span><b>${prontidao(c)}%</b></span>${barraHTML(prontidao(c), `Prontidão: ${prontidao(c)}%`, 'grifada')}
-        <span class="kf-so-leitor">. Ver o edital</span></button>` : ''}
+      ${[c, ...concursosAtivos().filter(x => c && x.id !== c.id)].filter(Boolean).map(x => { const fx = faseAtual(x), cx = contagem(x), px = prontidao(x);
+        return `<button type="button" class="card conc-card" data-act="ver-edital" data-id="${esc(x.id)}"><span class="cc-topo"><b>${esc(x.sigla)}</b>${fx ? `<span class="etiqueta">${esc(fx.nome)}</span>` : ''}</span><span class="cc-cargo">${esc(x.cargo || '')}${cx && cx.n >= 0 ? ` · ${cx.texto.toLowerCase()}${cx.estimada ? ' (data estimada)' : ''}` : ''}</span>
+        <span class="cc-pront"><span>Prontidão para a prova</span><b>${px}%</b></span>${barraHTML(px, `Prontidão: ${px}%`, 'grifada')}
+        <span class="kf-so-leitor">. Ver o edital</span></button>`; }).join('')}
       ${DB.sessoes.length ? `<button type="button" class="kf-btn kf-link" data-kf-ir="evolucao">Ver a sua evolução</button>` : ''}
 
       ${jogoLigado() ? `<button type="button" class="card nivel-card" data-act="ver-medalhas"><span class="kf-so-leitor">Nível ${s.nivel}: </span>${seloNivelHTML(s)}${nivelHTML(s)}
@@ -224,13 +225,13 @@ const viewInstrutor = {
     const R = respostasDoInstrutor();
     return `${voltaMais()}${cab('Instrutor', 'O Claude acompanha o seu estudo e responde às suas dúvidas.')}
       <section class="folha instrutor-capa"><ol class="passos">
-          <li><b>Pergunte.</b> O app copia a questão e a sua dúvida.</li>
+          <li><b>Pergunte.</b> O app copia a sua dúvida.</li>
           <li><b>Cole no Claude.</b> No Projeto Estudo Fácil, a resposta sai na hora.</li>
-          <li><b>Releia aqui.</b> O instrutor grava a resposta no app, junto da questão.</li></ol>
+          <li><b>Releia aqui.</b> O instrutor grava a resposta no app.</li></ol>
         <button type="button" class="kf-btn kf-pri bloco" data-act="perguntar" id="in-novo">Perguntar ao instrutor</button></section>
       <section aria-labelledby="in-r"><div class="sec-cab"><h2 class="sec-t" id="in-r">Respostas guardadas</h2><span class="apoio">${R.length}</span></div>
         ${R.length ? `<ul class="card lista respostas">${R.map(x => { const q = QID.get(x.id), t = q && topico(q.t); return `<li class="resp"><span class="rotulo-mini">${esc(x.em || '')}${t ? ' · ' + esc(t.nome) : ''}</span>${x.p ? `<p class="resp-p">${esc(x.p)}</p>` : ''}<p>${esc(x.r || '')}</p></li>`; }).join('')}</ul>`
-          : KitFacil.ui.vazio({ titulo: 'Nenhuma resposta ainda', texto: 'Numa questão, toque em Perguntar ao instrutor. As respostas ficam guardadas aqui.' })}</section>`;
+          : KitFacil.ui.vazio({ titulo: 'Nenhuma resposta ainda', texto: 'Toque em Perguntar ao instrutor. As respostas ficam guardadas aqui.' })}</section>`;
   },
 };
 
@@ -242,10 +243,10 @@ const viewMais = {
     return `${cab('Mais')}${KitFacil.nav.mais({ linhas: [
       { id: 'plano', titulo: 'Edital', texto: c ? `${prontidao(c)}% de prontidão · ${plural(DB.topicos.length, 'assunto', 'assuntos')}` : 'O edital, assunto por assunto', icone: I.plano },
       ...(jogoLigado() ? [{ id: 'evolucao', titulo: 'Evolução', texto: 'Prontidão, constância, horas e acertos', icone: I.evolucao }] : []),
-      { id: 'leis', titulo: 'Leis', texto: `${LEIS.length} normas do edital, na íntegra`, icone: I.lei },
-      { id: 'provas', titulo: 'Provas do Cebraspe', texto: `${PROVAS.length} cadernos oficiais, com gabarito e comentário`, icone: I.simulado },
+      { id: 'leis', titulo: 'Leis', texto: `${LEIS.length} normas dos editais, na íntegra`, icone: I.lei },
+      ...(QUEST ? [{ id: 'provas', titulo: 'Provas do Cebraspe', texto: `${PROVAS.length} cadernos oficiais, com gabarito e comentário`, icone: I.simulado }] : []),
       { id: 'discursivas', titulo: 'Discursiva', texto: `${DISCURSIVAS.length} temas, com o que a banca espera`, icone: I.lapis },
-      { titulo: 'Flashcards', texto: fc ? `${plural(fc, 'questão para rever hoje', 'questões para rever hoje')}` : 'Nenhum para hoje', icone: I.cartas, attrs: 'data-act="flashcards" id="ma-flash"' },
+      ...(QUEST ? [{ titulo: 'Flashcards', texto: fc ? `${plural(fc, 'questão para rever hoje', 'questões para rever hoje')}` : 'Nenhum para hoje', icone: I.cartas, attrs: 'data-act="flashcards" id="ma-flash"' }] : []),
       { id: 'revisoes', titulo: 'Revisões', texto: rv ? `${plural(rv, 'revisão para hoje', 'revisões para hoje')}` : 'Nenhuma revisão para hoje', icone: I.revisar },
       { id: 'instrutor', titulo: 'Instrutor', texto: nR ? plural(nR, 'resposta guardada', 'respostas guardadas') : 'Leve as suas dúvidas ao Claude', icone: I.balao },
       ...(GERAL ? [

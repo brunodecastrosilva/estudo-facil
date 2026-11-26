@@ -28,9 +28,16 @@ function abrirEstudar(pre = null) {
     pe: `<button type="button" class="kf-btn kf-sec" id="es-lancar">Lançar estudo</button><button type="button" class="kf-btn kf-comecar" id="es-ok">${I.play}Começar</button>`,
     aoMontar: d => {
       const sm = $('#es-m', d), st = $('#es-t', d);
-      const banco = () => { const n = questoesDoAssunto(t).length, usa = comBanco(), lei = tipo === 'lei' ? leiDoAssunto(t) : null;
-        $('#es-banco', d).textContent = tipo === 'lei' ? (lei ? `Abre a ${LEI.get(lei.id).nome}${lei.art ? ', no art. ' + lei.art : ''}, com a sessão contando.` : 'Sem lei ligada a este assunto: use o cronômetro.') : tipo === 'teoria' && !usa && n ? 'A apostila deste assunto ainda não existe: use o cronômetro.' : usa ? `${plural(n, 'questão do app', 'questões do app')} neste assunto, com comentário e aula.` : n ? 'Este assunto tem questões do app: escolha Questões para treinar.' : 'Sem questões do app neste assunto: use o cronômetro.';
-        $('#es-alvo-c', d).hidden = !!usa; $('#es-ok', d).lastChild.textContent = usa ? 'Abrir o caderno' : lei ? 'Abrir a lei' : 'Começar'; };
+      // Teoria abre a apostila do assunto, quando existe; Lei seca abre a lei no artigo; Questões são do Tec: aqui só o tempo, os acertos e os erros
+      const apost = () => tipo === 'teoria' && !comBanco() ? apostilaDoAssunto(t) : null;
+      const banco = () => { const n = QUEST ? questoesDoAssunto(t).length : 0, usa = comBanco(), lei = tipo === 'lei' ? leiDoAssunto(t) : null, ap = apost();
+        $('#es-banco', d).textContent = tipo === 'lei' ? (lei ? `Abre a ${LEI.get(lei.id).nome}${lei.art ? ', no art. ' + lei.art : ''}, com a sessão contando.` : 'Sem lei ligada a este assunto: use o cronômetro.')
+          : ap ? 'Abre a apostila no capítulo deste assunto, com a sessão contando.'
+          : usa ? `${plural(n, 'questão do app', 'questões do app')} neste assunto, com comentário e aula.`
+          : tipo === 'teoria' ? 'A apostila deste assunto ainda não foi escrita: use o cronômetro, com o seu material.'
+          : tipo === 'questoes' ? 'Resolva no Tec Concursos e marque aqui os acertos e os erros. O tempo conta neste assunto.'
+          : 'Revise o assunto e marque as questões que resolver.';
+        $('#es-alvo-c', d).hidden = !!usa; $('#es-ok', d).lastChild.textContent = usa ? 'Abrir o caderno' : lei ? 'Abrir a lei' : ap ? 'Abrir a apostila' : 'Começar'; };
       sm.addEventListener('change', () => { m = sm.value; rev = null; const px = proximoAssunto(m, topicosAtivos(m) || undefined); st.innerHTML = opcoesTopicos(m, px && px.t.id); t = st.value; banco(); });
       st.addEventListener('change', () => { t = st.value; rev = null; banco(); });
       ligarSeg($('#es-tipo', d), v => { tipo = v; banco(); });
@@ -40,6 +47,7 @@ function abrirEstudar(pre = null) {
         if (comBanco()) { treinoAbrir({ t, tipo, rev: tipo === 'revisao' ? rev : null }); return; }
         // lei seca: a sessão começa e a lei abre no ponto do assunto
         const lei = tipo === 'lei' ? leiDoAssunto(t) : null; if (lei) { iniciarSessao({ t, tipo, alvo }); leiAbrirEm(lei.id, lei.art); return; }
+        const ap = apost(); if (ap) { iniciarSessao({ t, tipo, alvo }); apostilaAbrirEm(ap.m, t); return; }
         iniciarSessao({ t, tipo, alvo, rev: tipo === 'revisao' ? rev : null }); focoAbrir(); render(); };
       $('#es-lancar', d).onclick = () => { fecharJanela(true); lancarEstudo({ m: sm.value, t: st.value, tipo }); };
     } });

@@ -1,7 +1,7 @@
 {
   "name": "estudo-facil",
-  "version": "1.12.1",
-  "description": "Estudo Fácil: plano de estudos para o concurso da ANPD, com questões no estilo Cebraspe, flashcards, revisões, sequência de dias e medalhas. App web instalável (PWA) do Projeto Fácil.",
+  "version": "1.13.0",
+  "description": "Estudo Fácil: plano de estudos para os concursos da ANPD e do Cofen, com edital para grifar, apostilas voltadas ao Cebraspe, leis na íntegra, revisões, sequência de dias e medalhas. App web instalável (PWA) do Projeto Fácil.",
   "private": true,
   "type": "module",
   "scripts": {

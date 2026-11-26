@@ -22,7 +22,7 @@ async function varrer(page, onde) {
 for (const tema of ['light', 'dark']) {
   test(`acessibilidade (WCAG 2.2 AA): abertura, telas, treino, flashcards, foco, festa e Ajustes, tema ${tema === 'light' ? 'claro' : 'escuro'}`, async t => {
     if (!AxeBuilder) { t.skip('axe não instalado: rode npm install (pacote @axe-core/playwright)'); return; }
-    const a = await aparelho(amb, { viewport: { width: 390, height: 844 }, caminho: '?hoje=2026-11-16', antes: () => { window.EF_TESTE_ABERTURA = true; } });
+    const a = await aparelho(amb, { viewport: { width: 390, height: 844 }, caminho: '?hoje=2026-11-16&questoes=1', antes: () => { window.EF_TESTE_ABERTURA = true; } });
     const p = a.page, nome = tema === 'light' ? 'claro' : 'escuro';
     await p.emulateMedia({ colorScheme: tema, reducedMotion: 'reduce' });
     await p.locator('.kf-abertura').waitFor();
@@ -53,6 +53,9 @@ for (const tema of ['light', 'dark']) {
     await p.evaluate(() => { const itens = {}; for (let n = 1; n <= 50; n++) itens[n] = 'Item inventado ' + n + ', com \u0001destaque\u0002.'; DB.textos = [{ id: 'anatel24-cb1', itens, grupos: [{ de: 1, cmd: 'Julgue os itens a seguir, relativos ao texto CB1.', apoio: 'Texto CB1\nParágrafo inventado.' }], em: 1 }]; salvar(); treinoAbrir({ caderno: 'p:anatel24-cb1', i: 0 }); });
     await p.locator('#treino.dentro').waitFor(); await p.click('#treino .tr-apoio summary'); await varrer(p, `Questão oficial (${nome})`);
     await p.click('#treino [data-resp="C"]'); await p.locator('#tr-prox').waitFor(); await varrer(p, `Questão oficial respondida (${nome})`); await p.evaluate(() => treinoFechar()); await p.waitForTimeout(300);
+    await p.evaluate(() => irPara('apostilas')); await p.waitForTimeout(200); await varrer(p, `Apostilas (${nome})`);
+    await p.evaluate(() => apostilaAbrirEm('anpd-lgpd')); await p.locator('#view .ap-cap').first().waitFor(); await varrer(p, `Apostila (${nome})`);
+    await p.evaluate(() => { planoConc = 'cofen-2027'; irPara('plano'); }); await p.waitForTimeout(200); await varrer(p, `Edital do Cofen (${nome})`); await p.evaluate(() => { planoConc = null; });
     await p.evaluate(() => irPara('leis')); await p.waitForTimeout(200); await varrer(p, `Leis (${nome})`);
     await p.evaluate(() => { leiId = 'l12813'; irPara('lei'); }); await p.locator('#view .lei-folha p').first().waitFor(); await varrer(p, `Lei (${nome})`);
     for (const tela of ['evolucao', 'instrutor', 'revisoes']) { await p.evaluate(t => { concId = 'anpd-2027'; discId = 'anpd-lgpd'; irPara(t); }, tela); await p.waitForTimeout(200); await varrer(p, `${tela} (${nome})`); }
