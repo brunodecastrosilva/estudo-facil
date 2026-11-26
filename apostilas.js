@@ -13,6 +13,7 @@
 "use strict";
 const APOSTILAS = [
   // caps: os assuntos <disciplina>-01 a -NN; mais: os assuntos de outro edital que entram na mesma disciplina (ids próprios)
+  { m: 'anpd-lp', titulo: 'Português para quem nunca se deu bem com gramática', curto: 'Língua Portuguesa', sub: '15 capítulos: os 12 assuntos da ANPD e os 3 que só o Cofen cobra', caps: 12, mais: ['cofen-lp-01', 'cofen-lp-02', 'cofen-lp-03'] },
   { m: 'anpd-da', titulo: 'Direito Administrativo para quem nunca viu', curto: 'Direito Administrativo', sub: '16 capítulos: os 12 assuntos da ANPD e os 4 que só o Cofen cobra', caps: 12, mais: ['cofen-da-01', 'cofen-da-02', 'cofen-da-03', 'cofen-da-04'] },
   { m: 'anpd-lgpd', titulo: 'LGPD para quem nunca viu', curto: 'LGPD', sub: 'A Lei 13.709/2018 em 19 capítulos, um por assunto do edital', caps: 19 },
 // nos testes (só em localhost), ?apostilas=anpd-lgpd deixa no app só as apostilas pedidas: os testes do motor usam uma só
@@ -67,7 +68,7 @@ function apBlocos(B, { de = 0, ate = B.length, marca = true } = {}) {
     else if (tipo === 'h') h += `<h2 class="ap-h"${d}>${apFmt(a)}</h2>`;
     else if (tipo === 'lei') h += `<blockquote class="ap-lei"${d}><span class="rotulo-mini">Na lei</span><p>${apFmt(a)}</p></blockquote>`;
     else if (tipo === 'ex') h += `<div class="ap-ex"${d}><span class="rotulo-mini">Exemplo</span><p>${apFmt(a)}</p></div>`;
-    else if (tipo === 'banca') h += `<div class="ap-banca"${d}><span class="rotulo-mini">Como o Cebraspe cobra</span><p>${apFmt(a)}</p></div>`;
+    else if (tipo === 'banca') h += `<div class="ap-banca"${d}><span class="rotulo-mini">${/Instituto Quadrix/.test(a) ? 'Como a banca cobra' : 'Como o Cebraspe cobra'}</span><p>${apFmt(a)}</p></div>`;
     else if (tipo === 'item') h += `<div class="ap-item ${a === 'C' ? 'ap-c' : 'ap-e'}"${d}><span class="etiqueta${a === 'C' ? ' ok' : ''}">${a === 'C' ? I.check + 'Modelo de item certo' : I.x + 'Modelo de item errado'}</span><p class="ap-af">${apFmt(b)}</p><p class="ap-pq"><b>Por quê:</b> ${apFmt(c)}</p></div>`;
     else h += `<p${d}>${apFmt(a)}</p>`;
   }

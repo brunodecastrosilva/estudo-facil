@@ -23,7 +23,7 @@ Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e
 - **A leitura continua de onde parou:** o app guarda, no aparelho, o ponto de cada capítulo em que a leitura ficou
 - **Apostilas:** teoria do instrutor (Claude) para quem nunca viu o assunto, voltada à banca. O texto fica em
   `apostilas/<disciplina>.md`, um capítulo por assunto do edital (formato no cabeçalho de `apostilas.js`). Existem a de
-  Direito Administrativo (16 capítulos: 12 assuntos da ANPD e 4 só do Cofen, em `mais`) e a da LGPD (19 capítulos)
+  Língua Portuguesa (15 capítulos: 12 da ANPD e 3 só do Cofen), a de Direito Administrativo (16 capítulos: 12 assuntos da ANPD e 4 só do Cofen, em `mais`) e a da LGPD (19 capítulos)
 - **Lei seca, sem travar a fila:** de cada capítulo concluído, uma dose só com os artigos daquele assunto, recortados do texto oficial
   (`DOSES`, em `leis.js`). O texto não muda: redações antigas e trechos riscados aparecem como no Planalto
 - **Relembrar:** cartões de conceito (frente pergunta, verso responde; **Lembrei** ou **Não lembrei**), escritos junto

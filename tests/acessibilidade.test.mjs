@@ -35,6 +35,8 @@ for (const tema of ['light', 'dark']) {
     await varrer(p, `Hoje (${nome})`);
     await p.click('#view [data-act="sobre-sequencia"]'); await p.locator('.kf-dlg').waitFor(); await varrer(p, `como funciona a sequência (${nome})`); await p.keyboard.press('Escape');
     await p.click('#kf-nav-apostilas'); await p.waitForTimeout(200); await varrer(p, `Apostilas (${nome})`);
+    await p.click('#view [data-act="abrir-apostila"][data-id="anpd-lp"]'); await p.locator('#view .ap-caps').waitFor(); await p.click('#view [data-act="abrir-cap"][data-id="anpd-lp-12"]'); await p.locator('#view .ap-folha').waitFor(); await varrer(p, `Capítulo de Português, redação oficial (${nome})`);
+    await p.click('#kf-nav-apostilas');
     await p.click('#view [data-act="abrir-apostila"][data-id="anpd-da"]'); await p.locator('#view .ap-caps').waitFor(); await varrer(p, `Apostila de Direito Administrativo (${nome})`);
     await p.click('#view [data-act="abrir-cap"][data-id="cofen-da-02"]'); await p.locator('#view .ap-folha').waitFor(); await p.locator('#ap-letra button', { hasText: 'Maior' }).click(); await varrer(p, `Capítulo do Cofen, letra maior (${nome})`);
     await p.locator('#ap-letra button', { hasText: 'Normal' }).click();

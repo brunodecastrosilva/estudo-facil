@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.15 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.16 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    A varredura de acessibilidade fica em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -488,11 +488,11 @@ test('apostila de Direito Administrativo: 16 capítulos (12 da ANPD e 4 só do C
   await p.evaluate(() => apCarregar('anpd-da')); await p.waitForFunction(() => apPronta('anpd-da'));
   const d = await p.evaluate(() => { const A = APOSTILAS.find(x => x.m === 'anpd-da'), tx = AP_TXT['anpd-da']; return { ids: A.ids.length, caps: A.caps, lidos: tx.caps.length, semAssunto: tx.caps.filter(c => !topico(c.t)).map(c => c.t), cartoes: tx.caps.reduce((n, c) => n + c.cartoes.length, 0), semSecao: tx.caps.flatMap(c => c.cartoes.filter(k => !(k.sec >= 0)).map(() => c.t)), sug: sugestao(), doses: A.ids.filter(id => doseDe(id)).length, cofen: DB.concursos.find(c => c.id === 'cofen-2027').disc.flatMap(x => x.topicos).filter(id => A.ids.includes(id)).length }; });
   assert.deepEqual([d.ids, d.caps, d.lidos, d.semAssunto, d.cartoes, d.semSecao, d.doses], [16, 16, 16, [], 83, [], 11]);
-  assert.deepEqual(d.sug, { tipo: 'cap', t: 'anpd-da-01' }, 'a fila começa pelo que serve aos dois editais'); assert.ok(d.cofen >= 4, 'os assuntos só do Cofen estão no edital dele');
+  assert.deepEqual(d.sug, { tipo: 'cap', t: 'anpd-lp-01' }, 'a fila começa por Português, a primeira disciplina que serve aos dois editais'); assert.ok(d.cofen >= 4, 'os assuntos só do Cofen estão no edital dele');
   // cada dose de lei seca encontra os artigos no texto da lei guardado no app
   const doses = await p.evaluate(async () => { const out = []; for (const id of APOSTILAS.find(x => x.m === 'anpd-da').ids) { const dz = doseDe(id); if (!dz) continue; const L = await leiCarregar(dz.lei), ps = doseParagrafos(L.p, dz); out.push([id, ps.length, ps.length ? ps[0][0].t.slice(0, 8) : '']); } return out; });
   assert.ok(doses.length === 11 && doses.every(x => x[1] > 1 && /^Art\. /.test(x[2])), 'doses: ' + JSON.stringify(doses));
-  await p.evaluate(() => irPara('apostilas')); assert.match(await p.locator('#view').innerText(), /Direito Administrativo para quem nunca viu[\s\S]*0 de 16 capítulos concluídos[\s\S]*LGPD para quem nunca viu[\s\S]*0 de 19 capítulos concluídos/);
+  await p.evaluate(() => irPara('apostilas')); assert.match(await p.locator('#view').innerText(), /Português para quem nunca se deu bem com gramática[\s\S]*0 de 15 capítulos concluídos[\s\S]*Direito Administrativo para quem nunca viu[\s\S]*0 de 16 capítulos concluídos[\s\S]*LGPD para quem nunca viu[\s\S]*0 de 19 capítulos concluídos/);
   // um capítulo só do Cofen abre, conclui e cria os cartões dele
   await p.evaluate(() => capituloAbrir('cofen-da-02')); await p.locator('#view .tela-t', { hasText: 'Conselhos de fiscalização profissional' }).waitFor();
   assert.equal(await p.locator('#view .ap-folha .ap-lista li').first().evaluate(e => getComputedStyle(e).display + ':' + getComputedStyle(e.parentElement).listStyleType), 'list-item:disc', 'as listas têm marcador');
@@ -529,6 +529,33 @@ test('data resolvida: a data que pede uma ação pode ser marcada no Edital, e o
   const chave = await b.evaluate(e => e.dataset.c + ':' + e.dataset.id); await b.click();
   assert.ok(await esperar(() => p.evaluate(k => cfg().datasFeitas.includes(k) && !datasPerto().some(x => x.c + ':' + x.id === k), chave)), 'marcada e fora dos avisos');
   await p.locator('.kf-toast button').first().click(); assert.ok(await esperar(() => p.evaluate(k => !cfg().datasFeitas.includes(k), chave)), 'Desfazer');
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+// ───────── 1.16.0 ─────────
+test('apostila de Língua Portuguesa: 15 capítulos (12 da ANPD e 3 só do Cofen), cartões em todos; é a primeira da fila', async () => {
+  const txt = readFileSync(new URL('../apostilas/anpd-lp.md', import.meta.url), 'utf8');
+  const caps = txt.split(/\n## /).slice(1);
+  assert.deepEqual(caps.map(c => c.split(' |')[0]), [...Array.from({ length: 12 }, (_, i) => 'anpd-lp-' + String(i + 1).padStart(2, '0')), 'cofen-lp-01', 'cofen-lp-02', 'cofen-lp-03']);
+  for (const c of caps) {
+    const id = c.split(' |')[0], n = re => (c.match(re) || []).length;
+    assert.ok(n(/^\? [a-z] \| .+ :: .+$/gm) >= 4 && n(/^\? /gm) === n(/^\? [a-z] \| .+ :: .+$/gm), `cartões de ${id}`);
+    assert.ok(n(/^C: .+ :: .+$/gm) >= 1 && n(/^E: .+ :: .+$/gm) >= 2 && n(/^= /gm) >= 4 && n(/^banca: /gm) === 1, `modelos, resumo e banca de ${id}`);
+    assert.equal(new Set(c.match(/^\? [a-z] \|/gm)).size, n(/^\? /gm), `letras repetidas em ${id}`);
+  }
+  assert.ok(!/—|–/.test(txt), 'sem travessão');
+  const a = await abrirTudo(), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
+  await p.evaluate(() => apCarregar('anpd-lp')); await p.waitForFunction(() => apPronta('anpd-lp'));
+  const d = await p.evaluate(() => { const A = APOSTILAS.find(x => x.m === 'anpd-lp'), tx = AP_TXT['anpd-lp']; return { ids: A.ids.length, lidos: tx.caps.length, semAssunto: tx.caps.filter(c => !topico(c.t)).map(c => c.t), cartoes: tx.caps.reduce((n, c) => n + c.cartoes.length, 0), semSecao: tx.caps.flatMap(c => c.cartoes.filter(k => !(k.sec >= 0)).map(() => c.t)), fila: fila().slice(0, 13).map(x => x.t), doses: A.ids.filter(id => doseDe(id)).length }; });
+  assert.deepEqual([d.ids, d.lidos, d.semAssunto, d.cartoes, d.semSecao, d.doses], [15, 15, [], 84, [], 0]);
+  assert.deepEqual(d.fila.slice(0, 12), Array.from({ length: 12 }, (_, i) => 'anpd-lp-' + String(i + 1).padStart(2, '0')), 'Português abre a fila'); assert.equal(d.fila[12], 'anpd-da-01');
+  assert.match(await p.locator('#view .sugestao').innerText(), /Próxima leitura\s+Compreensão e interpretação de textos\s+Capítulo 1 de 15 · Língua Portuguesa/);
+  // um capítulo com trecho de norma (redação oficial) e um só do Cofen abrem e concluem; sem dose de lei, o fim do capítulo não oferece lei seca
+  await p.evaluate(() => capituloAbrir('anpd-lp-12')); await p.locator('#view .tela-t', { hasText: 'Redação oficial' }).waitFor(); assert.match(await p.locator('#view .ap-folha').innerText(), /Decreto 9\.758\/2019[\s\S]*senhor/);
+  await p.click('#cap-entendi'); assert.ok(await esperar(() => p.evaluate(() => !!topico('anpd-lp-12').teoria && DB.cartoes.filter(c => c.id.startsWith('anpd-lp-12#')).length === 7)));
+  await fecharFesta(p).catch(() => {}); await fecharMedalhas(p); assert.equal(await p.locator('#ap-fim [data-act="abrir-dose"]').count(), 0);
+  await p.evaluate(() => capituloAbrir('cofen-lp-02')); await p.locator('#view .tela-t', { hasText: 'Significado das palavras' }).waitFor(); assert.ok(await semRolagemLateral(p));
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

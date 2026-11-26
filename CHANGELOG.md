@@ -3,6 +3,16 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.16.0 · 2026-11-26
+
+- **Apostila de Língua Portuguesa:** 15 capítulos (os 12 assuntos da ANPD e os 3 que só o Cofen cobra) e 84 cartões. Da interpretação de textos à redação oficial, com modelos de item de certo ou errado em cada capítulo.
+- **Redação oficial conferida na fonte:** o capítulo segue a 3ª edição do Manual de Redação da Presidência da República (2018) e o Decreto 9.758/2019, lidos em 26/11/2026.
+- **A fila começa por Português:** é a primeira disciplina da ordem combinada (o que serve aos dois concursos). Quem já começou Direito Administrativo continua de onde parou pelo botão de continuar a leitura ou pela tela Apostilas.
+- **Capítulos só do Cofen:** a caixa da banca passa a se chamar "Como a banca cobra", porque a banca desse concurso é o Instituto Quadrix.
+- **Sem lei seca nesta apostila:** Português não tem lei para acompanhar; o Manual de Redação não está nos textos do app.
+- **Ainda faltam:** Direito Constitucional e as demais apostilas; a segunda passada na da LGPD; os três níveis por trecho, o levantamento de mais provas (Cebraspe e Instituto Quadrix) e as normas do Cofen, que dependem do computador do Bruno ligado.
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou) e o leitor de PDF (nada mudou nele).
+
 ## 1.15.1 · 2026-11-26
 
 - **Apostila de Direito Administrativo sem internet:** o arquivo da apostila nova tinha ficado fora da lista que o app guarda no aparelho. Agora ela abre sem sinal, como a da LGPD.
