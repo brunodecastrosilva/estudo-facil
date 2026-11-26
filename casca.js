@@ -41,6 +41,9 @@ const ACOES = {
   ...ACOES_REL,
   'estudar-proximo': () => lerSugestao(),
   'ver-edital': b => { editalConc = b.dataset.id; irPara('edital'); },
+  'data-feita': b => { const k = b.dataset.c + ':' + b.dataset.id, L = cfg().datasFeitas || [], era = L.includes(k);
+    cfg().datasFeitas = era ? L.filter(x => x !== k) : [...L, k]; salvar();
+    avisar(era ? 'Data desmarcada.' : 'Resolvido. O aviso desta data não aparece mais.', { label: 'Desfazer', run: () => { cfg().datasFeitas = L; salvar(); } }); },
   'assunto': b => assuntoFicha(b.dataset.id),
   'medalha': b => { const m = MEDALHAS.find(x => x.id === b.dataset.id); if (m) medalhaFicha(m); },
   'abrir-red': b => { redId = b.dataset.id; irPara('discursiva'); },

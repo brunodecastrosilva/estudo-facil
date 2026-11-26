@@ -2,7 +2,7 @@
    As telas ficam em telas.js; as apostilas e a leitura, em apostilas.js; os cartões, em cartoes.js; níveis e medalhas,
    em jogo.js; moldura, Ajustes e abertura, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.14.0';
+const VERSAO = '1.15.0';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -182,9 +182,11 @@ function contagem(c) {
   return { n, texto: n > 1 ? `Faltam ${n} dias` : n === 1 ? 'Falta 1 dia' : n === 0 ? 'A prova é hoje' : 'Prova feita', estimada: !!c.previsto };
 }
 // datas que pedem ação e caem nos próximos dias (a data de prova estimada de edital ainda não publicado fica de fora)
+// datas que pedem uma ação e que ele já resolveu (ex.: a inscrição): ficam nos ajustes do app, que sincronizam
+const dataFeita = (cId, dId) => (cfg().datasFeitas || []).includes(cId + ':' + dId);
 function datasPerto(dias = 7) {
   const h = hojeISO(), out = [];
-  for (const c of concursosAtivos()) for (const d of c.datas || []) if (d.acao && d.ini >= h && entreDias(h, d.ini) <= dias && !(c.previsto && d.tipo === 'prova')) out.push({ ...d, c: c.id, em: entreDias(h, d.ini) });
+  for (const c of concursosAtivos()) for (const d of c.datas || []) if (d.acao && d.ini >= h && entreDias(h, d.ini) <= dias && !(c.previsto && d.tipo === 'prova') && !dataFeita(c.id, d.id)) out.push({ ...d, c: c.id, em: entreDias(h, d.ini) });
   return out.sort((a, b) => a.ini < b.ini ? -1 : a.ini > b.ini ? 1 : 0);
 }
 
@@ -239,12 +241,15 @@ function voltarAssunto(tId, foto) {
 }
 function concluirCapitulo(tId, { reler = false } = {}) {
   const t = topico(tId); if (!t) return null;
-  const primeira = !t.teoria, d = diaReg(), ag = agora();
+  const d = diaReg(), ag = agora();
+  /* "Quero reler depois" não conclui: o capítulo foi lido (o dia vale), mas continua na fila, não conta na cobertura
+     e os cartões dele só nascem no "Entendi". Num capítulo que já estava concluído, só marca a releitura. */
+  const primeira = !t.teoria && !reler;
   if (primeira) t.teoria = ag;
   t.lido = ag; t.reler = reler ? ag : 0; t.volta = 0;
-  d.cap = (d.cap || 0) + 1;
+  if (!reler) d.cap = (d.cap || 0) + 1;
   for (const c of cartoesDe(tId)) c.ult = ''; // a conta de "mais da metade" recomeça depois da releitura
-  const novos = typeof cartoesAtivar === 'function' ? cartoesAtivar(tId) : 0;
+  const novos = !reler && typeof cartoesAtivar === 'function' ? cartoesAtivar(tId) : 0;
   const valeu = diaValer();
   if (typeof posLimpar === 'function') posLimpar(tId);
   salvar();
@@ -260,7 +265,7 @@ function lerDose(tId) {
    Frente pergunta, verso responde: "Lembrei" ou "Não lembrei". Lembrou, o cartão sobe de caixa e volta mais tarde
    (3, 7, 15, 30 e 60 dias); não lembrou, o app mostra só o trecho do capítulo que responde e o cartão volta no dia
    seguinte. O capítulo inteiro só volta para a fila quando mais da metade dos cartões dele está como "não lembrei". */
-const CX_DIAS = [1, 3, 7, 15, 30, 60], RODADA = 15;
+const CX_DIAS = [1, 3, 7, 15, 30, 60], RODADA = 15, CARTOES_DO_DIA = 5; // com 5 cartões respondidos, o dia já vale
 const cartoesDeHoje = () => { const h = hojeISO(); return DB.cartoes.filter(c => c.due && c.due <= h && topico(c.t) && topico(c.t).teoria).sort((a, b) => a.due < b.due ? -1 : a.due > b.due ? 1 : a.id < b.id ? -1 : 1); };
 const proximoCartao = () => { const L = DB.cartoes.filter(c => c.due && topico(c.t) && topico(c.t).teoria).map(c => c.due).sort(); return L[0] || ''; };
 function responderCartao(id, lembrou) {
@@ -293,12 +298,17 @@ const capitulosEmOrdem = () => emOrdem(DB.topicos.filter(t => typeof apostilaDoA
 function fila() {
   const caps = capitulosEmOrdem(), out = [];
   for (const t of caps) if (t.volta) out.push({ tipo: 'volta', t: t.id });
-  for (const t of caps) { if (t.volta) continue; if (!t.teoria) out.push({ tipo: 'cap', t: t.id }); else if (!t.lei && typeof doseDe === 'function' && doseDe(t.id)) out.push({ tipo: 'lei', t: t.id }); }
-  for (const t of caps) if (t.teoria && t.reler && !t.volta) out.push({ tipo: 'reler', t: t.id });
+  // primeiro os capítulos novos; o que ficou "para reler depois" vem em seguida; a lei seca não trava a fila:
+  // fica como segunda opção (leiPendente) e só vira a leitura principal quando não há capítulo a ler
+  for (const t of caps) if (!t.volta && !t.teoria && !t.reler) out.push({ tipo: 'cap', t: t.id });
+  for (const t of caps) if (t.reler && !t.volta) out.push({ tipo: 'reler', t: t.id });
+  for (const t of caps) if (t.teoria && !t.lei && typeof doseDe === 'function' && doseDe(t.id)) out.push({ tipo: 'lei', t: t.id });
   // tudo lido e nada pendente: a leitura mais antiga volta como sugestão, para o dia nunca ficar sem leitura
   if (!out.length) { const L = caps.filter(t => t.teoria).sort((a, b) => (a.lido || a.teoria) - (b.lido || b.teoria)); if (L[0]) out.push({ tipo: 'reler', t: L[0].id, antigo: true }); }
   return out;
 }
+// a dose de lei seca mais antiga à espera (de um capítulo já concluído)
+const leiPendente = () => fila().find(x => x.tipo === 'lei') || null;
 // a leitura sugerida: o capítulo em que você parou no meio, ou o primeiro da fila
 function sugestao() {
   const L = typeof lendo === 'function' ? lendo() : { t: '', pos: {} }, t = L.t && topico(L.t);
@@ -328,7 +338,14 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db') { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.14.0', itens: [
+const NOVIDADES = [{ versao: '1.15.0', itens: [
+  'Apostila nova: Direito Administrativo, com 16 capítulos e 83 cartões. Serve à ANPD e ao Cofen.',
+  'A lei seca não trava mais a fila: o próximo capítulo é a leitura principal, e a lei fica como segunda opção em Hoje.',
+  'Quero reler depois não conclui mais o capítulo: ele continua na fila, e o dia vale.',
+  'Relembrar: com 5 cartões respondidos, o dia já vale. Hoje sugere começar por eles.',
+  'Leitura: listas com marcador, barrinha de progresso e escolha do tamanho da letra.',
+  'Edital: marque como resolvida a data que pedia uma ação, e o aviso some de Hoje.',
+] }, { versao: '1.14.0', itens: [
   'O app foi refeito para estudar no caminho: a tela Hoje mostra a sequência, a semana, uma leitura sugerida e um botão.',
   'A unidade de estudo é o capítulo concluído. No fim de cada um: Entendi ou Quero reler depois.',
   'Relembrar: cartões de conceito de cada capítulo voltam dias depois. Não lembrou? O app abre só o trecho que responde.',

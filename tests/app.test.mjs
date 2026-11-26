@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.14 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.15 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    A varredura de acessibilidade fica em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -12,7 +12,9 @@ before(async () => { amb = await preparar(); versao = JSON.parse(await readFile(
 after(async () => { await amb?.encerrar(); });
 const esperar = async (cond, ms = 8000) => { const fim = Date.now() + ms; while (Date.now() < fim) { if (await cond()) return true; await new Promise(r => setTimeout(r, 50)); } return false; };
 const HOJE = '2026-11-23'; // uma segunda-feira
-const abrir = (o = {}) => aparelho(amb, { caminho: '?hoje=' + (o.hoje || HOJE), ...o });
+// os testes do motor (fila, capítulo, cartões, medalhas) usam só a apostila da LGPD; abrirTudo abre o app como ele é
+const abrir = (o = {}) => aparelho(amb, { caminho: '?hoje=' + (o.hoje || HOJE) + '&apostilas=anpd-lgpd', ...o });
+const abrirTudo = (o = {}) => aparelho(amb, { caminho: '?hoje=' + (o.hoje || HOJE), ...o });
 const TELAS = [[{ width: 320, height: 568 }, 'celular mínimo (zoom 400%)'], [{ width: 360, height: 740 }, 'celular pequeno'], [{ width: 390, height: 844 }, 'celular'], [{ width: 820, height: 1180 }, 'tablet'], [{ width: 1440, height: 900 }, 'computador']];
 const nav = (p, id) => p.locator(`#kf-nav-${id}:visible, #kf-trilho-${id}:visible`).first().click();
 const pronto = p => p.waitForFunction(() => typeof apPronta === 'function' && apPronta('anpd-lgpd'));
@@ -146,7 +148,7 @@ test('capítulo pela tela: Entendi conclui, ativa os cartões, faz o dia valer e
   assert.match(await p.locator('.festa').innerText(), /O dia valeu!\s+Para quem a lei vale e para quem não vale[\s\S]*Capítulo\s+concluído\s+Cartões novos\s+6/); await fecharFesta(p);
   const d = await p.evaluate(() => ({ teoria: !!topico('anpd-lgpd-01').teoria, dia: DB.dias, c: DB.cartoes.map(c => [c.id, c.cx, c.due, c.ok, c.no]), seq: sequencia().n, sug: sugestao(), tot: totais(), pts: pontosBase() }));
   assert.deepEqual(d.dia, [{ id: HOJE, cap: 1, car: 0, lei: 0, vale: true }]); assert.equal(d.c.length, 6); assert.ok(d.c.every(c => c[1] === 0 && c[2] === '2026-11-24' && c[3] === 0), 'os cartões voltam a partir do dia seguinte');
-  assert.deepEqual([d.teoria, d.seq, d.sug, d.tot.caps, d.pts], [true, 1, { tipo: 'lei', t: 'anpd-lgpd-01' }, 1, 50], 'depois do capítulo vem a lei seca dele');
+  assert.deepEqual([d.teoria, d.seq, d.sug, d.tot.caps, d.pts], [true, 1, { tipo: 'cap', t: 'anpd-lgpd-02' }, 1, 50], 'depois do capítulo vem o capítulo seguinte; a lei seca não trava a fila');
   const fim = await p.locator('#ap-fim').innerText();
   assert.match(fim, /Capítulo concluído\s+6 cartões deste capítulo voltam a partir de amanhã, em Relembrar\.[\s\S]*Ler a lei seca deste capítulo\s+Lei 13\.709\/2018 · arts\. 1º a 4º[\s\S]*Próximo capítulo\s+O vocabulário da lei: quem é quem \(art\. 5º\)[\s\S]*Abrir o Tec Concursos/);
   assert.deepEqual(await p.locator('#ap-fim a.lin').evaluate(e => [e.href, e.target, e.rel]), ['https://www.tecconcursos.com.br/', '_blank', 'noopener noreferrer'], 'o atalho só abre o Tec');
@@ -154,18 +156,23 @@ test('capítulo pela tela: Entendi conclui, ativa os cartões, faz o dia valer e
   // Desfazer volta tudo: o capítulo, os cartões e o dia
   await p.locator('#view [data-act="abrir-cap"][data-id="anpd-lgpd-02"]').click(); await p.locator('#view .tela-t', { hasText: 'O vocabulário da lei' }).waitFor();
   await p.click('#cap-reler'); await p.locator('.kf-toast').waitFor();
-  assert.match(await p.locator('.kf-toast').innerText(), /Capítulo concluído\. Guardado para reler depois\./); assert.match(await p.locator('#ap-fim').innerText(), /Ele fica guardado para você reler depois\. 7 cartões/);
-  assert.deepEqual(await p.evaluate(() => [!!topico('anpd-lgpd-02').reler, DB.cartoes.length, DB.dias[0].cap, !!document.querySelector('.festa')]), [true, 13, 2, false], 'a festa é uma vez por dia');
+  // 1.15.0: Quero reler depois NÃO conclui: o capítulo fica na fila, fora da cobertura, e os cartões só nascem no Entendi
+  assert.match(await p.locator('.kf-toast').innerText(), /^Guardado para reler depois\./); assert.match(await p.locator('#ap-fim').innerText(), /Guardado para reler[\s\S]*continua na sua fila de leitura[\s\S]*Os cartões nascem quando você tocar em Entendi/);
+  assert.deepEqual(await p.evaluate(() => [!!topico('anpd-lgpd-02').reler, !!topico('anpd-lgpd-02').teoria, DB.cartoes.length, DB.dias[0].cap, !!document.querySelector('.festa')]), [true, false, 6, 1, false], 'não conclui, não cria cartão e a festa é uma vez por dia');
   await p.locator('.kf-toast button').first().click();
   assert.ok(await esperar(() => p.evaluate(() => !topico('anpd-lgpd-02').teoria && !topico('anpd-lgpd-02').reler && DB.cartoes.length === 6 && DB.dias[0].cap === 1 && !!document.querySelector('#cap-entendi'))), 'Desfazer');
-  // Quero reler depois: o capítulo conta, e volta no fim da fila; a releitura limpa a marca
+  // a fila: capítulos novos primeiro, depois o que ficou para reler, e a lei seca por último (ela não trava a fila)
   await p.evaluate(() => { concluirCapitulo('anpd-lgpd-02', { reler: true }); salvar(); });
-  assert.deepEqual(await p.evaluate(() => { const F = fila(); return [F[0], F[F.length - 1], F.filter(x => x.tipo === 'cap').length]; }), [{ tipo: 'lei', t: 'anpd-lgpd-01' }, { tipo: 'reler', t: 'anpd-lgpd-02' }, 17]);
+  assert.deepEqual(await p.evaluate(() => { const F = fila(), i = F.findIndex(x => x.tipo === 'reler'); return [F[0], F[i], F[F.length - 1], F.filter(x => x.tipo === 'cap').length, leiPendente(), cobertura(DB.concursos[0]).feitos]; }), [{ tipo: 'cap', t: 'anpd-lgpd-03' }, { tipo: 'reler', t: 'anpd-lgpd-02' }, { tipo: 'lei', t: 'anpd-lgpd-01' }, 17, { tipo: 'lei', t: 'anpd-lgpd-01' }, 1]);
   await p.evaluate(() => irPara('apostila')); assert.match(await p.locator('#view [data-act="abrir-cap"][data-id="anpd-lgpd-02"]').innerText(), /Capítulo 2 · Para reler/); assert.match(await p.locator('#view [data-act="abrir-cap"][data-id="anpd-lgpd-01"]').innerText(), /Capítulo 1 · Concluído/);
-  await p.evaluate(() => { concluirCapitulo('anpd-lgpd-02'); salvar(); }); assert.equal(await p.evaluate(() => fila().some(x => x.tipo === 'reler')), false);
+  // em Hoje, a leitura principal é o capítulo seguinte e a lei seca fica como segunda opção
+  await p.evaluate(() => irPara('hoje')); assert.match(await p.locator('#view .sugestao').innerText(), /Próxima leitura\s+Os dez princípios/); assert.match(await p.locator('#hoje-lei').innerText(), /Lei seca, se quiser\s+Lei 13\.709\/2018 · arts\. 1º a 4º/);
+  await p.evaluate(() => { concluirCapitulo('anpd-lgpd-02'); salvar(); }); assert.deepEqual(await p.evaluate(() => [fila().some(x => x.tipo === 'reler'), !!topico('anpd-lgpd-02').teoria, DB.cartoes.length]), [false, true, 13]);
   // tudo lido e nada pendente: a leitura mais antiga volta como sugestão, para o dia nunca ficar sem leitura
   await p.evaluate(() => { let k = 1; for (const t of capitulosEmOrdem()) { t.teoria = t.teoria || 1000 + k; t.lido = 1000 + k++; t.lei = 1; } salvar(); });
   assert.deepEqual(await p.evaluate(() => fila()), [{ tipo: 'reler', t: 'anpd-lgpd-01', antigo: true }]);
+  // fila em dia: Hoje diz que tudo foi lido e qual apostila vem a seguir
+  await p.evaluate(() => { LS.set('lendo', { t: '', pos: {} }); irPara('hoje'); render(); }); assert.match(await p.locator('#view .hoje-folha').innerText(), /Você está em dia · para reler[\s\S]*Você leu tudo o que já foi escrito\. A próxima apostila é a de Língua Portuguesa\.[\s\S]*Reler/);
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });
@@ -195,14 +202,14 @@ test('lei seca na fila: a dose traz só os artigos do capítulo, com o texto do 
   assert.match(lgpd.p[D[9][5]].t, /^Art\. 17\./); assert.match(lgpd.p[D[9][4] + 1].t, /^CAP[ÍI]TULO IV/); assert.match(lgpd.p[D[17][5]].t, /^Art\. 52\./); assert.match(lgpd.p[D[18][5]].t, /^Art\. 55-A\./);
   assert.match(lgpd.p.slice(D[18][4] + 1).find(x => /^Art\./.test(x.t)).t, /^Art\. 59\./, 'a dose da ANPD vai até o art. 58-B, com as redações antigas que o Planalto mantém');
   // pela tela: do fim do capítulo para a dose; marcar como lida tira a dose da fila e entra no resumo da semana
-  await p.evaluate(() => { concluirCapitulo('anpd-lgpd-10'); for (const id of APOSTILAS[0].ids.slice(0, 9)) { const t = topico(id); t.teoria = 1; t.lei = 1; } salvar(); jogoConferir({ silencioso: true }); irPara('hoje'); });
+  await p.evaluate(() => { concluirCapitulo('anpd-lgpd-10'); for (const id of APOSTILAS[0].ids) { if (id === 'anpd-lgpd-10') continue; const t = topico(id); t.teoria = 1; t.lei = 1; } salvar(); jogoConferir({ silencioso: true }); irPara('hoje'); });
   await p.locator('#view .sugestao', { hasText: 'Lei seca do capítulo' }).waitFor();
   assert.match(await p.locator('#view .sugestao').innerText(), /Lei seca do capítulo\s+Os direitos do titular \(arts\. 17 a 22\)\s+Lei 13\.709\/2018 · arts\. 17 a 22/); assert.equal((await p.locator('#hoje-estudar').innerText()).trim(), 'Ler a lei');
   await p.click('#hoje-estudar'); await p.locator('#view .lei-folha p').first().waitFor();
   const tela = await p.locator('#view .lei-folha p').allTextContents();
   assert.deepEqual(tela, lgpd.p.slice(D[9][5], D[9][4] + 1).map(x => x.t), 'o texto da dose é o do arquivo, sem alteração'); assert.match(tela[0], /^Art\. 17\./); assert.ok(tela.some(t => /^Art\. 22\./.test(t)) && !tela.some(t => /^Art\. 23\./.test(t)));
   assert.equal(await p.locator('#view .lei-folha .lei-r s').count(), lgpd.p.slice(D[9][5], D[9][4] + 1).filter(x => x.r).length, 'o revogado vem riscado, como no Planalto');
-  await p.click('#dose-lida'); assert.ok(await esperar(() => p.evaluate(() => !!topico('anpd-lgpd-10').lei && DB.dias[0].lei === 1 && sugestao().tipo === 'cap' && sugestao().t === 'anpd-lgpd-11')));
+  await p.click('#dose-lida'); assert.ok(await esperar(() => p.evaluate(() => !!topico('anpd-lgpd-10').lei && DB.dias[0].lei === 1 && sugestao().antigo === true)));
   await p.locator('#dose-lida[aria-pressed="true"]', { hasText: 'Desmarcar lei lida' }).waitFor(); assert.match(await p.locator('#view .ap-fim').innerText(), /Próxima leitura/);
   await p.locator('.kf-toast button').first().click(); assert.ok(await esperar(() => p.evaluate(() => !topico('anpd-lgpd-10').lei && DB.dias[0].lei === 0)), 'Desfazer');
   await p.click('#view [data-act="dose-inteira"]'); await p.locator('#view #lei-sumario').waitFor(); assert.equal(await p.evaluate(() => tab + ':' + leiId), 'lei:lgpd');
@@ -460,6 +467,67 @@ test('abertura: quatro telas, uma vez só; o cartão de exemplo vira; quem diz o
   await p.reload(); await p.locator('#view .hoje-folha').waitFor();
   assert.equal(await p.locator('.kf-abertura').count(), 0, 'a abertura não volta sozinha');
   assert.match(await p.locator('#view .tela-sub').innerText(), /Bruno/);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+// ───────── 1.15.0 ─────────
+test('apostila de Direito Administrativo: 16 capítulos (12 da ANPD e 4 só do Cofen), cartões em todos e modelos de item em cada um', async () => {
+  const txt = readFileSync(new URL('../apostilas/anpd-da.md', import.meta.url), 'utf8');
+  const caps = txt.split(/\n## /).slice(1);
+  assert.deepEqual(caps.map(c => c.split(' |')[0]), [...Array.from({ length: 12 }, (_, i) => 'anpd-da-' + String(i + 1).padStart(2, '0')), 'cofen-da-01', 'cofen-da-02', 'cofen-da-03', 'cofen-da-04']);
+  for (const c of caps) {
+    const id = c.split(' |')[0], n = re => (c.match(re) || []).length;
+    assert.ok(n(/^\? [a-z] \| .+ :: .+$/gm) >= 4 && n(/^\? /gm) === n(/^\? [a-z] \| .+ :: .+$/gm), `cartões de ${id}`);
+    assert.ok(n(/^C: .+ :: .+$/gm) >= 1 && n(/^E: .+ :: .+$/gm) >= 2 && n(/^= /gm) >= 4 && n(/^banca: /gm) === 1, `modelos, resumo e banca de ${id}`);
+    assert.equal(new Set(c.match(/^\? [a-z] \|/gm)).size, n(/^\? /gm), `letras repetidas em ${id}`);
+  }
+  assert.ok(!/—|–/.test(txt), 'sem travessão');
+  const a = await abrirTudo(), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
+  await p.evaluate(() => apCarregar('anpd-da')); await p.waitForFunction(() => apPronta('anpd-da'));
+  const d = await p.evaluate(() => { const A = APOSTILAS.find(x => x.m === 'anpd-da'), tx = AP_TXT['anpd-da']; return { ids: A.ids.length, caps: A.caps, lidos: tx.caps.length, semAssunto: tx.caps.filter(c => !topico(c.t)).map(c => c.t), cartoes: tx.caps.reduce((n, c) => n + c.cartoes.length, 0), semSecao: tx.caps.flatMap(c => c.cartoes.filter(k => !(k.sec >= 0)).map(() => c.t)), sug: sugestao(), doses: A.ids.filter(id => doseDe(id)).length, cofen: DB.concursos.find(c => c.id === 'cofen-2027').disc.flatMap(x => x.topicos).filter(id => A.ids.includes(id)).length }; });
+  assert.deepEqual([d.ids, d.caps, d.lidos, d.semAssunto, d.cartoes, d.semSecao, d.doses], [16, 16, 16, [], 83, [], 11]);
+  assert.deepEqual(d.sug, { tipo: 'cap', t: 'anpd-da-01' }, 'a fila começa pelo que serve aos dois editais'); assert.ok(d.cofen >= 4, 'os assuntos só do Cofen estão no edital dele');
+  // cada dose de lei seca encontra os artigos no texto da lei guardado no app
+  const doses = await p.evaluate(async () => { const out = []; for (const id of APOSTILAS.find(x => x.m === 'anpd-da').ids) { const dz = doseDe(id); if (!dz) continue; const L = await leiCarregar(dz.lei), ps = doseParagrafos(L.p, dz); out.push([id, ps.length, ps.length ? ps[0][0].t.slice(0, 8) : '']); } return out; });
+  assert.ok(doses.length === 11 && doses.every(x => x[1] > 1 && /^Art\. /.test(x[2])), 'doses: ' + JSON.stringify(doses));
+  await p.evaluate(() => irPara('apostilas')); assert.match(await p.locator('#view').innerText(), /Direito Administrativo para quem nunca viu[\s\S]*0 de 16 capítulos concluídos[\s\S]*LGPD para quem nunca viu[\s\S]*0 de 19 capítulos concluídos/);
+  // um capítulo só do Cofen abre, conclui e cria os cartões dele
+  await p.evaluate(() => capituloAbrir('cofen-da-02')); await p.locator('#view .tela-t', { hasText: 'Conselhos de fiscalização profissional' }).waitFor();
+  assert.equal(await p.locator('#view .ap-folha .ap-lista li').first().evaluate(e => getComputedStyle(e).display + ':' + getComputedStyle(e.parentElement).listStyleType), 'list-item:disc', 'as listas têm marcador');
+  assert.equal(await p.locator('#ap-prog').getAttribute('role'), 'progressbar');
+  await p.locator('#ap-letra button', { hasText: 'Grande' }).click(); assert.equal(await p.locator('#view .ap-folha').getAttribute('data-letra'), 'g');
+  const px = await p.locator('#view .ap-folha p').first().evaluate(e => parseFloat(getComputedStyle(e).fontSize)); assert.ok(px > 18 && px < 19, 'letra grande: ' + px);
+  await p.evaluate(() => { scrollTo(0, document.documentElement.scrollHeight); }); assert.ok(await esperar(() => p.evaluate(() => +document.querySelector('#ap-prog').getAttribute('aria-valuenow') > 60)), 'a barrinha anda com a leitura');
+  await p.click('#cap-entendi'); assert.ok(await esperar(() => p.evaluate(() => !!topico('cofen-da-02').teoria && DB.cartoes.filter(c => c.id.startsWith('cofen-da-02#')).length === 5)));
+  assert.ok(await semRolagemLateral(p)); assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('Relembrar: 5 cartões respondidos já fazem o dia valer; a tela diz quantos há nesta rodada e na próxima; Hoje começa por eles', async () => {
+  const a = await abrir({ hoje: '2026-11-25' }), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
+  await p.evaluate(() => { for (const id of APOSTILAS[0].ids.slice(0, 3)) { const t = topico(id); t.teoria = 1000; t.lido = 1000; cartoesAtivar(id); } for (const c of DB.cartoes) c.due = '2026-11-25'; salvar(); irPara('hoje'); render(); });
+  const n = await p.evaluate(() => DB.cartoes.length); assert.ok(n > 15, 'cartões: ' + n);
+  assert.match(await p.locator('#hoje-relembrar').innerText(), new RegExp(`Comece por Relembrar[\\s\\S]*${n} cartões[\\s\\S]*5 cartões respondidos já fazem o dia valer`));
+  assert.ok(await p.evaluate(() => { const r = document.querySelector('#hoje-relembrar'), s = document.querySelector('#view .sugestao'); return !!(r.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING); }), 'Relembrar vem antes da leitura');
+  await p.click('#hoje-relembrar'); await p.locator('#rel-ver').waitFor();
+  assert.match(await p.locator('#view').innerText(), new RegExp(`Cartão 1 de 15 nesta rodada · mais ${n - 15} na próxima`));
+  for (let i = 0; i < 5; i++) { assert.equal(await p.evaluate(() => !!diaReg().vale), false, 'antes do 5º cartão'); await p.click('#rel-ver'); await p.click('#rel-sim'); await p.locator('#rel-ver').waitFor(); }
+  assert.deepEqual(await p.evaluate(() => [diaReg().vale, diaReg().car]), [true, 5]);
+  assert.match(await p.locator('.kf-toast').innerText(), /O dia valeu\. Pode parar quando quiser\./);
+  assert.match(await p.locator('#view').innerText(), /Cartão 6 de 15 nesta rodada/);
+  assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+test('data resolvida: a data que pede uma ação pode ser marcada no Edital, e o aviso dela some de Hoje', async () => {
+  const a = await abrir({ hoje: '2027-01-08' }), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
+  const antes = await p.evaluate(() => datasPerto().map(x => x.c + ':' + x.id)); assert.ok(antes.length >= 1, 'há data perto em 08/01/2027');
+  await p.evaluate(() => { editalConc = 'cofen-2027'; irPara('edital'); }); const b = p.locator('#view [data-act="data-feita"]').first(); await b.scrollIntoViewIfNeeded().catch(() => {});
+  if (!(await b.isVisible())) { for (const s of await p.locator('#view summary, #view [aria-expanded="false"]').all()) await s.click().catch(() => {}); }
+  const chave = await b.evaluate(e => e.dataset.c + ':' + e.dataset.id); await b.click();
+  assert.ok(await esperar(() => p.evaluate(k => cfg().datasFeitas.includes(k) && !datasPerto().some(x => x.c + ':' + x.id === k), chave)), 'marcada e fora dos avisos');
+  await p.locator('.kf-toast button').first().click(); assert.ok(await esperar(() => p.evaluate(k => !cfg().datasFeitas.includes(k), chave)), 'Desfazer');
   assert.deepEqual(a.erros, []);
   await a.fechar();
 });

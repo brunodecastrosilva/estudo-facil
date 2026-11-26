@@ -35,7 +35,10 @@ for (const tema of ['light', 'dark']) {
     await varrer(p, `Hoje (${nome})`);
     await p.click('#view [data-act="sobre-sequencia"]'); await p.locator('.kf-dlg').waitFor(); await varrer(p, `como funciona a sequência (${nome})`); await p.keyboard.press('Escape');
     await p.click('#kf-nav-apostilas'); await p.waitForTimeout(200); await varrer(p, `Apostilas (${nome})`);
-    await p.click('#view [data-act="abrir-apostila"]'); await p.locator('#view .ap-caps').waitFor(); await varrer(p, `Apostila (${nome})`);
+    await p.click('#view [data-act="abrir-apostila"][data-id="anpd-da"]'); await p.locator('#view .ap-caps').waitFor(); await varrer(p, `Apostila de Direito Administrativo (${nome})`);
+    await p.click('#view [data-act="abrir-cap"][data-id="cofen-da-02"]'); await p.locator('#view .ap-folha').waitFor(); await p.locator('#ap-letra button', { hasText: 'Maior' }).click(); await varrer(p, `Capítulo do Cofen, letra maior (${nome})`);
+    await p.locator('#ap-letra button', { hasText: 'Normal' }).click();
+    await p.click('#kf-nav-apostilas'); await p.click('#view [data-act="abrir-apostila"][data-id="anpd-lgpd"]'); await p.locator('#view .ap-caps').waitFor(); await varrer(p, `Apostila (${nome})`);
     await p.click('#view [data-act="abrir-cap"][data-id="anpd-lgpd-01"]'); await p.locator('#view .ap-folha').waitFor(); await varrer(p, `Capítulo (${nome})`);
     await p.click('#cap-entendi'); await p.locator('#festa-ok').waitFor(); await varrer(p, `festa do dia (${nome})`);
     await p.click('#festa-ok'); await p.locator('.festa').waitFor({ state: 'detached' });
@@ -44,6 +47,8 @@ for (const tema of ['light', 'dark']) {
     await p.click('#view [data-act="abrir-dose"]'); await p.locator('#view .lei-folha p').first().waitFor(); await varrer(p, `Lei seca (${nome})`);
     await p.click('#dose-lida'); await p.locator('#dose-lida[aria-pressed="true"]').waitFor(); await varrer(p, `Lei seca lida (${nome})`);
     await p.evaluate(() => { capId = 'anpd-lgpd-03'; topico('anpd-lgpd-03').volta = 1; irPara('capitulo'); }); await p.locator('#view .ap-folha').waitFor(); await varrer(p, `Capítulo que voltou (${nome})`);
+    await p.evaluate(() => capituloAbrir('anpd-lgpd-04')); await p.locator('#cap-reler').waitFor(); await p.click('#cap-reler'); await p.locator('.kf-toast').waitFor(); await varrer(p, `Guardado para reler (${nome})`);
+    await p.evaluate(() => irPara('hoje')); await p.locator('#hoje-lei, #hoje-relembrar').first().waitFor(); await varrer(p, `Hoje com Relembrar e lei seca (${nome})`);
     // cartões: frente, verso, trecho e fim da rodada
     await p.click('#kf-nav-relembrar'); await p.locator('#rel-ver').waitFor(); await varrer(p, `cartão, frente (${nome})`);
     await p.click('#rel-ver'); await varrer(p, `cartão, verso (${nome})`);

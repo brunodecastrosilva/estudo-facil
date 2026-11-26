@@ -12,8 +12,12 @@
    A leitura é por capítulo: um por tela, com "Entendi" ou "Quero reler depois" no fim. O app guarda onde você parou. */
 "use strict";
 const APOSTILAS = [
+  // caps: os assuntos <disciplina>-01 a -NN; mais: os assuntos de outro edital que entram na mesma disciplina (ids próprios)
+  { m: 'anpd-da', titulo: 'Direito Administrativo para quem nunca viu', curto: 'Direito Administrativo', sub: '16 capítulos: os 12 assuntos da ANPD e os 4 que só o Cofen cobra', caps: 12, mais: ['cofen-da-01', 'cofen-da-02', 'cofen-da-03', 'cofen-da-04'] },
   { m: 'anpd-lgpd', titulo: 'LGPD para quem nunca viu', curto: 'LGPD', sub: 'A Lei 13.709/2018 em 19 capítulos, um por assunto do edital', caps: 19 },
-].map(a => ({ ...a, ids: Array.from({ length: a.caps }, (_, i) => `${a.m}-${String(i + 1).padStart(2, '0')}`) }));
+// nos testes (só em localhost), ?apostilas=anpd-lgpd deixa no app só as apostilas pedidas: os testes do motor usam uma só
+].filter(a => { try { const m = /[?&]apostilas=([\w,-]+)/.exec(location.search); return !m || !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) || m[1].split(',').includes(a.m); } catch { return true; } })
+.map(a => { const ids = [...Array.from({ length: a.caps }, (_, i) => `${a.m}-${String(i + 1).padStart(2, '0')}`), ...(a.mais || [])]; return { ...a, ids, caps: ids.length }; });
 const AP = new Map(APOSTILAS.map(a => [a.m, a]));
 const AP_TXT = {};           // apostilas já buscadas nesta visita
 const TEC = 'https://www.tecconcursos.com.br/';
@@ -93,6 +97,24 @@ addEventListener('scroll', () => {
 function capituloAbrir(tId) { const a = apostilaDoAssunto(tId); if (!a) return; apId = a.m; capId = tId; capFim = null; capRolar = true; irPara('capitulo', { topo: false }); }
 // a leitura sugerida (o botão de Hoje e o botão do centro da barra)
 function lerSugestao() { const s = sugestao(); if (!s) { irPara('apostilas'); return; } if (s.tipo === 'lei') doseAbrir(s.t); else capituloAbrir(s.t); }
+// a próxima apostila a ser escrita: a primeira disciplina da fila de leitura que ainda não tem apostila
+function proximaApostila() {
+  const ativos = new Set(concursosAtivos().flatMap(c => c.disc.filter(d => !d.fora).map(d => d.m)));
+  return DB.materias.filter(m => !AP.has(m.id) && ativos.has(m.id) && topicosDe(m.id).length).map(m => [ordemDoAssunto(topicosDe(m.id)[0]), m]).sort((a, b) => a[0] - b[0]).map(x => x[1])[0] || null;
+}
+/* ---------- conforto de leitura: o tamanho da letra (só neste aparelho) e a barrinha de progresso ---------- */
+const LETRAS = [['m', 'Normal'], ['g', 'Grande'], ['x', 'Maior']];
+const letra = () => { const v = LS.get('letra', 'm'); return LETRAS.some(l => l[0] === v) ? v : 'm'; };
+const letraHTML = () => `<div class="ap-letra"><span class="rotulo-mini" id="ap-letra-r">Tamanho da letra</span>${segHTML('ap-letra', LETRAS, letra(), 'Tamanho da letra')}</div>`;
+const ligarLetra = v => ligarSeg($('#ap-letra', v), x => { LS.set('letra', x); $$('.ap-folha, .lei-folha', v).forEach(f => { f.dataset.letra = x; }); });
+const progHTML = () => `<div class="ap-prog" id="ap-prog" role="progressbar" aria-label="Quanto você já leu desta tela" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>`;
+function progAtualizar() {
+  const el = $('#ap-prog'), f = el && $('#view .ap-folha, #view .lei-folha'); if (!f) return;
+  const r = f.getBoundingClientRect(), topo = ($('#barra')?.offsetHeight || 60), total = Math.max(1, r.height - (innerHeight - topo) * 0.6);
+  const pct = Math.max(0, Math.min(100, Math.round((topo - r.top) / total * 100)));
+  el.firstElementChild.style.transform = `scaleX(${pct / 100})`; el.setAttribute('aria-valuenow', pct);
+}
+addEventListener('scroll', () => { if (tab === 'capitulo' || tab === 'dose') requestAnimationFrame(progAtualizar); }, { passive: true });
 const proximoCapitulo = fora => { const p = fila().find(x => x.tipo !== 'lei' && x.t !== fora && !x.antigo); return p ? p.t : ''; };
 
 /* ---------- a lista de apostilas ---------- */
@@ -140,15 +162,17 @@ const viewCapitulo = {
     const fim = capFim && capFim.t === capId ? capFim : null;
     return `${volta}${cab(c.titulo, `Capítulo ${i + 1} de ${caps.length} · ${esc(a.curto)}`)}
       ${t.volta ? KitFacil.ui.faixa({ tipo: 'info', html: 'Este capítulo voltou para a fila: mais da metade dos cartões dele não foi lembrada.' }) : ''}
-      <article class="folha ap-folha" lang="pt-BR">${apBlocos(c.b)}</article>
+      ${letraHTML()}${progHTML()}
+      <article class="folha ap-folha" lang="pt-BR" data-letra="${letra()}">${apBlocos(c.b)}</article>
       <section class="card ap-fim" id="ap-fim" aria-labelledby="ap-fim-t">${fim ? capFimHTML(fim) : `
         <h2 class="sec-t" id="ap-fim-t">Chegou ao fim do capítulo</h2>
-        <p class="apoio">${t.teoria ? `Concluído em ${fmtData(iso(new Date(t.teoria)))}. Releu? Marque de novo.` : 'O capítulo concluído faz o dia valer e ativa os cartões dele.'}</p>
+        <p class="apoio">${t.teoria ? `Concluído em ${fmtData(iso(new Date(t.teoria)))}. Releu? Marque de novo.` : 'Entendi conclui o capítulo e ativa os cartões dele. Quero reler depois deixa o capítulo na fila. Os dois fazem o dia valer.'}</p>
         <div class="ap-fim-botoes"><button type="button" class="kf-btn kf-sec" data-act="cap-reler" id="cap-reler">Quero reler depois</button><button type="button" class="kf-btn kf-pri" data-act="cap-entendi" id="cap-entendi">${I.check}Entendi</button></div>`}</section>
       <p class="apoio">Texto do instrutor (Claude). Os modelos de item são do instrutor, não são questões de prova. Na dúvida, vale o texto da lei.</p>`;
   },
   // ao abrir, a tela vai ao ponto em que a leitura parou (ou ao começo)
   ligar(v) {
+    ligarLetra(v); requestAnimationFrame(progAtualizar);
     if (!capRolar || !apPronta(apId)) return;
     const b = capFim ? 0 : Math.max(0, +lendo().pos[capId] | 0);
     requestAnimationFrame(() => { const el = b > 0 && $(`.ap-folha [data-b="${b}"]`, v); if (el) el.scrollIntoView({ block: 'start', behavior: 'auto' }); else window.scrollTo({ top: 0 }); setTimeout(() => { capRolar = false; }, 500); });
@@ -158,8 +182,9 @@ const viewCapitulo = {
 function capFimHTML(f) {
   const t = topico(f.t), dose = doseDe(f.t), px = proximoCapitulo(f.t);
   const lin = (attrs, ic, titulo, sub, tag = 'button') => `<li><${tag} class="lin" ${tag === 'button' ? 'type="button"' : ''} ${attrs}><span class="lin-ic">${ic}</span><span class="lin-tx"><b>${titulo}</b><small>${sub}</small></span>${tag === 'a' ? I.fora : I.seta}</${tag}></li>`;
-  return `<h2 class="sec-t" id="ap-fim-t" tabindex="-1"><span class="grifo">Capítulo concluído</span></h2>
-    <p>${f.reler ? 'Ele fica guardado para você reler depois. ' : ''}${f.novos ? `${plural(f.novos, 'cartão deste capítulo volta', 'cartões deste capítulo voltam')} a partir de amanhã, em Relembrar.` : cartoesDe(f.t).length ? 'Os cartões deste capítulo seguem em Relembrar.' : ''}</p>
+  const soReler = f.reler && !t.teoria;
+  return `<h2 class="sec-t" id="ap-fim-t" tabindex="-1"><span class="grifo">${soReler ? 'Guardado para reler' : 'Capítulo concluído'}</span></h2>
+    <p>${soReler ? 'Ele continua na sua fila de leitura e ainda não conta na cobertura do edital. Os cartões nascem quando você tocar em Entendi. ' : f.reler ? 'Ele fica guardado para você reler depois. ' : ''}${soReler ? '' : f.novos ? `${plural(f.novos, 'cartão deste capítulo volta', 'cartões deste capítulo voltam')} a partir de amanhã, em Relembrar.` : cartoesDe(f.t).length ? 'Os cartões deste capítulo seguem em Relembrar.' : ''}</p>
     <ul class="lista ap-depois">
       ${dose && !t.lei ? lin(`data-act="abrir-dose" data-id="${esc(f.t)}"`, I.lei, 'Ler a lei seca deste capítulo', esc(doseRotulo(dose))) : ''}
       ${px ? lin(`data-act="abrir-cap" data-id="${esc(px)}"`, I.livro, 'Próximo capítulo', esc(capTitulo(px))) : ''}
@@ -173,8 +198,8 @@ function capConcluir(reler) {
   capFim = { t: id, reler, ...r };
   render();
   requestAnimationFrame(() => { const h = $('#ap-fim-t'); if (h) { h.scrollIntoView({ block: 'center', behavior: semMovimento() ? 'auto' : 'smooth' }); try { h.focus({ preventScroll: true }); } catch {} } });
-  const aviso = () => avisar(reler ? 'Capítulo concluído. Guardado para reler depois.' : 'Capítulo concluído.', { label: 'Desfazer', run: () => { voltarAssunto(id, foto); LS.set('lendo', lendoAntes); if (capFim && capFim.t === id) capFim = null; render(); } });
-  if (r.valeu && festa(antes, { rotulo: capTitulo(id), linhas: [['Capítulo', 'concluído'], ...(r.novos ? [['Cartões novos', String(r.novos)]] : [])], aoFechar: () => { aviso(); setTimeout(medalhaFilaMostrar, 600); } })) return;
+  const aviso = () => avisar(reler ? 'Guardado para reler depois.' : 'Capítulo concluído.', { label: 'Desfazer', run: () => { voltarAssunto(id, foto); LS.set('lendo', lendoAntes); if (capFim && capFim.t === id) capFim = null; render(); } });
+  if (r.valeu && festa(antes, { rotulo: capTitulo(id), linhas: [['Capítulo', reler && !t.teoria ? 'lido, para reler' : 'concluído'], ...(r.novos ? [['Cartões novos', String(r.novos)]] : [])], aoFechar: () => { aviso(); setTimeout(medalhaFilaMostrar, 600); } })) return;
   aviso(); setTimeout(() => jogoConferir(), 700);
 }
 
@@ -194,13 +219,14 @@ const viewDose = {
     const semRev = LS.get('leiSemRev', 0), px = t.lei ? sugestao() : null;
     return `${topo}
       <p class="apoio">Só os artigos do capítulo <b>${esc(capTitulo(doseId))}</b>. É o texto do Planalto, sem alteração: as redações antigas aparecem como lá.</p>
-      <article class="folha lei-folha${semRev ? ' sem-rev' : ''}" lang="pt-BR">${P.map(([p, i]) => leiParagrafo(p, i)).join('')}</article>
+      ${letraHTML()}${progHTML()}
+      <article class="folha lei-folha${semRev ? ' sem-rev' : ''}" lang="pt-BR" data-letra="${letra()}">${P.map(([p, i]) => leiParagrafo(p, i)).join('')}</article>
       <section class="card ap-fim" aria-label="Fim da leitura">
         ${KitFacil.ui.fato({ marcado: !!t.lei, marcar: 'Marcar lei como lida', desmarcar: 'Desmarcar lei lida', attrs: `data-act="dose-lida" id="dose-lida"` })}
         ${px && px.t !== doseId ? `<button type="button" class="kf-btn kf-comecar bloco" data-act="estudar-proximo">${I.play}${px.tipo === 'lei' ? 'Próxima lei seca' : 'Próxima leitura'}</button>` : ''}
         <button type="button" class="kf-btn kf-link" data-act="dose-inteira">Abrir a lei inteira</button></section>
       <p class="apoio">Texto compilado do Planalto, copiado em ${esc(tx.lido.split('-').reverse().join('/'))}, sem alteração. <a href="${esc(tx.fonte)}" target="_blank" rel="noopener noreferrer">Conferir no site oficial<span class="kf-so-leitor"> (abre em outra aba)</span></a></p>`;
-  },
+  },  ligar(v) { ligarLetra(v); requestAnimationFrame(progAtualizar); },
 };
 
 const ACOES_AP = {

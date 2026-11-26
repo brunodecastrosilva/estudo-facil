@@ -5,10 +5,10 @@ Estudo para os concursos da ANPD (Especialista em Regulação de Proteção de D
 capítulos**, diz qual é a próxima leitura, traz de volta o que foi lido em **cartões de conceito**, mostra a **lei seca**
 de cada capítulo e mantém o hábito com a sequência de dias. **As questões são resolvidas fora do app, no Tec Concursos.**
 
-Versão **1.14.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.15.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno; desde a 1.13.0, voltado aos
-> concursos da ANPD e do Cofen. Na 1.14.0 ele foi refeito no desenho combinado em 26/11/2026 ("estudo no ônibus"). No
+> concursos da ANPD e do Cofen. Na 1.15.0 ele foi refeito no desenho combinado em 26/11/2026 ("estudo no ônibus"). No
 > futuro volta a ser publicado para o público geral. Veja "Exceções ao padrão".
 
 Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e Guitarra Fácil) e segue o
@@ -19,12 +19,12 @@ Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e
 - **Hoje limpo:** a sequência de dias, a semana, **uma leitura sugerida e um botão**. Sem relógio, sem porcentagem e sem
   contagem regressiva. Uma data só aparece ali quando está a até 7 dias e pede uma ação (por exemplo, o fim da inscrição)
 - **A unidade de estudo é o capítulo concluído**, não o tempo nem a questão. No fim de cada capítulo: **Entendi** ou
-  **Quero reler depois**; em seguida, a lei seca do capítulo, o próximo capítulo e um atalho que só abre o Tec Concursos
+  **Quero reler depois** (que guarda o capítulo na fila, sem concluir); em seguida, a lei seca do capítulo, o próximo capítulo e um atalho que só abre o Tec Concursos. Na leitura há barrinha de progresso e escolha do tamanho da letra
 - **A leitura continua de onde parou:** o app guarda, no aparelho, o ponto de cada capítulo em que a leitura ficou
 - **Apostilas:** teoria do instrutor (Claude) para quem nunca viu o assunto, voltada à banca. O texto fica em
-  `apostilas/<disciplina>.md`, um capítulo por assunto do edital (formato no cabeçalho de `apostilas.js`). Por ora existe
-  a da LGPD (19 capítulos)
-- **Lei seca na fila:** depois do capítulo, uma dose só com os artigos daquele assunto, recortados do texto oficial
+  `apostilas/<disciplina>.md`, um capítulo por assunto do edital (formato no cabeçalho de `apostilas.js`). Existem a de
+  Direito Administrativo (16 capítulos: 12 assuntos da ANPD e 4 só do Cofen, em `mais`) e a da LGPD (19 capítulos)
+- **Lei seca, sem travar a fila:** de cada capítulo concluído, uma dose só com os artigos daquele assunto, recortados do texto oficial
   (`DOSES`, em `leis.js`). O texto não muda: redações antigas e trechos riscados aparecem como no Planalto
 - **Relembrar:** cartões de conceito (frente pergunta, verso responde; **Lembrei** ou **Não lembrei**), escritos junto
   com cada capítulo. Nascem quando o capítulo é concluído e voltam em 1, 3, 7, 15, 30 e 60 dias. Não são questões de
@@ -51,7 +51,7 @@ Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e
   sua conta GitHub; **avaliação e relato de problemas** pelo balão; **presente para o criador** (Pix, opcional)
 - Tema claro, escuro ou automático; instalável; funciona sem internet depois da primeira visita
 
-**Saíram de vez na 1.14.0:** cronômetro e modo foco, meta de tempo, meta de 50 questões, missões do dia, lançamento de
+**Saíram de vez na 1.15.0:** cronômetro e modo foco, meta de tempo, meta de 50 questões, missões do dia, lançamento de
 acertos e erros, plano do dia por blocos, revisões de 1, 7 e 30 dias (os cartões as substituem), a tela Evolução, a tela
 Instrutor e as medalhas de horas, questões, acertos e simulados. O código das questões dentro do app (cadernos, treino,
 flashcards e provas do Cebraspe), das telas gerais (Concursos, Disciplinas, Simulados e Agenda) e do guia também saiu do
@@ -137,12 +137,13 @@ Tudo fica num objeto só (`estudofacil.db`, formato 4). Cada lista tem registros
 
 Regras:
 
-- **o dia vale** quando um capítulo é concluído no app (Entendi ou Quero reler depois) ou quando uma rodada de cartões
-  chega ao fim. Marcar um assunto à mão no Edital não faz o dia valer;
+- **o dia vale** quando um capítulo é lido até o fim no app (Entendi ou Quero reler depois) ou quando 5 cartões são
+  respondidos no dia (`CARTOES_DO_DIA`; menos, se a rodada for menor). Marcar um assunto à mão no Edital não faz o dia valer;
 - **sequência:** dias seguidos que valeram; dia fora da rotina é neutro (se houver estudo, soma); a cada 7 dias seguidos
   entra uma folga (até 2), gasta sozinha num dia de falta;
-- **fila:** capítulos que voltaram pelos cartões; depois, na ordem dos assuntos, cada capítulo não lido e a dose de lei
-  de cada capítulo concluído; por último, os marcados para reler. Sem nada pendente, a leitura mais antiga volta como
+- **fila:** capítulos que voltaram pelos cartões; depois, na ordem dos assuntos, os capítulos não lidos; depois os
+  guardados para reler (ainda não concluídos); por último, as doses de lei dos capítulos concluídos. Em Hoje, a dose
+  aparece como segunda opção ("Lei seca, se quiser") e os cartões do dia vêm antes da leitura. Sem nada pendente, a leitura mais antiga volta como
   sugestão. O capítulo em que a leitura parou no meio vem antes de tudo;
 - **ordem dos assuntos:** grupo (comum aos dois concursos, só Cofen, só ANPD), disciplina (`ORDEM_DISC`, em `app.js`) e
   a ordem do edital. Depois da prova de um concurso, o que só ele cobra vai para o fim;
@@ -173,7 +174,7 @@ mostrar. O arquivo é público: não entra nome, e-mail nem nada pessoal.
 | Código dividido em vários `.js`, carregados com `?v=<versão>` | Regras do Estudo Fácil, Art. 5º (exceção já aprovada) |
 | **Fase de testes fechada (desde a 1.1.0, provisória):** o app é de uso exclusivo do Bruno e só dos concursos dele (ANPD e Cofen); a página pede para não entrar em buscadores (`noindex`) e os outros apps não devem listá-lo em "Outros apps da família" | Decisão do Bruno em 16/11/2026. Exceção ao Código, Art. 10 (app feito para o mercado), e às Regras do Estudo Fácil, Art. 1º (controle de estudos geral). No futuro o app volta a ser publicado para o público geral. Registrada no Painel do Integrador (Art. 5º, III) |
 | **Sem guia (desde a 1.3.0, provisória)** | Decisão do Bruno em 16/11/2026: na fase fechada o guia deixa o app extenso e não ajuda quem é o único usuário. Exceção ao Código, Arts. 77 a 80. Volta, refeito, quando o app for aberto ao público. Registrada no Painel do Integrador |
-| **Desenho "estudo no ônibus" (desde a 1.14.0):** a barra de baixo é Hoje, Apostilas, Estudar (a leitura sugerida), Relembrar e Mais; não há cadastro de editais nem de disciplinas; as guias próprias dos Ajustes são Rotina e Medalhas e apresentação | Escopo fechado com o Bruno em 26/11/2026. Diverge das Regras do Estudo Fácil, Arts. 6º a 10, até o texto das Regras ser atualizado (pendência para o Bruno e para o Painel do Integrador, D18) |
+| **Desenho "estudo no ônibus" (desde a 1.15.0):** a barra de baixo é Hoje, Apostilas, Estudar (a leitura sugerida), Relembrar e Mais; não há cadastro de editais nem de disciplinas; as guias próprias dos Ajustes são Rotina e Medalhas e apresentação | Escopo fechado com o Bruno em 26/11/2026. Diverge das Regras do Estudo Fácil, Arts. 6º a 10, até o texto das Regras ser atualizado (pendência para o Bruno e para o Painel do Integrador, D18) |
 
 **Peças próprias do app** (não substituem peça do Kit; Código, Art. 72, § 4º): a medalha em 3D (`jogo.js`) e a festa do
 dia, que é uma tela cheia de marca (Art. 68, § 4º).

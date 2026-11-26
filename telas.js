@@ -28,6 +28,7 @@ const viewHoje = {
   html() {
     const S = sequencia(), s = sugestao(), due = cartoesDeHoje().length, P = datasPerto(), sem = resumoSemana(), ant = sem.vazio ? resumoSemana(maisDias(sem.seg, -7)) : null;
     const t = s && topico(s.t), a = s && apostilaDoAssunto(s.t), dose = s && s.tipo === 'lei' ? doseDe(s.t) : null;
+    const lei = leiPendente(), prox = s && s.antigo ? proximaApostila() : null;
     const estado = S.hojeFeito ? 'Hoje já valeu.' : S.livre ? 'Hoje é dia livre: não quebra a sequência.' : 'Um capítulo concluído ou a revisão fazem o dia valer.';
     return `${cab('Hoje', `${saudacao()}.`)}
       ${P.length ? (d => KitFacil.ui.faixa({ tipo: 'alerta', html: `<b>${d.em === 0 ? 'Hoje' : d.em === 1 ? 'Amanhã' : `Em ${d.em} dias`}:</b> ${esc(d.titulo)} (${fmtData(d.ini)}).${P.length > 1 ? ` Há mais ${plural(P.length - 1, 'data', 'datas')} perto.` : ''}`, acao: `<button type="button" class="kf-btn kf-sec" data-act="ver-edital" data-id="${esc(d.c)}">Ver no Edital</button>` }))(P[0]) : ''}
@@ -36,11 +37,13 @@ const viewHoje = {
           <button type="button" class="btn-ic" data-act="sobre-sequencia" aria-label="Como funciona a sequência">${I.questoes}</button></div>
         ${tiraSemana()}
         ${!sem.vazio ? `<p class="hf-semana"><b>Esta semana:</b> ${esc(fraseSemana(sem) || plural(sem.dias, 'dia de estudo', 'dias de estudo'))}.</p>` : ant && !ant.vazio && fraseSemana(ant) ? `<p class="hf-semana"><b>Semana passada:</b> ${esc(fraseSemana(ant))}.</p>` : ''}
-        ${s ? `<div class="sugestao"><span class="rotulo-mini">${ROTULO_SUG[s.tipo]}</span><b>${esc(capTitulo(s.t))}</b><small>${dose ? esc(doseRotulo(dose)) : `Capítulo ${a.ids.indexOf(s.t) + 1} de ${a.caps} · ${esc(a.curto)}`}</small></div>
-        <button type="button" class="kf-btn kf-comecar bloco" id="hoje-estudar" data-act="estudar-proximo">${I.play}${s.tipo === 'lei' ? 'Ler a lei' : s.tipo === 'continuar' ? 'Continuar a leitura' : 'Ler agora'}</button>`
+        ${due ? `<button type="button" class="lin hoje-rel" data-kf-ir="relembrar" id="hoje-relembrar"><span class="lin-ic">${I.cartas}</span><span class="lin-tx"><b>Comece por Relembrar</b><small>${plural(due, 'cartão para hoje', 'cartões para hoje')}${S.hojeFeito ? '' : ` · ${plural(Math.min(due, CARTOES_DO_DIA), 'cartão respondido já faz', 'cartões respondidos já fazem')} o dia valer`}</small></span>${I.seta}</button>` : ''}
+        ${s ? `<div class="sugestao"><span class="rotulo-mini">${s.antigo ? 'Você está em dia · para reler' : ROTULO_SUG[s.tipo]}</span><b>${esc(capTitulo(s.t))}</b><small>${dose ? esc(doseRotulo(dose)) : `Capítulo ${a.ids.indexOf(s.t) + 1} de ${a.caps} · ${esc(a.curto)}`}</small></div>
+        ${s.antigo ? `<p class="apoio" role="status">Você leu tudo o que já foi escrito. ${prox ? `A próxima apostila é a de ${esc(prox.nome)}. ` : ''}Enquanto ela não chega, releia, faça os cartões e resolva questões no Tec.</p>` : ''}
+        <button type="button" class="kf-btn kf-comecar bloco" id="hoje-estudar" data-act="estudar-proximo">${I.play}${s.tipo === 'lei' ? 'Ler a lei' : s.tipo === 'continuar' ? 'Continuar a leitura' : s.antigo ? 'Reler' : 'Ler agora'}</button>`
           : `<p class="apoio">Nenhuma apostila disponível ainda.</p>`}
       </section>
-      ${due ? `<ul class="card lista"><li><button type="button" class="lin" data-kf-ir="relembrar" id="hoje-relembrar"><span class="lin-ic">${I.cartas}</span><span class="lin-tx"><b>Relembrar</b><small>${plural(due, 'cartão para hoje', 'cartões para hoje')}</small></span>${I.seta}</button></li></ul>` : ''}`;
+      ${lei && s && s.tipo !== 'lei' ? `<ul class="card lista"><li><button type="button" class="lin" data-act="abrir-dose" data-id="${esc(lei.t)}" id="hoje-lei"><span class="lin-ic">${I.lei}</span><span class="lin-tx"><b>Lei seca, se quiser</b><small>${esc(doseRotulo(doseDe(lei.t)))}</small></span>${I.seta}</button></li></ul>` : ''}`;
   },
 };
 function sobreSequencia() {
@@ -61,7 +64,9 @@ const viewEdital = {
     if (!c) return `${voltaMais()}${cab('Edital', 'Cobertura, contagem para a prova e datas importantes.')}${KitFacil.ui.vazio({ titulo: 'Nenhum edital no app', texto: 'Restaure os padrões de fábrica em Ajustes, Privacidade e segurança.' })}`;
     const ed = editalDaBiblioteca(c), ct = contagem(c), cb = cobertura(c), h = hojeISO();
     const discs = c.disc.filter(d => materia(d.m) && !d.fora), D = (c.datas || []).slice().sort((a, b) => a.ini < b.ini ? -1 : 1), fut = D.filter(d => d.ini >= h), pas = D.filter(d => d.ini < h);
-    const dataLin = d => `<li class="${d.ini < h ? 'passou' : ''}"><span class="dt-dia">${fmtDataAno(d.ini)}</span><span class="dt-tx">${esc(d.titulo)}${d.ini === h ? ' <b>(hoje)</b>' : ''}</span></li>`;
+    // data que pede uma ação (inscrição, pagamento) pode ser marcada como resolvida: aí o aviso de Hoje não aparece
+    const dataLin = d => { const pede = d.acao && d.ini >= h && d.tipo !== 'prova', ok = pede && dataFeita(c.id, d.id);
+      return `<li class="${d.ini < h ? 'passou' : ''}"><span class="dt-dia">${fmtDataAno(d.ini)}</span><span class="dt-tx">${ok ? `<span class="grifo">${esc(d.titulo)}</span>` : esc(d.titulo)}${d.ini === h ? ' <b>(hoje)</b>' : ''}${pede ? KitFacil.ui.fato({ marcado: ok, marcar: 'Marcar como resolvido', desmarcar: 'Desmarcar resolvido', attrs: `data-act="data-feita" data-c="${esc(c.id)}" data-id="${esc(d.id)}"` }) : ''}</span></li>`; };
     return `${voltaMais()}${cab('Edital', 'Cobertura, contagem para a prova e datas importantes.')}
       ${A.length > 1 ? segHTML('ed-conc', A.map(x => [x.id, x.sigla]), c.id, 'Concurso') : ''}
       <section class="folha plano-capa" aria-label="${esc(c.sigla)}">

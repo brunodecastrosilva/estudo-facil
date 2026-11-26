@@ -43,9 +43,11 @@ function relIniciar() {
 function relSair() { if (REL && REL.fase === 'fim') REL = null; }
 function relSeguir() {
   REL.i++; REL.voltou = false;
+  // o dia vale com 5 cartões respondidos (ou com todos os de hoje, se forem menos): quem desce do ônibus no meio da rodada não perde o dia
+  if ((diaReg().car || 0) >= Math.min(CARTOES_DO_DIA, REL.lista.length) && diaValer()) { REL.valeu = true; if (REL.i < REL.lista.length) avisar('O dia valeu. Pode parar quando quiser.'); }
   if (REL.i < REL.lista.length) { REL.fase = 'frente'; salvar(); return; }
   REL.fase = 'fim';
-  const valeu = diaValer(), antes = REL.antes, ok = REL.ok, n = REL.lista.length;
+  const valeu = diaValer() || REL.valeu, antes = REL.antes, ok = REL.ok, n = REL.lista.length;
   salvar();
   if (valeu && festa(antes, { rotulo: 'Revisão feita', linhas: [['Cartões', `${ok} de ${n} lembrados`]], aoFechar: () => setTimeout(medalhaFilaMostrar, 600) })) return;
   setTimeout(() => jogoConferir(), 700);
@@ -78,7 +80,8 @@ const viewRelembrar = {
     while (REL.i < n && !cartaoDef(REL.lista[REL.i])) { const a = apostilaDoAssunto(REL.lista[REL.i].split('#')[0]); if (a && AP_TXT[a.m] && AP_TXT[a.m].erro) { delete AP_TXT[a.m]; return `${cab('Relembrar')}${KitFacil.ui.vazio({ titulo: 'Não deu para abrir os cartões', texto: 'Confira a internet e tente de novo.' })}`; } REL.lista.splice(REL.i, 1); }
     if (REL.i >= REL.lista.length) { REL = null; return this.html(); }
     const d = cartaoDef(REL.lista[REL.i]), t = topico(d.t), m = materia(t.m), tr = REL.fase === 'trecho' ? apTrecho(capituloDe(d.t), d.sec) : null;
-    return `${cab('Relembrar', `Cartão ${REL.i + 1} de ${REL.lista.length}`)}
+    const depois = due.filter(c => !REL.lista.includes(c.id)).length;
+    return `${cab('Relembrar', `Cartão ${REL.i + 1} de ${REL.lista.length} nesta rodada${depois ? ` · mais ${depois} na próxima` : ''}`)}
       <section class="folha rel-cartao" aria-labelledby="rel-foco">
         <span class="rotulo-mini">${esc(m ? m.nome : '')} · ${esc(capTitulo(d.t))}</span>
         <p class="rel-f" id="rel-foco" tabindex="-1">${apFmt(d.f)}</p>

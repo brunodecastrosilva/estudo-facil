@@ -3,6 +3,25 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.15.0 · 2026-11-26
+
+Rodada de revisão: o Claude usou o app como o Bruno usaria e corrigiu o que encontrou. Mais a segunda apostila.
+
+- **Apostila de Direito Administrativo:** 16 capítulos (os 12 assuntos da ANPD e os 4 que só o Cofen cobra) e 83 cartões. Números, prazos e artigos conferidos nos textos das leis que estão no app. As decisões do STF sobre conselhos profissionais foram conferidas em 26/11/2026.
+- **Lei seca do Direito Administrativo:** 11 capítulos ganharam dose de lei seca (Leis 9.784, 14.133, 8.112, 8.429, 12.846, 13.848, 14.129 e Constituição).
+- **A lei seca não trava mais a fila:** depois de um capítulo, a leitura principal de Hoje é o capítulo seguinte. A lei seca aparece embaixo, como "Lei seca, se quiser", e só vira a principal quando não há capítulo a ler.
+- **"Quero reler depois" não conclui o capítulo:** ele fica guardado na fila, não conta na cobertura do edital e os cartões só nascem no "Entendi". O dia vale do mesmo jeito.
+- **Relembrar vem primeiro:** quando há cartões para o dia, Hoje sugere começar por eles.
+- **O dia vale com 5 cartões:** não é mais preciso terminar a rodada. O app avisa na hora.
+- **Números da rodada:** a tela diz quantos cartões há nesta rodada e quantos ficam para a próxima.
+- **Listas com marcador** nos capítulos (estavam só recuadas).
+- **Barrinha de progresso** na leitura do capítulo e da lei seca.
+- **Tamanho da letra:** Normal, Grande ou Maior, escolhido na própria leitura e guardado no aparelho.
+- **Fila em dia:** quando você já leu tudo o que foi escrito, Hoje diz isso e informa qual é a próxima apostila.
+- **Data resolvida:** no Edital, a data que pede uma ação (inscrição, pagamento) pode ser marcada como resolvida; o aviso dela não aparece mais em Hoje.
+- **Ainda faltam:** a apostila de Português; a segunda passada na da LGPD; os três níveis por trecho, o levantamento de mais provas e as normas do Cofen, que dependem do computador do Bruno ligado; temas de discursiva do Cofen, depois do levantamento de provas do Instituto Quadrix.
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou).
+
 ## 1.14.0 · 2026-11-26
 
 O app foi refeito no desenho combinado com o Bruno em 26/11/2026: estudar no caminho, pelo celular, sem relógio.
