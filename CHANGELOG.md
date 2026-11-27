@@ -3,6 +3,16 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.17.0 · 2026-11-27
+
+- **Exercícios de fixação:** cada capítulo das três apostilas termina com pelo menos cinco exercícios (259 ao todo: 84 de Português, 80 de Direito Administrativo e 95 de LGPD). Você responde de cabeça e abre a resposta com um toque. Não valem ponto nem contam para o dia: servem para testar o que acabou de ler.
+- **Português com um exemplo para cada conceito:** as listas de conectores, tipos de texto, orações, sinais de pontuação e figuras ganharam uma frase de exemplo em cada item.
+- **Português ampliado, depois da leitura do material de estudo do Bruno:** intertextualidade; discurso direto, indireto e indireto livre; tipos de argumento, dedução e indução; fonemas, dígrafos, ditongos e hiatos; paralelismo; formas nominais; funções do "se" e do "que"; termos da oração; mais casos de vírgula, de concordância (inclusive do infinitivo e do verbo ser), de regência e de crase; próclise facultativa; nominalização; vícios de linguagem. A apostila passou de 84 para 102 cartões.
+- **Como o material do curso foi usado:** só como referência, para conferir a lista de conceitos. Os textos, os exemplos e os exercícios foram escritos para o app; nada do material foi copiado para o repositório, que é público.
+- **Formato das apostilas:** linha nova `x: enunciado :: resposta comentada`.
+- **Ainda faltam:** conferir a lista de conceitos de Direito Administrativo e de LGPD com o mesmo material e completar os exemplos dessas duas; Direito Constitucional; os três níveis por trecho.
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou) e o leitor de PDF (nada mudou nele).
+
 ## 1.16.0 · 2026-11-26
 
 - **Apostila de Língua Portuguesa:** 15 capítulos (os 12 assuntos da ANPD e os 3 que só o Cofen cobra) e 84 cartões. Da interpretação de textos à redação oficial, com modelos de item de certo ou errado em cada capítulo.

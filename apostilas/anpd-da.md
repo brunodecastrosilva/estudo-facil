@@ -47,6 +47,11 @@ C: A Administração Pública deve anular seus próprios atos quando eivados de 
 = Agente público só faz o que a lei autoriza.
 = Lei 9.784, art. 2º: onze princípios, com finalidade, motivação, razoabilidade, proporcionalidade e segurança jurídica.
 = Autotutela: a Administração anula e revoga os próprios atos.
+x: Um prefeito quer nomear o sobrinho para um cargo efetivo sem concurso, "porque confia nele". Que ideia do regime jurídico-administrativo isso fere? :: A indisponibilidade do interesse público: o cargo não é do prefeito. Daí vem a sujeição ao concurso, ligada também à impessoalidade.
+x: Um particular e um fiscal estão diante de uma situação que a lei não regula. Quem pode agir? :: O particular pode: para ele, vale tudo o que a lei não proíbe. O fiscal não pode: o agente público só faz o que a lei autoriza.
+x: Quais são os cinco princípios do art. 37 da Constituição? Qual deles entrou por último? :: Legalidade, impessoalidade, moralidade, publicidade e eficiência. A eficiência entrou com a Emenda 19, de 1998.
+x: Certo ou errado: "A publicidade está na lista de princípios do art. 2º da Lei 9.784/1999." :: Errado. Com esse nome, a publicidade está no art. 37 da Constituição. A lista do art. 2º da Lei 9.784 não a traz.
+x: A Administração descobre que concedeu uma licença de forma ilegal. Precisa ir ao juiz para desfazer o ato? Que princípio responde? :: Não. Pela autotutela, ela mesma deve anular o ato ilegal.
 
 ## anpd-da-02 | Quem é quem no Estado: organização administrativa, autarquias e agências
 
@@ -94,6 +99,11 @@ C: A desconcentração consiste na distribuição interna de competências dentr
 = Lei cria autarquia; lei autoriza empresa pública, sociedade de economia mista e fundação.
 = Agência: sem tutela nem subordinação, com autonomia e mandato dos dirigentes.
 = Agência edita resolução; decreto é do chefe do Executivo.
+x: A União cria uma secretaria dentro de um ministério. Depois, cria uma autarquia. Qual é desconcentração e qual é descentralização? :: A secretaria é desconcentração (mesma pessoa jurídica, com hierarquia). A autarquia é descentralização (outra pessoa jurídica, sem hierarquia).
+x: Complete: a lei específica ___ a autarquia e ___ a instituição de empresa pública. :: Cria a autarquia e autoriza a instituição da empresa pública.
+x: Certo ou errado: "O ministro pode reformar, por recurso, a decisão técnica de uma agência reguladora, por ser seu superior hierárquico." :: Errado. A agência é vinculada, não subordinada: a natureza especial é marcada pela ausência de tutela ou de subordinação hierárquica.
+x: Qual é a diferença de capital entre empresa pública e sociedade de economia mista? :: Na empresa pública, o capital é todo público. Na sociedade de economia mista, há capital público e privado, com controle do Estado.
+x: Uma agência reguladora pode editar decreto para detalhar a lei do setor? :: Não. Decreto é ato do chefe do Poder Executivo. A agência edita normas técnicas, como resoluções, dentro do que a lei permite.
 
 ## anpd-da-03 | Os poderes administrativos e o poder de polícia
 
@@ -143,6 +153,11 @@ C: Configura desvio de poder a prática de ato por agente competente com finalid
 = Decreto detalha a lei; não cria obrigação nova.
 = Polícia: limita liberdade e propriedade; discricionariedade, autoexecutoriedade e coercibilidade.
 = Excesso: foi além da competência. Desvio: usou para outro fim.
+x: Um fiscal sanitário interdita um restaurante sem ordem judicial. Que poder ele exerce e que atributo permite agir sem o juiz? :: Poder de polícia. O atributo é a autoexecutoriedade.
+x: Uma comissão pune um servidor por faltas ao trabalho. É poder de polícia ou poder disciplinar? :: Poder disciplinar: o servidor tem vínculo especial com a Administração.
+x: Um agente competente remove um servidor para se vingar de uma discussão. Excesso ou desvio de poder? :: Desvio de poder (ou de finalidade): ele tinha competência, mas usou o ato para um fim que não é o interesse público.
+x: O decreto do art. 84, IV, da Constituição pode criar uma obrigação que a lei não previu? :: Não. Ele serve para a fiel execução da lei: detalha, mas não inova.
+x: Ponha em ordem as quatro etapas do ciclo de polícia e dê um exemplo de cada. :: Ordem (a norma que exige extintor), consentimento (o alvará), fiscalização (a vistoria) e sanção (a multa).
 
 ## anpd-da-04 | Atos administrativos: do nascimento à anulação
 
@@ -200,6 +215,11 @@ E: A decisão de recursos administrativos pode ser objeto de delegação, desde 
 = Anular: ilegalidade, dever, efeitos para trás. Revogar: conveniência, só a Administração, para a frente.
 = Anulação de ato favorável: cinco anos, salvo má-fé.
 = Motivo declarado amarra o ato.
+x: Numa multa de trânsito, qual é o motivo e qual é o objeto do ato? :: O motivo é o fato que levou à multa (o excesso de velocidade). O objeto é o que o ato faz (a cobrança do valor).
+x: Um ato legal deixou de ser conveniente. Anula-se ou revoga-se? Quem pode fazer isso? :: Revoga-se. Só a própria Administração pode revogar, com efeitos dali para a frente.
+x: A Administração quer anular, sete anos depois, uma vantagem concedida por erro a um servidor de boa-fé. Pode? :: Não. O direito de anular atos com efeitos favoráveis decai em cinco anos, salvo comprovada má-fé.
+x: O chefe quer delegar a um subordinado a decisão de um recurso administrativo. Pode? :: Não. A Lei 9.784 proíbe delegar a decisão de recursos administrativos, a edição de atos normativos e as matérias de competência exclusiva.
+x: Um servidor é exonerado de cargo em comissão "por corte de gastos", e depois se prova que não houve corte. O que acontece com o ato? :: É inválido. Pela teoria dos motivos determinantes, o motivo declarado amarra o ato; se for falso, o ato cai.
 
 ## anpd-da-05 | O processo administrativo federal (Lei 9.784/1999)
 
@@ -257,6 +277,11 @@ C: É impedido de atuar em processo administrativo o servidor que esteja litigan
 = Decidir: 30 + 30 dias. Recorrer: 10 dias. Reconsiderar: 5 dias. Três instâncias.
 = Recurso sem efeito suspensivo, em regra.
 = Recurso pode agravar (com aviso); revisão não pode.
+x: Você foi notificado de uma decisão no dia 3. Sem regra específica, até quando pode recorrer, e em quanto tempo o recurso deve ser decidido? :: O prazo para recorrer é de 10 dias, contados da ciência (exclui-se o dia do começo). O recurso deve ser decidido em 30 dias, prorrogáveis por igual período.
+x: Certo ou errado: "Para recorrer no processo administrativo federal, é preciso depositar o valor da multa." :: Errado. Salvo exigência legal, o recurso independe de caução.
+x: Qual é a diferença entre impedimento e suspeição? Dê um exemplo de cada. :: Impedimento é objetivo: o servidor não pode atuar (ex.: está em litígio com o interessado). Suspeição depende de alegação (ex.: amizade íntima ou inimizade notória).
+x: A autoridade superior, ao julgar o recurso, quer aumentar a multa. Pode? O que precisa fazer antes? :: Pode, mas antes tem de avisar o recorrente para que ele se manifeste.
+x: Anos depois, surgem fatos novos e o punido pede revisão. A sanção pode aumentar? :: Não. A revisão pode ser pedida a qualquer tempo, mas dela não pode resultar agravamento da sanção.
 
 ## anpd-da-06 | Licitações e contratos: o essencial da Lei 14.133/2021
 
@@ -321,6 +346,11 @@ C: No processo de licitação, a fase de julgamento das propostas, em regra, ant
 = Inexigibilidade: competição inviável. Dispensa: lei autoriza não licitar.
 = Alteração unilateral: 25% (50% em reforma). Contínuos: 5 anos, até 10.
 = Impedimento: até 3 anos, no ente. Inidoneidade: 3 a 6 anos, em todos.
+x: A prefeitura quer comprar canetas e papel. Qual modalidade de licitação deve usar? :: Pregão, obrigatório para bens e serviços comuns.
+x: Só existe um fabricante da peça de que o órgão precisa. Dispensa ou inexigibilidade? Por quê? :: Inexigibilidade: a competição é inviável.
+x: Certo ou errado: "Pela Lei 14.133/2021, a habilitação dos licitantes vem, em regra, antes do julgamento das propostas." :: Errado. A regra é o julgamento antes da habilitação. A inversão exige ato motivado e previsão no edital.
+x: Um contrato de reforma de um prédio vale R$ 1 milhão. Até quanto a Administração pode acrescer, de forma unilateral? E se fosse uma compra? :: Na reforma de edifício, até 50% (R$ 500 mil). Numa compra, até 25%.
+x: Qual sanção impede o contratado de licitar em todos os entes da Federação, e por quanto tempo? :: A declaração de inidoneidade, pelo prazo de 3 a 6 anos. O impedimento de licitar vale só no ente que o aplicou, por até 3 anos.
 
 ## anpd-da-07 | Agentes públicos e o regime da Lei 8.112/1990
 
@@ -373,6 +403,11 @@ C: A ação disciplinar prescreve em 180 dias quanto à advertência, contados d
 = Posse: 30 dias. Exercício: 15 dias.
 = Estabilidade: 3 anos (Constituição).
 = Prescrição disciplinar: 5 anos, 2 anos e 180 dias.
+x: Um aprovado em concurso é nomeado no dia 1º. Quais são os prazos para a posse e para o exercício? :: Posse em 30 dias, contados da publicação do ato de provimento. Exercício em 15 dias, contados da posse.
+x: Um servidor pede para sair do cargo. Outro é punido por abandono de cargo. Qual é exoneração e qual é demissão? :: O que pede para sair é exonerado (não é punição). O punido por abandono é demitido (penalidade).
+x: Certo ou errado: "Pessoa sem vínculo com a Administração pode exercer função de confiança." :: Errado. Função de confiança é exclusiva de servidor de cargo efetivo. Quem pode vir de fora é o ocupante de cargo em comissão.
+x: Depois de quanto tempo o servidor de cargo efetivo adquire estabilidade? De onde vem o número? :: Após três anos de efetivo exercício, pelo art. 41 da Constituição. O texto da Lei 8.112 ainda fala em 2 anos, mas vale a Constituição.
+x: A Administração soube hoje de uma falta punível com advertência, ocorrida há um ano. A ação disciplinar prescreveu? :: Não. O prazo de 180 dias conta da data em que o fato se tornou conhecido, não da data do fato.
 
 ## anpd-da-08 | Quando o Estado paga a conta: responsabilidade civil
 
@@ -419,6 +454,11 @@ C: É assegurado ao Estado o direito de regresso contra o agente responsável pe
 = Respondem também as empresas privadas que prestam serviço público.
 = Excludentes: culpa exclusiva da vítima, força maior, fato de terceiro. O Estado prova.
 = Regresso contra o agente: só com dolo ou culpa.
+x: Uma ambulância do município bate no seu carro. O que você precisa provar para ser indenizado? :: A conduta do agente, o dano e o nexo causal entre os dois. Não precisa provar culpa: a responsabilidade é objetiva.
+x: Um ônibus de uma concessionária privada de transporte público atropela um pedestre. A regra do art. 37, § 6º, se aplica? :: Sim. Respondem objetivamente as pessoas de direito público e as de direito privado prestadoras de serviço público.
+x: O município prova que o pedestre se jogou na frente do veículo. O que acontece? Quem tinha de provar isso? :: A responsabilidade é afastada por culpa exclusiva da vítima. O ônus de provar a excludente é do Estado.
+x: Depois de indenizar a vítima, o Estado quer cobrar do motorista. O que precisa provar? :: Dolo ou culpa do motorista. A responsabilidade do agente, no regresso, é subjetiva.
+x: Certo ou errado: "Na teoria do risco administrativo, o Estado indeniza sempre, sem possibilidade de exclusão." :: Errado. O risco administrativo admite excludentes: culpa exclusiva da vítima, caso fortuito ou força maior e fato exclusivo de terceiro.
 
 ## anpd-da-09 | Quem vigia a Administração: controle interno, externo e judicial
 
@@ -460,6 +500,11 @@ C: Os responsáveis pelo controle interno que tomarem conhecimento de irregulari
 = Contas dos demais: TCU julga.
 = Judiciário: legalidade, não mérito; anula, não revoga; só se provocado.
 = Qualquer cidadão pode denunciar ao TCU.
+x: Quem julga as contas do Presidente da República? E qual é o papel do TCU nelas? :: O Congresso Nacional julga. O TCU aprecia as contas e emite parecer prévio, em 60 dias.
+x: Um diretor de autarquia federal presta contas. Quem as julga? :: O TCU, que julga as contas dos administradores e demais responsáveis por dinheiro público.
+x: Um juiz acha que seria mais útil asfaltar outra rua. Pode trocar a escolha do prefeito? E se a obra foi contratada sem licitação? :: Não pode trocar a escolha: é mérito administrativo. Mas pode anular a contratação ilegal, porque controla a legalidade.
+x: Uma empresa privada recebe dinheiro federal por convênio. Ela presta contas? :: Sim. Presta contas qualquer pessoa, física ou jurídica, pública ou privada, que use ou administre dinheiro público.
+x: O chefe do controle interno descobre uma irregularidade e se cala. Qual é a consequência? :: Responde solidariamente, por não ter dado ciência ao TCU.
 
 ## anpd-da-10 | Improbidade administrativa (Lei 8.429/1992, depois da reforma de 2021)
 
@@ -509,6 +554,11 @@ C: O mero exercício da função ou o desempenho de competências públicas, sem
 = Direitos políticos: até 14 anos (art. 9º) e até 12 anos (art. 10); nada no art. 11.
 = Art. 11: multa de até 24 remunerações e 4 anos sem contratar.
 = Prescrição: 8 anos.
+x: Um servidor causa prejuízo ao erário por descuido, sem intenção. Cometeu ato de improbidade? :: Não. Desde a Lei 14.230/2021, só há improbidade com conduta dolosa.
+x: Classifique: receber propina; pagar por obra não executada; fraudar concurso para favorecer alguém. :: Receber propina é enriquecimento ilícito (art. 9º). Pagar por obra não executada é lesão ao erário (art. 10). Fraudar concurso atenta contra os princípios (art. 11).
+x: Qual é o prazo máximo de suspensão dos direitos políticos no enriquecimento ilícito e na lesão ao erário? E no atentado contra os princípios? :: Até 14 anos e até 12 anos. No atentado contra os princípios não há suspensão de direitos políticos: há multa de até 24 vezes a remuneração e proibição de contratar por até 4 anos.
+x: Um gestor adota uma interpretação da lei apoiada em decisões de tribunais, e depois essa interpretação é derrubada. É improbidade? :: Não. A divergência interpretativa da lei, baseada em jurisprudência, não configura improbidade.
+x: Em quanto tempo prescreve a ação de improbidade? :: Em oito anos, contados do fato ou, na infração permanente, do dia em que cessou.
 
 ## anpd-da-11 | Lei Anticorrupção (Lei 12.846/2013): quando a punida é a empresa
 
@@ -573,6 +623,11 @@ C: A celebração do acordo de leniência reduz em até dois terços o valor da 
 = Administrativas: multa e publicação. Judiciais: perdimento, suspensão, dissolução, proibição de incentivos.
 = Leniência: primeira a se manifestar; multa cai até 2/3; dano continua devido.
 = Prescrição: 5 anos, da ciência.
+x: Um vendedor paga propina a um fiscal para a empresa ganhar um contrato, sem a diretoria saber. A empresa responde? :: Sim, objetivamente: basta o ato lesivo em seu interesse ou benefício. Não é preciso provar culpa ou dolo da empresa.
+x: E o diretor dessa empresa, responde do mesmo jeito? :: Não. Dirigentes e administradores respondem na medida da sua culpabilidade.
+x: Quais são as duas sanções administrativas da Lei Anticorrupção e a faixa da multa? :: Multa de 0,1% a 20% do faturamento bruto do último exercício, excluídos os tributos, e publicação extraordinária da decisão condenatória.
+x: A autoridade administrativa pode decretar a dissolução da empresa ao fim do processo? :: Não. A dissolução compulsória é sanção judicial, aplicada pelo juiz.
+x: O que a empresa precisa fazer para firmar acordo de leniência e o que ganha? :: Ser a primeira a se manifestar, cessar o envolvimento, admitir a participação e cooperar. Ganha isenção da publicação e da proibição de incentivos e redução de até dois terços da multa. Continua devendo a reparação do dano.
 
 ## anpd-da-12 | Governo Digital e eficiência pública (Lei 14.129/2021)
 
@@ -617,6 +672,11 @@ C: Os entes públicos poderão instituir laboratórios de inovação, abertos à
 = CPF e CNPJ bastam para identificar.
 = Dados abertos: uso livre, respeitada a LGPD.
 = Laboratórios de inovação: faculdade, não dever.
+x: Um órgão cria um cadastro e exige do cidadão um número de identificação novo. Isso combina com a Lei 14.129/2021? :: Não. O CPF é número suficiente para identificar o cidadão nos bancos de dados de serviços públicos.
+x: Certo ou errado: "Com o governo digital, o atendimento presencial deixa de existir." :: Errado. A plataforma única vale sem prejuízo do atendimento presencial, quando indispensável.
+x: Os dados abertos do governo podem ser usados por uma empresa privada? Há limite? :: Podem: são de livre utilização pela sociedade. O limite são os princípios da LGPD.
+x: Todo órgão é obrigado a ter um laboratório de inovação? :: Não. A lei diz que os entes públicos poderão instituí-los.
+x: Cite os quatro meios pelos quais a lei busca aumentar a eficiência pública. :: Desburocratização, inovação, transformação digital e participação do cidadão.
 
 ## cofen-da-01 | O que é o Direito Administrativo e de onde ele vem
 
@@ -657,6 +717,11 @@ C: A lei, em sentido amplo, é a fonte primária do Direito Administrativo. :: �
 = Sem código único.
 = Fontes: lei (primária), doutrina, jurisprudência e costumes.
 = Brasil: jurisdição una; o Judiciário dá a palavra final.
+x: Um tribunal abre licitação para comprar cadeiras. Que função está exercendo e que ramo do direito se aplica? :: Função administrativa, exercida de forma atípica pelo Judiciário. Aplica-se o Direito Administrativo.
+x: Existe um "Código de Direito Administrativo" no Brasil? :: Não. O Direito Administrativo brasileiro não é codificado: as normas estão na Constituição e em leis esparsas.
+x: Qual é a fonte primária do Direito Administrativo e quais são as secundárias? :: Primária: a lei em sentido amplo. Secundárias: a doutrina, a jurisprudência e os costumes.
+x: Você perdeu em todas as instâncias administrativas. Ainda pode discutir o caso? Onde, e por quê? :: Pode, no Poder Judiciário. O Brasil adota a jurisdição una: a lei não exclui da apreciação do Judiciário lesão ou ameaça a direito.
+x: Certo ou errado: "Um costume antigo da repartição pode prevalecer sobre o que a lei determina." :: Errado. O costume é fonte secundária e não prevalece contra a lei.
 
 ## cofen-da-02 | Conselhos de fiscalização profissional: o que é o Cofen para o Direito
 
@@ -695,6 +760,11 @@ C: É constitucional a legislação que permite a contratação de pessoal pelos
 = Consequências: concurso público e fiscalização do TCU.
 = Natureza sui generis: sem precatório (RE 938837).
 = Pessoal pode ser celetista (ADC 36).
+x: Qual é a natureza jurídica do Cofen, segundo o entendimento do STF sobre os conselhos profissionais? :: Autarquia: pessoa jurídica de direito público (ADI 1717).
+x: Por que o Cofen fez concurso público em vez de contratar por currículo? :: Porque, sendo autarquia, sujeita-se à exigência de concurso público para admitir pessoal.
+x: Um conselho profissional perde uma ação e deve pagar. O pagamento entra na fila dos precatórios? :: Não. O STF decidiu, no RE 938837, que esses pagamentos não se submetem ao regime de precatórios.
+x: Os conselhos profissionais prestam contas a quem? :: Ao Tribunal de Contas da União.
+x: Ao cassar o registro de um profissional, que poder o conselho exerce? Esse poder poderia ser entregue a uma entidade privada? :: Poder de polícia. Não: o STF afirmou que o poder de polícia não pode ser delegado a entidade de direito privado.
 
 ## cofen-da-03 | Empregado público e o regime de quem trabalha nos conselhos
 
@@ -736,6 +806,11 @@ C: A investidura em emprego público depende de aprovação prévia em concurso 
 = Concurso, princípios do art. 37 e Lei de Improbidade valem para os dois.
 = Lei 8.112 não rege o empregado público.
 = Conselhos: autarquias com pessoal celetista, admitido pelo STF (ADC 36).
+x: Qual lei rege o vínculo do Analista Técnico do Cofen, pelo regime que o STF admitiu para os conselhos? :: A CLT. O vínculo é de emprego público, contratual.
+x: Certo ou errado: "Por ser celetista, o empregado de conselho profissional pode ser admitido sem concurso." :: Errado. A Constituição exige concurso para a investidura em cargo ou emprego público.
+x: As regras de posse em 30 dias e de estágio probatório da Lei 8.112 valem para o empregado público? :: Não. A Lei 8.112 rege os servidores ocupantes de cargo público. O empregado segue a CLT e as normas internas da entidade.
+x: Em que julgamento o STF considerou constitucional o regime celetista nos conselhos profissionais? :: Na ADC 36 (julgada com a ADI 5367 e a ADPF 367).
+x: Um empregado de conselho recebe vantagem indevida para liberar um registro. A Lei de Improbidade o alcança? :: Sim. O conceito de agente público da Lei 8.429/1992 inclui quem exerce emprego.
 
 ## cofen-da-04 | Sindicância e processo administrativo disciplinar
 
@@ -795,3 +870,9 @@ C: Da revisão do processo disciplinar não poderá resultar agravamento de pena
 = PAD: comissão de três estáveis; 60 + 60 dias; fases de instauração, inquérito e julgamento.
 = Defesa escrita em 10 dias; julgamento em 20.
 = Afastamento preventivo é cautelar. Revisão não agrava.
+x: Atrasos repetidos de um servidor: sindicância ou PAD? E suspeita de desvio de dinheiro? :: Atrasos: basta a sindicância, que pode levar a advertência ou a suspensão de até 30 dias. Desvio de dinheiro pode levar a demissão: o PAD é obrigatório.
+x: Quantos membros tem a comissão do PAD e que requisito eles precisam cumprir? :: Três servidores estáveis.
+x: Quais são as fases do PAD, em ordem? :: Instauração, inquérito administrativo (instrução, defesa e relatório) e julgamento.
+x: A comissão conclui o relatório. É ela quem aplica a pena? :: Não. A comissão apura e relata; quem decide é a autoridade julgadora, em 20 dias.
+x: O servidor é afastado por 60 dias durante a apuração. Isso é punição? :: Não. O afastamento preventivo é medida cautelar, para que o servidor não influa na apuração.
+

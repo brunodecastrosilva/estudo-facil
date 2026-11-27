@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.16 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.17 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    A varredura de acessibilidade fica em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -548,7 +548,7 @@ test('apostila de Língua Portuguesa: 15 capítulos (12 da ANPD e 3 só do Cofen
   const a = await abrirTudo(), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
   await p.evaluate(() => apCarregar('anpd-lp')); await p.waitForFunction(() => apPronta('anpd-lp'));
   const d = await p.evaluate(() => { const A = APOSTILAS.find(x => x.m === 'anpd-lp'), tx = AP_TXT['anpd-lp']; return { ids: A.ids.length, lidos: tx.caps.length, semAssunto: tx.caps.filter(c => !topico(c.t)).map(c => c.t), cartoes: tx.caps.reduce((n, c) => n + c.cartoes.length, 0), semSecao: tx.caps.flatMap(c => c.cartoes.filter(k => !(k.sec >= 0)).map(() => c.t)), fila: fila().slice(0, 13).map(x => x.t), doses: A.ids.filter(id => doseDe(id)).length }; });
-  assert.deepEqual([d.ids, d.lidos, d.semAssunto, d.cartoes, d.semSecao, d.doses], [15, 15, [], 84, [], 0]);
+  assert.deepEqual([d.ids, d.lidos, d.semAssunto, d.cartoes, d.semSecao, d.doses], [15, 15, [], 102, [], 0]);
   assert.deepEqual(d.fila.slice(0, 12), Array.from({ length: 12 }, (_, i) => 'anpd-lp-' + String(i + 1).padStart(2, '0')), 'Português abre a fila'); assert.equal(d.fila[12], 'anpd-da-01');
   assert.match(await p.locator('#view .sugestao').innerText(), /Próxima leitura\s+Compreensão e interpretação de textos\s+Capítulo 1 de 15 · Língua Portuguesa/);
   // um capítulo com trecho de norma (redação oficial) e um só do Cofen abrem e concluem; sem dose de lei, o fim do capítulo não oferece lei seca
@@ -557,5 +557,31 @@ test('apostila de Língua Portuguesa: 15 capítulos (12 da ANPD e 3 só do Cofen
   await fecharFesta(p).catch(() => {}); await fecharMedalhas(p); assert.equal(await p.locator('#ap-fim [data-act="abrir-dose"]').count(), 0);
   await p.evaluate(() => capituloAbrir('cofen-lp-02')); await p.locator('#view .tela-t', { hasText: 'Significado das palavras' }).waitFor(); assert.ok(await semRolagemLateral(p));
   assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+// ───────── 1.17.0 ─────────
+test('exercícios de fixação: pelo menos 5 no fim de cada capítulo das três apostilas; a resposta abre com um toque e não entra no trecho do cartão', async () => {
+  let total = 0;
+  for (const m of ['anpd-lp', 'anpd-da', 'anpd-lgpd']) {
+    const txt = readFileSync(new URL(`../apostilas/${m}.md`, import.meta.url), 'utf8');
+    for (const c of txt.split(/\n## /).slice(1)) {
+      const id = c.split(' |')[0], L = c.trimEnd().split('\n'), n = L.filter(l => /^x: .+ :: .+$/.test(l)).length; total += n;
+      assert.ok(n >= 5 && n === L.filter(l => /^x:/.test(l)).length, `exercícios de ${id}: ${n}`);
+      assert.ok(L.slice(-n).every(l => /^x: /.test(l)), `os exercícios de ${id} ficam no fim do capítulo`);
+    }
+    assert.ok(!/—|–/.test(txt), 'sem travessão em ' + m);
+  }
+  assert.equal(total, 259);
+  const a = await abrirTudo(), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
+  await p.evaluate(() => capituloAbrir('anpd-lp-09')); await p.locator('#view .ap-fix').waitFor();
+  assert.equal(await p.locator('#view .ap-fix-l > li').count(), 6); assert.match(await p.locator('#view .ap-fix').innerText(), /Exercícios de fixação[\s\S]*Responda de cabeça/);
+  const d = p.locator('#view .ap-fix-l details').first(); assert.equal(await d.evaluate(e => e.open), false); assert.equal(await d.locator('p').isVisible(), false, 'a resposta começa fechada');
+  const sm = d.locator('summary'); assert.ok((await sm.boundingBox()).height >= 44, 'alvo de toque'); await sm.focus(); await p.keyboard.press('Enter');
+  assert.equal(await d.evaluate(e => e.open), true); assert.match(await d.locator('p').innerText(), /Prefiro estudar de manhã a estudar à noite/);
+  // os exercícios vêm antes dos botões do fim do capítulo e não aparecem no trecho que o cartão esquecido abre
+  assert.ok(await p.evaluate(() => { const f = document.querySelector('#view .ap-fix'), b = document.querySelector('#cap-entendi'); return !!(f.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING); }));
+  assert.equal(await p.evaluate(() => { const c = capituloDe('anpd-lp-09'); return c.cartoes.map(k => apTrecho(c, k.sec).html).some(h => /ap-fix/.test(h)); }), false);
+  assert.ok(await semRolagemLateral(p)); assert.deepEqual(a.erros, []);
   await a.fechar();
 });

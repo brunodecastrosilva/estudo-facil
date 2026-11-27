@@ -8,6 +8,7 @@
      C: item certo :: por quê        E: item errado :: por quê    (modelos de item, só para ler: não é questão)
      = linha do resumo "Para a prova"
      ? <letra> | pergunta :: resposta   cartão de conceito; fica dentro do trecho (###) que responde a ele
+     x: enunciado :: resposta comentada   exercício de fixação, no fim do capítulo; a resposta abre com um toque
    Qualquer outra linha é um parágrafo. **negrito** é o único destaque. Tudo é protegido (esc) antes de ir para a tela.
    A leitura é por capítulo: um por tela, com "Entendi" ou "Quero reler depois" no fim. O app guarda onde você parou. */
 "use strict";
@@ -53,6 +54,7 @@ function apLer(txt) {
     else if ((m = /^ex:\s*(.+)$/.exec(l))) por('ex', m[1]);
     else if ((m = /^banca:\s*(.+)$/.exec(l))) por('banca', m[1]);
     else if ((m = /^([CE]):\s*(.+?)\s*::\s*(.+)$/.exec(l))) por('item', m[1], m[2], m[3]);
+    else if ((m = /^x:\s*(.+?)\s*::\s*(.+)$/.exec(l))) por('fix', m[1], m[2]);
     else por('p', l);
   }
   return A;
@@ -65,6 +67,8 @@ function apBlocos(B, { de = 0, ate = B.length, marca = true } = {}) {
     const [tipo, a, b, c] = B[i], d = marca ? ` data-b="${i}"` : '';
     if (tipo === 'li' || tipo === 'res') { const L = []; while (i < ate && B[i][0] === tipo) L.push(B[i++][1]); i--;
       h += tipo === 'li' ? `<ul class="ap-lista"${d}>${L.map(x => `<li>${apFmt(x)}</li>`).join('')}</ul>` : `<div class="ap-resumo"${d}><span class="rotulo-mini">Para a prova</span><ul class="ap-lista">${L.map(x => `<li>${apFmt(x)}</li>`).join('')}</ul></div>`; }
+    else if (tipo === 'fix') { const L = []; while (i < ate && B[i][0] === 'fix') { L.push(B[i]); i++; } i--;
+      h += `<section class="ap-fix"${d} aria-label="Exercícios de fixação"><h2 class="ap-h">Exercícios de fixação</h2><p class="ap-fix-sub">Responda de cabeça e só então abra a resposta. Não valem ponto: servem para você testar o que acabou de ler.</p><ol class="ap-fix-l">${L.map(x => `<li><p>${apFmt(x[1])}</p><details><summary>Ver resposta</summary><p>${apFmt(x[2])}</p></details></li>`).join('')}</ol></section>`; }
     else if (tipo === 'h') h += `<h2 class="ap-h"${d}>${apFmt(a)}</h2>`;
     else if (tipo === 'lei') h += `<blockquote class="ap-lei"${d}><span class="rotulo-mini">Na lei</span><p>${apFmt(a)}</p></blockquote>`;
     else if (tipo === 'ex') h += `<div class="ap-ex"${d}><span class="rotulo-mini">Exemplo</span><p>${apFmt(a)}</p></div>`;
@@ -79,7 +83,7 @@ function apBlocos(B, { de = 0, ate = B.length, marca = true } = {}) {
 function apTrecho(cap, sec) {
   if (!cap) return { titulo: '', html: '' };
   const ini = sec >= 0 ? sec + 1 : 0; let fim = cap.b.findIndex((b, i) => i >= ini && b[0] === 'h'); if (fim < 0) fim = cap.b.length;
-  const B = cap.b.slice(ini, fim).filter(b => !['banca', 'item', 'res'].includes(b[0]));
+  const B = cap.b.slice(ini, fim).filter(b => !['banca', 'item', 'res', 'fix'].includes(b[0]));
   return { titulo: sec >= 0 ? cap.b[sec][1] : cap.titulo, html: apBlocos(B, { marca: false }) };
 }
 

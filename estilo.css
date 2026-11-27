@@ -451,3 +451,17 @@ a.lin:active{background:var(--surface-2)}
 .ap-prog span{display:block;height:100%;background:var(--pen);transform-origin:left center;transform:scaleX(0)}
 .hoje-rel{border-radius:var(--kf-r-md);box-shadow:inset 0 0 0 1.5px var(--pen)}
 .dt-tx .kf-btn{margin-top:6px}
+
+/* 1.17.0 · exercícios de fixação no fim do capítulo: a resposta abre com um toque */
+.ap-fix{margin:28px 0 8px;padding:4px 0 0;border-top:2px solid var(--kf-line)}
+.ap-fix-sub{color:var(--kf-muted);font-size:14.5px;margin:0 0 6px}
+.ap-folha .ap-fix-l{list-style:decimal;padding-left:24px;margin:0}
+.ap-folha .ap-fix-l>li{display:list-item;margin:14px 0;padding-left:2px}
+.ap-fix-l>li>p{margin:0 0 6px}
+.ap-fix-l details{border:1px solid var(--kf-line);border-radius:12px;background:var(--kf-surface)}
+.ap-fix-l summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;padding:0 14px;font-weight:700;color:var(--kf-primary-ink,var(--kf-primary));list-style:none}
+.ap-fix-l summary::-webkit-details-marker{display:none}
+.ap-fix-l summary::before{content:"+";font-weight:800;width:14px;text-align:center}
+.ap-fix-l details[open] summary::before{content:"\2212"}
+.ap-fix-l summary:focus-visible{outline:3px solid var(--kf-focus,var(--kf-primary));outline-offset:2px;border-radius:12px}
+.ap-fix-l details>p{margin:0;padding:2px 14px 12px}
