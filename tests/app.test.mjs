@@ -1,4 +1,4 @@
-/* Estudo Fácil 1.17 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
+/* Estudo Fácil 1.18 · testes do app (npm test). Rodam num Chromium (ou no Google Chrome instalado), sem internet:
    o GitHub (sincronização) é simulado por comum/testes/ambiente.mjs. O dia é fixado com ?hoje=AAAA-MM-DD.
    A varredura de acessibilidade fica em tests/acessibilidade.test.mjs. */
 import { test, before, after } from 'node:test';
@@ -487,7 +487,7 @@ test('apostila de Direito Administrativo: 16 capítulos (12 da ANPD e 4 só do C
   const a = await abrirTudo(), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
   await p.evaluate(() => apCarregar('anpd-da')); await p.waitForFunction(() => apPronta('anpd-da'));
   const d = await p.evaluate(() => { const A = APOSTILAS.find(x => x.m === 'anpd-da'), tx = AP_TXT['anpd-da']; return { ids: A.ids.length, caps: A.caps, lidos: tx.caps.length, semAssunto: tx.caps.filter(c => !topico(c.t)).map(c => c.t), cartoes: tx.caps.reduce((n, c) => n + c.cartoes.length, 0), semSecao: tx.caps.flatMap(c => c.cartoes.filter(k => !(k.sec >= 0)).map(() => c.t)), sug: sugestao(), doses: A.ids.filter(id => doseDe(id)).length, cofen: DB.concursos.find(c => c.id === 'cofen-2027').disc.flatMap(x => x.topicos).filter(id => A.ids.includes(id)).length }; });
-  assert.deepEqual([d.ids, d.caps, d.lidos, d.semAssunto, d.cartoes, d.semSecao, d.doses], [16, 16, 16, [], 83, [], 11]);
+  assert.deepEqual([d.ids, d.caps, d.lidos, d.semAssunto, d.cartoes, d.semSecao, d.doses], [16, 16, 16, [], 91, [], 11]);
   assert.deepEqual(d.sug, { tipo: 'cap', t: 'anpd-lp-01' }, 'a fila começa por Português, a primeira disciplina que serve aos dois editais'); assert.ok(d.cofen >= 4, 'os assuntos só do Cofen estão no edital dele');
   // cada dose de lei seca encontra os artigos no texto da lei guardado no app
   const doses = await p.evaluate(async () => { const out = []; for (const id of APOSTILAS.find(x => x.m === 'anpd-da').ids) { const dz = doseDe(id); if (!dz) continue; const L = await leiCarregar(dz.lei), ps = doseParagrafos(L.p, dz); out.push([id, ps.length, ps.length ? ps[0][0].t.slice(0, 8) : '']); } return out; });
@@ -563,7 +563,7 @@ test('apostila de Língua Portuguesa: 15 capítulos (12 da ANPD e 3 só do Cofen
 // ───────── 1.17.0 ─────────
 test('exercícios de fixação: pelo menos 5 no fim de cada capítulo das três apostilas; a resposta abre com um toque e não entra no trecho do cartão', async () => {
   let total = 0;
-  for (const m of ['anpd-lp', 'anpd-da', 'anpd-lgpd']) {
+  for (const m of ['anpd-lp', 'anpd-da', 'anpd-dc', 'anpd-lgpd']) {
     const txt = readFileSync(new URL(`../apostilas/${m}.md`, import.meta.url), 'utf8');
     for (const c of txt.split(/\n## /).slice(1)) {
       const id = c.split(' |')[0], L = c.trimEnd().split('\n'), n = L.filter(l => /^x: .+ :: .+$/.test(l)).length; total += n;
@@ -572,7 +572,7 @@ test('exercícios de fixação: pelo menos 5 no fim de cada capítulo das três 
     }
     assert.ok(!/—|–/.test(txt), 'sem travessão em ' + m);
   }
-  assert.equal(total, 259);
+  assert.equal(total, 334);
   const a = await abrirTudo(), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
   await p.evaluate(() => capituloAbrir('anpd-lp-09')); await p.locator('#view .ap-fix').waitFor();
   assert.equal(await p.locator('#view .ap-fix-l > li').count(), 6); assert.match(await p.locator('#view .ap-fix').innerText(), /Exercícios de fixação[\s\S]*Responda de cabeça/);
@@ -582,6 +582,37 @@ test('exercícios de fixação: pelo menos 5 no fim de cada capítulo das três 
   // os exercícios vêm antes dos botões do fim do capítulo e não aparecem no trecho que o cartão esquecido abre
   assert.ok(await p.evaluate(() => { const f = document.querySelector('#view .ap-fix'), b = document.querySelector('#cap-entendi'); return !!(f.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING); }));
   assert.equal(await p.evaluate(() => { const c = capituloDe('anpd-lp-09'); return c.cartoes.map(k => apTrecho(c, k.sec).html).some(h => /ap-fix/.test(h)); }), false);
+  assert.ok(await semRolagemLateral(p)); assert.deepEqual(a.erros, []);
+  await a.fechar();
+});
+
+// ───────── 1.18.0 ─────────
+test('apostila de Direito Constitucional: 14 capítulos (9 da ANPD e 5 só do Cofen), citações iguais ao texto da Constituição e doses de lei seca', async () => {
+  const txt = readFileSync(new URL('../apostilas/anpd-dc.md', import.meta.url), 'utf8');
+  const caps = txt.split(/\n## /).slice(1);
+  assert.deepEqual(caps.map(c => c.split(' |')[0]), [...Array.from({ length: 9 }, (_, i) => 'anpd-dc-0' + (i + 1)), 'cofen-dc-01', 'cofen-dc-02', 'cofen-dc-03', 'cofen-dc-04', 'cofen-dc-05']);
+  for (const c of caps) {
+    const id = c.split(' |')[0], n = re => (c.match(re) || []).length;
+    assert.ok(n(/^\? [a-z] \| .+ :: .+$/gm) >= 4 && n(/^\? /gm) === n(/^\? [a-z] \| .+ :: .+$/gm), `cartões de ${id}`);
+    assert.ok(n(/^C: .+ :: .+$/gm) >= 1 && n(/^E: .+ :: .+$/gm) >= 2 && n(/^= /gm) >= 4 && n(/^banca: /gm) === 1, `modelos, resumo e banca de ${id}`);
+    assert.equal(new Set(c.match(/^\? [a-z] \|/gm)).size, n(/^\? /gm), `letras repetidas em ${id}`);
+  }
+  // toda citação entre aspas numa linha "na lei" existe, igual, no texto da Constituição guardado no app
+  const norm = t => t.replace(/\s+/g, ' ').toLowerCase(), cf = norm(JSON.parse(readFileSync(new URL('../leis/cf.json', import.meta.url), 'utf8')).p.map(x => x.t).join(' '));
+  const cit = txt.split('\n').filter(l => l.startsWith('> ')).flatMap(l => [...l.matchAll(/"([^"]{15,})"/g)].map(m => m[1]));
+  assert.ok(cit.length >= 15); for (const q of cit) assert.ok(cf.includes(norm(q).replace(/[.,;]$/, '')), 'citação que não está na Constituição: ' + q.slice(0, 80));
+  const a = await abrirTudo(), p = a.page; await p.locator('#view .hoje-folha').waitFor(); await pronto(p);
+  await p.evaluate(() => apCarregar('anpd-dc')); await p.waitForFunction(() => apPronta('anpd-dc'));
+  const d = await p.evaluate(() => { const A = APOSTILAS.find(x => x.m === 'anpd-dc'), tx = AP_TXT['anpd-dc']; return { ids: A.ids.length, lidos: tx.caps.length, semAssunto: tx.caps.filter(c => !topico(c.t)).map(c => c.t), cartoes: tx.caps.reduce((n, c) => n + c.cartoes.length, 0), semSecao: tx.caps.flatMap(c => c.cartoes.filter(k => !(k.sec >= 0)).map(() => c.t)), doses: A.ids.filter(id => doseDe(id)).length, ordem: APOSTILAS.map(x => x.m), fila: fila().filter(x => x.tipo === 'cap').map(x => x.t.replace(/-\d+$/, '')).filter((x, i, L) => L.indexOf(x) === i) }; });
+  assert.deepEqual([d.ids, d.lidos, d.semAssunto, d.cartoes, d.semSecao, d.doses], [14, 14, [], 83, [], 11]);
+  assert.deepEqual(d.ordem, ['anpd-lp', 'anpd-da', 'anpd-dc', 'anpd-lgpd']);
+  assert.deepEqual(d.fila.slice(0, 3), ['anpd-lp', 'anpd-da', 'anpd-dc'], 'a fila segue a ordem combinada: Português, Administrativo, Constitucional');
+  const doses = await p.evaluate(async () => { const L = await leiCarregar('cf'), out = []; for (const id of APOSTILAS.find(x => x.m === 'anpd-dc').ids) { const dz = doseDe(id); if (!dz) continue; const ps = doseParagrafos(L.p, dz); out.push([id, ps.length, ps.length ? ps[0][0].t.slice(0, 30) : '']); } return out; });
+  assert.ok(doses.length === 11 && doses.every(x => x[1] > 3 && /^Art\. /.test(x[2])), 'doses: ' + JSON.stringify(doses));
+  assert.match(doses.find(x => x[0] === 'anpd-dc-01')[2], /^Art\. 1º A República Federativa/, 'a dose pega o corpo da Constituição, não o ADCT');
+  await p.evaluate(() => capituloAbrir('anpd-dc-03')); await p.locator('#view .tela-t', { hasText: 'Proteção de dados pessoais como direito fundamental' }).waitFor();
+  assert.match(await p.locator('#view .ap-folha').innerText(), /Emenda Constitucional 115[\s\S]*LXXIX[\s\S]*Exercícios de fixação/); assert.equal(await p.locator('#view .ap-fix-l > li').count(), 5);
+  await p.evaluate(() => capituloAbrir('cofen-dc-05')); await p.locator('#view .tela-t', { hasText: 'saúde' }).waitFor(); assert.match(await p.locator('#view .ap-banca .rotulo-mini').innerText(), /Como a banca cobra/i);
   assert.ok(await semRolagemLateral(p)); assert.deepEqual(a.erros, []);
   await a.fechar();
 });

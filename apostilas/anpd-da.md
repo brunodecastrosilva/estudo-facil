@@ -26,17 +26,23 @@ ex: Um fiscal quer multar um comércio, mas não existe lei prevendo aquela mult
 ### A lista maior da Lei 9.784/1999
 A lei do processo administrativo federal traz uma lista mais longa, no art. 2º: **legalidade, finalidade, motivação, razoabilidade, proporcionalidade, moralidade, ampla defesa, contraditório, segurança jurídica, interesse público e eficiência**.
 Repare no que ela acrescenta e explique para si mesmo:
-- **Finalidade:** todo ato tem de buscar o interesse público. Buscar outro fim é desvio.
-- **Motivação:** dizer por escrito os fatos e os fundamentos da decisão.
-- **Razoabilidade e proporcionalidade:** a medida tem de ser adequada e na dose certa. Não se mata mosquito com canhão.
-- **Segurança jurídica:** as pessoas precisam poder confiar nos atos do Estado. Nova interpretação não volta no tempo.
-- **Contraditório e ampla defesa:** ninguém é punido sem ser ouvido e sem poder se defender.
+- **Finalidade:** todo ato tem de buscar o interesse público. Buscar outro fim é desvio. Ex.: desapropriar um terreno para prejudicar um adversário político.
+- **Motivação:** dizer por escrito os fatos e os fundamentos da decisão. Ex.: a decisão que nega uma licença diz qual requisito faltou e em que norma ele está.
+- **Razoabilidade e proporcionalidade:** a medida tem de ser adequada e na dose certa. Não se mata mosquito com canhão. Ex.: fechar uma padaria por um mês porque faltava uma placa de aviso é desproporcional.
+- **Segurança jurídica:** as pessoas precisam poder confiar nos atos do Estado. Nova interpretação não volta no tempo. Ex.: o órgão muda o modo de calcular um benefício; a mudança vale para os pedidos novos, não para os já decididos.
+- **Contraditório e ampla defesa:** ninguém é punido sem ser ouvido e sem poder se defender. Ex.: antes de multar, a agência notifica a empresa e abre prazo para a defesa.
 Atenção: a **publicidade** e a **impessoalidade** estão na Constituição, mas **não** aparecem com esses nomes na lista do art. 2º da Lei 9.784.
 ? d | Cite três princípios que estão no art. 2º da Lei 9.784/1999 e não estão no LIMPE. :: Finalidade, motivação, razoabilidade, proporcionalidade, ampla defesa, contraditório, segurança jurídica e interesse público (quaisquer três).
 
 ### Autotutela
 A Administração pode **corrigir os próprios atos** sem precisar do juiz: anula o que é ilegal e revoga o que deixou de ser conveniente. Está no art. 53 da Lei 9.784. O capítulo de atos administrativos detalha.
 ? e | O que é a autotutela? :: O poder de a Administração rever os próprios atos: anular os ilegais e revogar os inconvenientes, sem depender do Judiciário.
+
+### Mais três princípios que aparecem em prova
+- **Impessoalidade na publicidade oficial:** a propaganda dos órgãos públicos é educativa, informativa ou de orientação social, e não pode trazer nomes, símbolos ou imagens que promovam autoridades ou servidores (Constituição, art. 37, § 1º). Ex.: a placa de uma obra não pode levar o nome nem a foto do prefeito.
+- **Continuidade do serviço público** (doutrina): o serviço essencial não pode parar. Ex.: por isso a greve no serviço público tem limites, que a Constituição manda uma lei específica definir (art. 37, VII).
+- **Especialidade** (doutrina): a entidade da administração indireta só atua na finalidade para a qual foi criada. Ex.: uma autarquia criada para cuidar da previdência não pode passar a construir estradas.
+? f | O que a Constituição proíbe na publicidade dos órgãos públicos? :: Nomes, símbolos ou imagens que caracterizem promoção pessoal de autoridades ou servidores. A publicidade deve ser educativa, informativa ou de orientação social.
 
 banca: A banca troca o princípio pelo vizinho e joga com o "apenas". Diz que a legalidade para o agente é "fazer tudo o que a lei não proíbe" (essa é a do particular), que a eficiência está na Constituição desde 1988, ou que os princípios do art. 37 valem "apenas para o Poder Executivo". Em prova de agência, o Direito Administrativo ocupou de 4 a 9 itens do bloco básico (ANM 2025, ANTT 2024, ANAC 2024 e ANATEL 2024).
 E: Em razão do princípio da legalidade, ao agente público é permitido fazer tudo aquilo que a lei não proíbe. :: Papéis invertidos. Essa é a legalidade do particular. O agente público só pode fazer o que a lei autoriza.
@@ -63,8 +69,8 @@ ex: Pense numa rede de padarias. Abrir um novo balcão dentro da mesma loja é d
 ? a | Qual é a diferença entre desconcentração e descentralização? :: Desconcentração divide tarefas dentro da mesma pessoa jurídica, com hierarquia (cria órgãos). Descentralização passa a tarefa a outra pessoa jurídica, sem hierarquia (há vinculação).
 
 ### Administração direta e indireta
-- **Direta:** a União, os estados, o Distrito Federal e os municípios, com seus órgãos.
-- **Indireta:** as entidades criadas por eles. São quatro: **autarquias**, **fundações públicas**, **empresas públicas** e **sociedades de economia mista**.
+- **Direta:** a União, os estados, o Distrito Federal e os municípios, com seus órgãos. Ex.: a União e o Ministério da Saúde, que é órgão dela.
+- **Indireta:** as entidades criadas por eles. São quatro: **autarquias**, **fundações públicas**, **empresas públicas** e **sociedades de economia mista**. Ex.: o INSS, criado pela União.
 Como nascem (Constituição, art. 37, XIX):
 - a **autarquia** é **criada** por lei específica;
 - a empresa pública, a sociedade de economia mista e a fundação têm a criação **autorizada** por lei específica;
@@ -75,8 +81,8 @@ Subsidiárias dessas entidades, e a participação delas em empresa privada, dep
 ### As quatro, em uma frase cada (doutrina)
 - **Autarquia:** pessoa de direito **público**, faz atividade típica de Estado. Ex.: INSS, universidades federais, agências reguladoras.
 - **Fundação pública:** patrimônio destinado a um fim social. Ex.: pesquisa, cultura.
-- **Empresa pública:** pessoa de direito **privado**, capital **todo público**.
-- **Sociedade de economia mista:** pessoa de direito **privado**, sempre sociedade anônima, com capital público e privado e controle do Estado.
+- **Empresa pública:** pessoa de direito **privado**, capital **todo público**. Ex.: a Caixa Econômica Federal e os Correios.
+- **Sociedade de economia mista:** pessoa de direito **privado**, sempre sociedade anônima, com capital público e privado e controle do Estado. Ex.: o Banco do Brasil e a Petrobras.
 
 ### Autarquia especial e agência reguladora
 A agência reguladora é uma autarquia com mais independência. A Lei 13.848/2019 diz o que é essa **natureza especial**:
@@ -89,6 +95,18 @@ A ANPD é hoje uma agência assim: autarquia de natureza especial **vinculada** 
 ### Agência não faz decreto
 A agência edita **normas técnicas** dentro do que a lei permite (resoluções). **Decreto** é ato do chefe do Poder Executivo.
 ? e | Órgão público tem personalidade jurídica? :: Não. O órgão é parte de uma pessoa jurídica. Quem tem personalidade é a entidade.
+
+### Dois sentidos de "administração pública" e os tipos de órgão (doutrina)
+- **Sentido subjetivo (ou formal, orgânico):** **quem** administra: os órgãos, as entidades e os agentes. Ex.: o Ministério da Saúde, o INSS.
+- **Sentido objetivo (ou material, funcional):** **o que** se faz: a atividade administrativa. Ex.: fiscalizar, prestar serviço público, fomentar.
+A descentralização, por sua vez, tem duas formas:
+- **Por outorga (ou por serviços):** a lei cria a entidade e lhe passa a **titularidade** do serviço. Ex.: a criação de uma autarquia.
+- **Por delegação (ou por colaboração):** um contrato passa a um particular só a **execução** do serviço. Ex.: a concessão de uma rodovia.
+E os órgãos se classificam assim:
+- **Pela posição:** independentes (previstos na Constituição, sem subordinação: Presidência da República, Congresso Nacional, tribunais), autônomos (logo abaixo: ministérios), superiores (direção, sem autonomia: secretarias, departamentos) e subalternos (execução: seções, portarias).
+- **Pela estrutura:** simples (um só centro de competência: uma seção) ou compostos (reúnem outros órgãos: um ministério).
+- **Pela atuação:** singulares (decide uma pessoa: a Presidência da República) ou colegiados (decide um grupo: o Conselho Diretor de uma agência).
+? f | Qual é a diferença entre descentralização por outorga e por delegação? :: Na outorga, a lei cria uma entidade e lhe transfere a titularidade do serviço. Na delegação, um contrato transfere a um particular só a execução.
 
 banca: A armadilha campeã em prova de agência é a subordinação que não existe: o item diz que a agência é subordinada ao ministério (ANATEL 2024, item 25; ANAC 2024, item 14; ANTT 2024, item 23). A banca também já pôs agência editando decreto (ANATEL 2024, item 36). Fique atento ainda à troca de "criada por lei" por "autorizada por lei" e de desconcentração por descentralização.
 E: As agências reguladoras são autarquias subordinadas hierarquicamente ao ministério a que se vinculam. :: Subordinação que não existe. A natureza especial é marcada pela ausência de tutela ou de subordinação hierárquica.
@@ -178,7 +196,7 @@ ex: Na multa de trânsito: competência do agente de trânsito, finalidade de pr
 
 ### Competência: delegar e avocar (Lei 9.784)
 A competência é **irrenunciável** (art. 11). Mas pode ser:
-- **delegada:** passada a outro órgão ou agente. O ato de delegação e a revogação são **publicados** no meio oficial;
+- **delegada:** passada a outro órgão ou agente. O ato de delegação e a revogação são **publicados** no meio oficial; Ex.: o diretor delega ao coordenador a assinatura de certidões.
 - **avocada:** puxada do subordinado pelo superior, em caráter **excepcional**, **temporário** e por motivos relevantes justificados (art. 15).
 > Art. 13 da Lei 9.784/1999: não podem ser objeto de delegação "a edição de atos de caráter normativo", "a decisão de recursos administrativos" e "as matérias de competência exclusiva do órgão ou autoridade".
 ? c | O que não pode ser delegado, pela Lei 9.784/1999? :: A edição de atos normativos, a decisão de recursos administrativos e as matérias de competência exclusiva.
@@ -189,10 +207,10 @@ Pela **teoria dos motivos determinantes** (doutrina), o motivo declarado **amarr
 ex: Um servidor em cargo de confiança é exonerado "por falta de verba". Depois se prova que havia verba. A exoneração, que nem precisava de motivo, cai, porque o motivo dado era falso.
 
 ### Os atributos (doutrina)
-- **Presunção de legitimidade:** o ato vale até que se prove o contrário. Quem alega o vício é que prova.
-- **Imperatividade:** impõe-se ao particular sem depender da concordância dele.
-- **Autoexecutoriedade:** a Administração executa sem ordem judicial, quando a lei permite ou há urgência.
-- **Tipicidade:** cada ato corresponde a uma figura prevista em lei.
+- **Presunção de legitimidade:** o ato vale até que se prove o contrário. Quem alega o vício é que prova. Ex.: a multa de trânsito vale até que o motorista prove, no recurso, que ela está errada.
+- **Imperatividade:** impõe-se ao particular sem depender da concordância dele. Ex.: a ordem de interdição de uma obra vale mesmo que o dono discorde.
+- **Autoexecutoriedade:** a Administração executa sem ordem judicial, quando a lei permite ou há urgência. Ex.: o guincho remove o carro estacionado em local proibido, sem ordem do juiz.
+- **Tipicidade:** cada ato corresponde a uma figura prevista em lei. Ex.: para punir um servidor, a Administração usa as penalidades que a lei prevê, e não uma inventada.
 ? d | O que é a presunção de legitimidade? :: O ato administrativo é considerado válido até prova em contrário, e cabe a quem o contesta provar o vício.
 
 ### Como o ato sai de cena
@@ -204,6 +222,30 @@ Se o efeito é um pagamento que se repete, o prazo conta do **primeiro pagamento
 ex: Uma gratificação foi concedida por erro há sete anos, e o servidor estava de boa-fé. A Administração perdeu o prazo para anular.
 ? e | Qual é o prazo para a Administração anular ato com efeitos favoráveis ao destinatário? :: Cinco anos, contados da prática do ato, salvo comprovada má-fé. Com pagamentos contínuos, conta do primeiro pagamento.
 ? f | Quem pode revogar um ato administrativo, e por qual motivo? :: Só a própria Administração, por conveniência ou oportunidade. O Judiciário não revoga ato de outro Poder.
+
+### Classificações e espécies que a banca cobra (doutrina)
+Quanto à formação da vontade:
+- **Ato simples:** nasce da vontade de **um só órgão**, singular ou colegiado. Ex.: a decisão do Conselho Diretor de uma agência.
+- **Ato complexo:** exige a vontade de **dois ou mais órgãos**, que se fundem em um ato só. Ex.: a nomeação de um diretor de agência, que depende do Presidente da República e do Senado.
+- **Ato composto:** um órgão decide e **outro confirma** (visto, homologação). Ex.: um parecer que só produz efeito depois de aprovado pela chefia.
+Três planos diferentes:
+- **Perfeição:** o ato completou as etapas de formação. **Validade:** está de acordo com a lei. **Eficácia:** já pode produzir efeitos. Ex.: uma nomeação assinada, mas ainda não publicada, é perfeita e pode ser válida, mas ainda não é eficaz.
+As cinco espécies de ato:
+- **Normativos:** regras gerais. Ex.: decreto, resolução.
+- **Ordinatórios:** organizam o serviço internamente. Ex.: portaria, circular, ordem de serviço.
+- **Negociais:** atendem a um pedido do particular. Ex.: licença, autorização, permissão.
+- **Enunciativos:** atestam ou opinam. Ex.: certidão, atestado, parecer.
+- **Punitivos:** aplicam sanção. Ex.: multa, interdição.
+? g | Qual é a diferença entre ato complexo e ato composto? :: No complexo, as vontades de dois ou mais órgãos se fundem para formar um único ato. No composto, um órgão pratica o ato e outro apenas o confirma.
+
+### Outras formas de extinção e casos vizinhos (doutrina)
+- **Cassação:** o beneficiário **descumpre as condições** do ato. Ex.: o bar que perde a licença por funcionar fora do horário permitido.
+- **Caducidade:** uma **lei nova** torna o ato incompatível. Ex.: a autorização para um quiosque numa área que a nova lei de zoneamento passou a proibir.
+- **Contraposição:** um **ato novo, de efeito oposto**, extingue o anterior. Ex.: a exoneração extingue a nomeação.
+- **Silêncio administrativo:** a falta de resposta, por si só, não é concordância nem recusa; só produz efeito quando a lei disser qual. Ex.: o pedido que ficou sem resposta não se considera deferido, salvo regra expressa.
+- **Função de fato:** alguém investido de forma irregular pratica atos com aparência de legalidade; os atos se mantêm para proteger terceiros de boa-fé. Ex.: a certidão assinada por servidor cuja nomeação depois foi anulada.
+- **Usurpação de função:** quem não tem nenhum vínculo se faz passar por agente público. Ex.: um falso fiscal que "multa" comerciantes. O ato não produz efeito.
+? h | Qual é a diferença entre cassação e caducidade do ato administrativo? :: A cassação ocorre porque o beneficiário descumpriu as condições do ato. A caducidade ocorre porque uma lei nova tornou o ato incompatível com ela.
 
 banca: As trocas clássicas: anulação por conveniência e revogação por ilegalidade (papéis invertidos); o Judiciário revogando ato administrativo; prazo de anulação "em qualquer caso" (esquecendo a má-fé); e delegação da decisão de recurso. A banca também troca "deve anular" por "pode anular".
 E: A Administração pode revogar seus atos quando eivados de vício de legalidade, respeitados os direitos adquiridos. :: Papéis invertidos. Vício de legalidade leva à anulação, que é dever. A revogação é por conveniência ou oportunidade.
@@ -267,6 +309,11 @@ ex: Você recorre de uma multa de R$ 1.000. A autoridade superior entende que o 
 - **Decisão coordenada** (art. 49-A): quando a decisão depende de **três ou mais** setores, órgãos ou entidades, eles podem decidir juntos.
 - **Prioridade** (art. 69-A): pessoa com 60 anos ou mais, pessoa com deficiência e pessoa com doença grave têm tramitação prioritária.
 
+### Motivação por remissão
+A motivação tem de ser **explícita, clara e congruente**, mas pode consistir em **concordar com um parecer, informação ou decisão anterior**, que passa a fazer parte do ato (art. 50, § 1º). A doutrina chama isso de motivação aliunde.
+ex: A autoridade decide: "Nego o pedido, pelos fundamentos do Parecer 12, que adoto." A motivação está no parecer, e isso é válido.
+? g | A autoridade pode motivar a decisão apenas remetendo a um parecer? :: Pode. A motivação pode consistir em declaração de concordância com parecer, informação ou decisão anterior, que passa a integrar o ato.
+
 banca: É capítulo de número trocado e de papéis invertidos: 15 dias no lugar de 10 para recorrer, quatro instâncias no lugar de três, recurso "com efeito suspensivo em regra", exigência de caução, advogado obrigatório. A troca mais fina é entre recurso e revisão: a banca diz que a revisão pode agravar, ou que o recurso nunca pode.
 E: O recurso administrativo, em regra, tem efeito suspensivo e depende de caução. :: Duas trocas. Salvo disposição legal em contrário, o recurso não tem efeito suspensivo, e a interposição independe de caução.
 E: Da revisão do processo administrativo de que resulte sanção poderá resultar o agravamento da penalidade, se surgirem fatos novos. :: O art. 65, parágrafo único, proíbe o agravamento na revisão.
@@ -291,11 +338,11 @@ A Lei 14.133/2021 vale para a administração direta, as autarquias e as fundaç
 ? a | A Lei 14.133/2021 se aplica às empresas públicas e às sociedades de economia mista? :: Não. Elas são regidas pela Lei 13.303/2016.
 
 ### As cinco modalidades (art. 28)
-- **Pregão:** obrigatório para **bens e serviços comuns**. Julga por menor preço ou maior desconto.
-- **Concorrência:** para obras, serviços e bens especiais.
-- **Concurso:** escolhe trabalho técnico, científico ou artístico.
-- **Leilão:** vende bens. Ganha o maior lance.
-- **Diálogo competitivo:** a Administração conversa com licitantes pré-selecionados para **descobrir a solução** de um problema complexo, e só depois recebe as propostas.
+- **Pregão:** obrigatório para **bens e serviços comuns**. Julga por menor preço ou maior desconto. Ex.: compra de papel, de combustível ou de serviço de limpeza.
+- **Concorrência:** para obras, serviços e bens especiais. Ex.: a construção de um hospital.
+- **Concurso:** escolhe trabalho técnico, científico ou artístico. Ex.: a escolha do projeto arquitetônico de uma praça, com prêmio ao vencedor.
+- **Leilão:** vende bens. Ganha o maior lance. Ex.: a venda de carros oficiais usados.
+- **Diálogo competitivo:** a Administração conversa com licitantes pré-selecionados para **descobrir a solução** de um problema complexo, e só depois recebe as propostas. Ex.: o órgão quer um sistema inovador de atendimento e ainda não sabe qual tecnologia serve.
 Tomada de preços e convite, da lei antiga, **não existem** na Lei 14.133.
 ? b | Quais são as modalidades de licitação da Lei 14.133/2021? :: Pregão, concorrência, concurso, leilão e diálogo competitivo.
 
@@ -356,11 +403,11 @@ x: Qual sanção impede o contratado de licitar em todos os entes da Federação
 
 ### Quem é agente público (doutrina)
 Agente público é **toda pessoa que exerce função pública**, com ou sem pagamento, de forma permanente ou passageira. É o gênero. As espécies mais cobradas:
-- **Agentes políticos:** o alto escalão. Presidente, ministros, parlamentares.
+- **Agentes políticos:** o alto escalão. Presidente, ministros, parlamentares. Ex.: um ministro de Estado.
 - **Servidores estatutários:** ocupam **cargo** e seguem um estatuto (na União, a Lei 8.112).
 - **Empregados públicos:** ocupam **emprego** e seguem a CLT. É o caso das estatais e, como você verá, dos conselhos profissionais.
-- **Temporários:** contratados por tempo determinado para necessidade excepcional.
-- **Particulares em colaboração:** mesários, jurados.
+- **Temporários:** contratados por tempo determinado para necessidade excepcional. Ex.: os recenseadores do IBGE.
+- **Particulares em colaboração:** mesários, jurados. Ex.: o eleitor convocado para trabalhar como mesário no dia da eleição.
 > Art. 2º da Lei 8.112/1990: "servidor é a pessoa legalmente investida em cargo público".
 ? a | Qual é a diferença entre servidor estatutário e empregado público? :: O servidor ocupa cargo e segue um estatuto (Lei 8.112, na União). O empregado público ocupa emprego e segue a CLT.
 
@@ -371,7 +418,7 @@ Agente público é **toda pessoa que exerce função pública**, com ou sem paga
 ? b | Por quanto tempo vale um concurso público? :: Até dois anos, prorrogável uma vez, por igual período.
 
 ### Do concurso ao trabalho (Lei 8.112)
-- **Nomeação:** o ato que chama o aprovado.
+- **Nomeação:** o ato que chama o aprovado. Ex.: a portaria publicada no Diário Oficial com o nome do aprovado.
 - **Posse:** em **30 dias**, contados da publicação do ato de provimento. Sem posse no prazo, o ato fica **sem efeito**.
 - **Exercício:** em **15 dias**, contados da posse.
 As **formas de provimento** em vigor (art. 8º): nomeação, promoção, readaptação, reversão, aproveitamento, reintegração e recondução. Ascensão e transferência foram revogadas.
@@ -392,6 +439,21 @@ As penalidades são: **advertência, suspensão, demissão, cassação de aposen
 - Demissão: para faltas graves, como improbidade, abandono de cargo, corrupção e acumulação ilegal.
 A ação disciplinar **prescreve** em: **5 anos** (demissão, cassação e destituição de cargo em comissão), **2 anos** (suspensão) e **180 dias** (advertência). O prazo começa quando o fato **se tornou conhecido**.
 ? e | Em quanto tempo prescreve a ação disciplinar na Lei 8.112/1990? :: Cinco anos para demissão, cassação e destituição de cargo em comissão; dois anos para suspensão; 180 dias para advertência. Conta de quando o fato se tornou conhecido.
+
+### As formas de provimento, uma a uma (Lei 8.112)
+- **Readaptação:** o servidor que sofreu limitação física ou mental passa a um cargo compatível com ela (art. 24). Ex.: o motorista que perdeu parte da visão vai para um cargo administrativo de atribuições afins.
+- **Reversão:** o **aposentado volta** à atividade (art. 25). Ex.: a junta médica declara que cessou a invalidez que motivou a aposentadoria.
+- **Reintegração:** o servidor estável **volta ao cargo** porque a **demissão foi invalidada**, com ressarcimento de todas as vantagens (art. 28). Ex.: a Justiça anula a demissão.
+- **Recondução:** o servidor estável volta ao **cargo anterior**, por ter sido inabilitado no estágio probatório de outro cargo ou porque o antigo ocupante foi reintegrado (art. 29). Ex.: o técnico que virou analista e reprovou no estágio probatório volta a ser técnico.
+- **Aproveitamento:** o servidor em **disponibilidade** volta, em cargo compatível com o que ocupava (art. 30). Ex.: o cargo foi extinto, e depois surge vaga em cargo equivalente.
+Dica: **rein**tegração vem de demissão **in**validada; **recon**dução leva ao cargo anterior.
+? f | Qual é a diferença entre reintegração e recondução? :: Reintegração é a volta do servidor estável ao cargo porque a demissão foi invalidada. Recondução é o retorno do servidor estável ao cargo anterior, por inabilitação em estágio probatório de outro cargo ou por reintegração do antigo ocupante.
+
+### Remoção e redistribuição: não são provimento
+- **Remoção:** desloca o **servidor**, a pedido ou de ofício, dentro do **mesmo quadro**, com ou sem mudança de sede (art. 36). Ex.: o servidor da agência vai da sede em Brasília para o escritório de São Paulo.
+- **Redistribuição:** desloca o **cargo**, com o servidor que o ocupa, para **outro órgão ou entidade do mesmo Poder** (art. 37). Ex.: um órgão é extinto, e os cargos dele passam para outro ministério.
+Um caso de remoção a pedido independe do interesse da Administração: para acompanhar cônjuge ou companheiro servidor deslocado no interesse da Administração, por motivo de saúde comprovado por junta médica oficial, ou por processo seletivo interno.
+? g | Qual é a diferença entre remoção e redistribuição? :: A remoção desloca o servidor dentro do mesmo quadro. A redistribuição desloca o cargo, com o servidor, para outro órgão ou entidade do mesmo Poder.
 
 banca: A banca troca exoneração por demissão, põe função de confiança para quem não é servidor efetivo, troca os prazos de posse e exercício (30 e 15) e mexe na validade do concurso ("prorrogável por até dois anos, sucessivas vezes"). Na estabilidade, o item costuma repetir os 2 anos do texto antigo da lei. A banca já errou de propósito a autoridade que pune: comissão de ética aplicando demissão (ANAC 2024, item 21).
 E: A exoneração é penalidade disciplinar aplicável ao servidor que comete falta grave. :: Conceito trocado. Exoneração não é punição; a penalidade para falta grave é a demissão.
@@ -417,7 +479,7 @@ Se um agente público, trabalhando, causa dano a alguém, **o Estado indeniza**.
 Leia a frase em três pedaços:
 - **Quem responde:** pessoas de direito público (União, estados, municípios, autarquias) **e** empresas privadas que prestam serviço público (uma concessionária de ônibus, por exemplo).
 - **Por quê:** dano causado por agente "**nessa qualidade**", isto é, agindo como agente.
-- **E depois:** o Estado pode cobrar do agente (regresso), mas só se ele agiu com **dolo ou culpa**.
+- **E depois:** o Estado pode cobrar do agente (regresso), mas só se ele agiu com **dolo ou culpa**. Ex.: a prefeitura indeniza a vítima e depois cobra do motorista que dirigia olhando o celular.
 ? a | Quem responde pelos danos, segundo o art. 37, § 6º, da Constituição? :: As pessoas jurídicas de direito público e as de direito privado prestadoras de serviços públicos.
 
 ### Responsabilidade objetiva
@@ -544,6 +606,11 @@ As sanções podem ser aplicadas **isolada ou cumulativamente**, e não dependem
 - O Ministério Público pode celebrar **acordo de não persecução civil** (art. 17-B).
 - A ação **prescreve em 8 anos**, contados do fato ou, na infração permanente, do dia em que cessou (art. 23).
 ? e | Em quanto tempo prescreve a ação de improbidade? :: Em oito anos, contados da ocorrência do fato ou, nas infrações permanentes, do dia em que cessou a permanência.
+
+### O terceiro e a declaração de bens
+- **Quem não é agente público também responde:** a lei se aplica, no que couber, a quem **induz ou concorre** para o ato de improbidade, ou dele se beneficia (art. 3º). Ex.: o empresário que paga a propina responde junto com o servidor que a recebe.
+- **Declaração de bens:** a posse e o exercício dependem da apresentação da declaração dos bens e valores do agente, atualizada **todo ano** e na saída do cargo (art. 13). Quem se recusa a apresentá-la no prazo, ou a apresenta falsa, é punido com **demissão**. Ex.: o servidor pode entregar a cópia da declaração do Imposto de Renda.
+? f | O particular que paga propina a um servidor pode responder por improbidade? :: Sim. A lei se aplica, no que couber, a quem induz ou concorre para o ato de improbidade ou dele se beneficia.
 
 banca: O alvo é a reforma de 2021: itens que ainda admitem improbidade culposa na lesão ao erário, que dispensam o dolo, ou que mantêm a prescrição antiga. A banca também mistura as sanções de um tipo com as de outro (suspensão de direitos políticos no art. 11) e troca os números (14, 12 e 4 anos; 24 vezes).
 E: Constitui ato de improbidade administrativa a conduta culposa do agente público que cause lesão ao erário. :: Regra revogada. Depois da Lei 14.230/2021, os atos de improbidade são apenas os dolosos, inclusive na lesão ao erário.
@@ -695,9 +762,9 @@ ex: Um tribunal que faz licitação para comprar computadores não está julgand
 ### As fontes
 Fonte é de onde a regra sai. A doutrina aponta quatro:
 - **Lei**, em sentido amplo: Constituição, leis, decretos, resoluções. É a fonte **primária**, por causa do princípio da legalidade.
-- **Doutrina:** o que os estudiosos escrevem. Ajuda a interpretar.
-- **Jurisprudência:** as decisões repetidas dos tribunais.
-- **Costumes:** práticas reiteradas da Administração. Têm papel pequeno e não podem contrariar a lei.
+- **Doutrina:** o que os estudiosos escrevem. Ajuda a interpretar. Ex.: um manual de Direito Administrativo que explica o que é poder de polícia.
+- **Jurisprudência:** as decisões repetidas dos tribunais. Ex.: as decisões do STF que afirmam a natureza autárquica dos conselhos profissionais.
+- **Costumes:** práticas reiteradas da Administração. Têm papel pequeno e não podem contrariar a lei. Ex.: o hábito de uma repartição de atender por ordem de chegada, quando nenhuma norma fixa a ordem.
 Doutrina, jurisprudência e costumes são fontes **secundárias**. A ressalva: a **súmula vinculante** do STF obriga a Administração. A própria Lei 9.784 trata do recurso em que se alega contrariedade a súmula vinculante (art. 56, § 3º).
 ? c | Qual é a fonte primária do Direito Administrativo? :: A lei em sentido amplo, a começar pela Constituição.
 ? d | O costume pode contrariar a lei no Direito Administrativo? :: Não. É fonte secundária, de papel reduzido, e não prevalece contra a lei.
@@ -837,8 +904,8 @@ ex: Atraso repetido: uma sindicância resolve, com advertência. Suspeita de des
 O PAD é conduzido por comissão de **três servidores estáveis** (art. 149). Não pode participar cônjuge, companheiro ou parente do acusado até o **terceiro grau**.
 
 ### As três fases (art. 151)
-- **Instauração:** publicação do ato que constitui a comissão.
-- **Inquérito administrativo:** instrução (provas), defesa e relatório.
+- **Instauração:** publicação do ato que constitui a comissão. Ex.: a portaria que nomeia os três membros da comissão.
+- **Inquérito administrativo:** instrução (provas), defesa e relatório. Ex.: a comissão ouve testemunhas, recebe a defesa escrita e entrega o relatório.
 - **Julgamento.**
 Dentro do inquérito:
 - se houver indícios, a comissão faz a **indiciação**, dizendo os fatos e as provas;

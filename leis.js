@@ -59,6 +59,9 @@ const DOSES = {
   'anpd-lgpd-01': ['lgpd', '1', '4'], 'anpd-lgpd-02': ['lgpd', '5', '5'], 'anpd-lgpd-03': ['lgpd', '6', '6'], 'anpd-lgpd-04': ['lgpd', '7', '7'], 'anpd-lgpd-05': ['lgpd', '8', '9'],
   'anpd-lgpd-06': ['lgpd', '10', '10'], 'anpd-lgpd-07': ['lgpd', '11', '13'], 'anpd-lgpd-08': ['lgpd', '14', '14'], 'anpd-lgpd-09': ['lgpd', '15', '16'], 'anpd-lgpd-10': ['lgpd', '17', '22'],
   'anpd-lgpd-11': ['lgpd', '20', '20'], 'anpd-lgpd-12': ['lgpd', '23', '32'], 'anpd-lgpd-13': ['lgpd', '33', '36'], 'anpd-lgpd-14': ['lgpd', '37', '41'], 'anpd-lgpd-15': ['lgpd', '42', '45'],
+  // Direito Constitucional: o trecho da Constituição que o capítulo explica
+  'anpd-dc-01': ['cf', '1', '4'], 'anpd-dc-02': ['cf', '5', '5'], 'anpd-dc-05': ['cf', '21', '24'], 'anpd-dc-06': ['cf', '37', '41'], 'anpd-dc-07': ['cf', '59', '69'], 'anpd-dc-08': ['cf', '102', '103-A'], 'anpd-dc-09': ['cf', '170', '175'],
+  'cofen-dc-02': ['cf', '6', '11'], 'cofen-dc-03': ['cf', '92', '95'], 'cofen-dc-04': ['cf', '127', '135'], 'cofen-dc-05': ['cf', '196', '200'],
   // Direito Administrativo: a dose é um recorte curto da lei que o capítulo mais usa
   'anpd-da-01': ['l9784', '1', '2'], 'anpd-da-02': ['l13848', '2', '3'], 'anpd-da-04': ['l9784', '50', '55'], 'anpd-da-05': ['l9784', '56', '67'], 'anpd-da-06': ['l14133', '28', '33'], 'anpd-da-07': ['l8112', '127', '142'],
   'anpd-da-09': ['cf', '70', '74'], 'anpd-da-10': ['l8429', '9', '12'], 'anpd-da-11': ['l12846', '1', '7'], 'anpd-da-12': ['l14129', '1', '3'], 'cofen-da-04': ['l8112', '143', '152'],

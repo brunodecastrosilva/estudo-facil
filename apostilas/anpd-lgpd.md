@@ -88,13 +88,13 @@ Mudança recente: desde a Lei 15.352/2026, o texto diz que o encarregado é a pe
 ### As operações
 ? f | Bloqueio e eliminação são a mesma coisa? :: Não. Bloqueio é suspensão temporária do tratamento, guardando o dado. Eliminação é a exclusão do dado.
 ? g | Como o consentimento tem de ser, pela definição da lei? :: Livre, informado e inequívoco, para uma finalidade determinada.
-- **Tratamento:** toda operação feita com dados pessoais. Coletar, guardar, consultar, usar, transmitir, apagar: tudo é tratamento.
-- **Anonimização:** uso de meios técnicos pelos quais o dado **perde** a possibilidade de ser associado a alguém.
-- **Consentimento:** manifestação **livre, informada e inequívoca** do titular, para uma finalidade determinada.
-- **Bloqueio:** suspensão **temporária** do tratamento, guardando o dado.
-- **Eliminação:** exclusão do dado.
-- **Uso compartilhado de dados:** comunicação ou tratamento compartilhado entre órgãos públicos, entre eles e entes privados, ou entre entes privados.
-- **Relatório de impacto à proteção de dados pessoais:** documento do **controlador** que descreve os tratamentos que podem gerar risco e as medidas para reduzir esse risco.
+- **Tratamento:** toda operação feita com dados pessoais. Coletar, guardar, consultar, usar, transmitir, apagar: tudo é tratamento. Ex.: a loja que só guarda o seu cadastro, sem usá-lo, já está tratando dados.
+- **Anonimização:** uso de meios técnicos pelos quais o dado **perde** a possibilidade de ser associado a alguém. Ex.: uma pesquisa divulga só o total de respostas por bairro, sem nada que ligue a resposta a alguém.
+- **Consentimento:** manifestação **livre, informada e inequívoca** do titular, para uma finalidade determinada. Ex.: marcar a caixa "aceito receber ofertas por e-mail", que vinha desmarcada.
+- **Bloqueio:** suspensão **temporária** do tratamento, guardando o dado. Ex.: o cadastro fica congelado enquanto se apura se o dado está correto.
+- **Eliminação:** exclusão do dado. Ex.: apagar o cadastro do cliente que encerrou a conta.
+- **Uso compartilhado de dados:** comunicação ou tratamento compartilhado entre órgãos públicos, entre eles e entes privados, ou entre entes privados. Ex.: a secretaria de saúde envia dados a uma universidade para um estudo.
+- **Relatório de impacto à proteção de dados pessoais:** documento do **controlador** que descreve os tratamentos que podem gerar risco e as medidas para reduzir esse risco. Ex.: antes de instalar câmeras com reconhecimento facial, a empresa descreve os riscos e as medidas para reduzi-los.
 
 banca: Troca de conceito vizinho é a armadilha número um. A banca já trocou encarregado por operador (DATAPREV 2023, item 69) e anonimização por pseudonimização (DATAPREV 2023, item 70). A pseudonimização não está no art. 5º: aparece no art. 13, § 4º, e é diferente, porque o dado ainda pode ser religado à pessoa com uma informação guardada à parte.
 E: O operador é a pessoa indicada para atuar como canal de comunicação entre o controlador, os titulares dos dados e a ANPD. :: Conceito vizinho trocado. Canal de comunicação é o encarregado. O operador trata os dados em nome do controlador.
@@ -270,9 +270,9 @@ ex: Uma livraria manda para quem já comprou lá um aviso de lançamento do mesm
 ? b | Quais são os três freios do legítimo interesse? :: Só os dados estritamente necessários; transparência sobre o tratamento; e a ANPD pode solicitar o relatório de impacto.
 ? c | A ANPD tem de exigir sempre o relatório de impacto no legítimo interesse? :: Não. Ela pode solicitar.
 ? d | O que o art. 37 manda fazer, especialmente quando a base é o legítimo interesse? :: Manter registro das operações de tratamento.
-- **Só o estritamente necessário:** apenas os dados indispensáveis para a finalidade.
-- **Transparência:** o controlador tem de adotar medidas para deixar claro esse tratamento.
-- **Relatório de impacto:** a ANPD **pode solicitar** ao controlador o relatório de impacto à proteção de dados quando a base for o legítimo interesse.
+- **Só o estritamente necessário:** apenas os dados indispensáveis para a finalidade. Ex.: para prevenir fraude num pagamento, a loja usa os dados da compra, não o histórico de navegação inteiro.
+- **Transparência:** o controlador tem de adotar medidas para deixar claro esse tratamento. Ex.: a política de privacidade diz que os dados são usados para prevenir fraudes.
+- **Relatório de impacto:** a ANPD **pode solicitar** ao controlador o relatório de impacto à proteção de dados quando a base for o legítimo interesse. Ex.: a ANPD pede o relatório a uma empresa que usa o legítimo interesse para traçar o perfil dos clientes.
 Além disso, o art. 37 manda manter registro das operações, **especialmente** quando a base for o legítimo interesse.
 
 ### O que o legítimo interesse não alcança
@@ -858,7 +858,7 @@ ex: Uma empresa faturou R$ 10 bilhões no Brasil no último exercício. Dois por
 ? d | Quando as suspensões e a proibição podem ser aplicadas? :: Só depois de já imposta, no mesmo caso, ao menos uma destas: multa simples, multa diária, publicização, bloqueio ou eliminação.
 ? e | Para onde vai o dinheiro das multas? :: Para o Fundo de Defesa de Direitos Difusos.
 ? f | Que sanção não se aplica a órgãos e entidades públicos? :: A multa.
-- **Órgãos e entidades públicos:** podem receber advertência, publicização, bloqueio, eliminação, as duas suspensões e a proibição. **Multa, não.**
+- **Órgãos e entidades públicos:** podem receber advertência, publicização, bloqueio, eliminação, as duas suspensões e a proibição. **Multa, não.** Ex.: um ministério que vaza dados pode ser advertido e ter a infração divulgada, mas não paga multa.
 - **As três sanções mais pesadas** (as duas suspensões e a proibição) só podem ser aplicadas **depois** de já ter sido imposta, no mesmo caso, ao menos uma destas: multa simples, multa diária, publicização, bloqueio ou eliminação.
 - As sanções da LGPD **não substituem** as sanções administrativas, civis ou penais do Código de Defesa do Consumidor e de legislação específica.
 - O dinheiro das multas vai para o **Fundo de Defesa de Direitos Difusos**.

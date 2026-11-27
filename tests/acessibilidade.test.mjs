@@ -38,6 +38,8 @@ for (const tema of ['light', 'dark']) {
     await p.click('#view [data-act="abrir-apostila"][data-id="anpd-lp"]'); await p.locator('#view .ap-caps').waitFor(); await p.click('#view [data-act="abrir-cap"][data-id="anpd-lp-12"]'); await p.locator('#view .ap-folha').waitFor(); await varrer(p, `Capítulo de Português, redação oficial (${nome})`);
     await p.locator('#view .ap-fix').scrollIntoViewIfNeeded(); await p.locator('#view .ap-fix-l summary').first().click(); await varrer(p, `Exercícios de fixação, com uma resposta aberta (${nome})`);
     await p.click('#kf-nav-apostilas');
+    await p.click('#view [data-act="abrir-apostila"][data-id="anpd-dc"]'); await p.locator('#view .ap-caps').waitFor(); await p.click('#view [data-act="abrir-cap"][data-id="anpd-dc-07"]'); await p.locator('#view .ap-folha').waitFor(); await varrer(p, `Capítulo de Direito Constitucional (${nome})`);
+    await p.click('#kf-nav-apostilas');
     await p.click('#view [data-act="abrir-apostila"][data-id="anpd-da"]'); await p.locator('#view .ap-caps').waitFor(); await varrer(p, `Apostila de Direito Administrativo (${nome})`);
     await p.click('#view [data-act="abrir-cap"][data-id="cofen-da-02"]'); await p.locator('#view .ap-folha').waitFor(); await p.locator('#ap-letra button', { hasText: 'Maior' }).click(); await varrer(p, `Capítulo do Cofen, letra maior (${nome})`);
     await p.locator('#ap-letra button', { hasText: 'Normal' }).click();

@@ -16,6 +16,7 @@ const APOSTILAS = [
   // caps: os assuntos <disciplina>-01 a -NN; mais: os assuntos de outro edital que entram na mesma disciplina (ids próprios)
   { m: 'anpd-lp', titulo: 'Português para quem nunca se deu bem com gramática', curto: 'Língua Portuguesa', sub: '15 capítulos: os 12 assuntos da ANPD e os 3 que só o Cofen cobra', caps: 12, mais: ['cofen-lp-01', 'cofen-lp-02', 'cofen-lp-03'] },
   { m: 'anpd-da', titulo: 'Direito Administrativo para quem nunca viu', curto: 'Direito Administrativo', sub: '16 capítulos: os 12 assuntos da ANPD e os 4 que só o Cofen cobra', caps: 12, mais: ['cofen-da-01', 'cofen-da-02', 'cofen-da-03', 'cofen-da-04'] },
+  { m: 'anpd-dc', titulo: 'Direito Constitucional para quem nunca viu', curto: 'Direito Constitucional', sub: '14 capítulos: os 9 assuntos da ANPD e os 5 que só o Cofen cobra', caps: 9, mais: ['cofen-dc-01', 'cofen-dc-02', 'cofen-dc-03', 'cofen-dc-04', 'cofen-dc-05'] },
   { m: 'anpd-lgpd', titulo: 'LGPD para quem nunca viu', curto: 'LGPD', sub: 'A Lei 13.709/2018 em 19 capítulos, um por assunto do edital', caps: 19 },
 // nos testes (só em localhost), ?apostilas=anpd-lgpd deixa no app só as apostilas pedidas: os testes do motor usam uma só
 ].filter(a => { try { const m = /[?&]apostilas=([\w,-]+)/.exec(location.search); return !m || !/^(localhost|127\.0\.0\.1)$/.test(location.hostname) || m[1].split(',').includes(a.m); } catch { return true; } })

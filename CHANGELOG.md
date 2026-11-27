@@ -3,6 +3,18 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.18.0 · 2026-11-27
+
+- **Apostila de Direito Constitucional:** 14 capítulos (os 9 assuntos da ANPD e os 5 que só o Cofen cobra), 83 cartões e 75 exercícios de fixação, já no padrão de um exemplo para cada conceito. Inclui o capítulo da proteção de dados como direito fundamental (Emenda 115/2022).
+- **Tudo conferido no texto da Constituição que está no app** (cópia do Planalto de 16/11/2026): as 19 citações entre aspas são comparadas com esse texto por um teste. O texto já traz a Emenda 138, de 2025 (acumulação de cargo de professor com outro de qualquer natureza), e a Emenda 141, de 2026 (jornada de 40 horas semanais, com passagem por 42); a transição da Emenda 141 foi conferida por busca na web em 27/11/2026.
+- **Lei seca de Direito Constitucional:** 11 capítulos ganharam a dose com o trecho da Constituição que explicam.
+- **Direito Administrativo ampliado, depois da leitura do material de estudo do Bruno:** publicidade oficial sem promoção pessoal, continuidade e especialidade; sentidos de administração pública, outorga e delegação, tipos de órgão; ato simples, complexo e composto, espécies de ato, cassação, caducidade e contraposição, silêncio administrativo, função de fato; motivação por remissão a parecer; formas de provimento uma a uma, remoção e redistribuição; terceiro na improbidade e declaração de bens. A apostila passou de 83 para 91 cartões.
+- **Um exemplo em cada conceito:** 29 itens de Direito Administrativo e 11 de LGPD que estavam sem exemplo ganharam um.
+- **A fila segue a ordem combinada:** Português, Direito Administrativo, Direito Constitucional e LGPD.
+- **Como o material do curso foi usado:** só como referência para a lista de conceitos; nada dele foi copiado.
+- **Ainda faltam:** os três níveis por trecho; a segunda passada na LGPD (artigos deixados de fora); contratos e o resto do Cofen; o levantamento de provas do Instituto Quadrix.
+- **Testes pulados nesta versão:** os testes do Kit (a pasta `comum/` não mudou) e o leitor de PDF (nada mudou nele).
+
 ## 1.17.0 · 2026-11-27
 
 - **Exercícios de fixação:** cada capítulo das três apostilas termina com pelo menos cinco exercícios (259 ao todo: 84 de Português, 80 de Direito Administrativo e 95 de LGPD). Você responde de cabeça e abre a resposta com um toque. Não valem ponto nem contam para o dia: servem para testar o que acabou de ler.
