@@ -5,7 +5,7 @@ Estudo para os concursos da ANPD (Especialista em Regulação de Proteção de D
 capítulos**, diz qual é a próxima leitura, traz de volta o que foi lido em **cartões de conceito**, mostra a **lei seca**
 de cada capítulo e mantém o hábito com a sequência de dias. **As questões são resolvidas fora do app, no Tec Concursos.**
 
-Versão **1.18.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.18.1** · Kit Fácil 0.9.1 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno; desde a 1.13.0, voltado aos
 > concursos da ANPD e do Cofen. Na 1.15.0 ele foi refeito no desenho combinado em 26/11/2026 ("estudo no ônibus"). No
