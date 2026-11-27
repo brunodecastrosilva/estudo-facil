@@ -5,7 +5,7 @@ Estudo para os concursos da ANPD (Especialista em Regulação de Proteção de D
 capítulos**, diz qual é a próxima leitura, traz de volta o que foi lido em **cartões de conceito**, mostra a **lei seca**
 de cada capítulo e mantém o hábito com a sequência de dias. **As questões são resolvidas fora do app, no Tec Concursos.**
 
-Versão **1.15.0** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
+Versão **1.18.1** · Kit Fácil 0.9.0 · app web em <https://brunodecastrosilva.github.io/estudo-facil/>
 
 > **Fase de testes fechada (provisória).** Desde a 1.1.0 o app é de uso exclusivo do Bruno; desde a 1.13.0, voltado aos
 > concursos da ANPD e do Cofen. Na 1.15.0 ele foi refeito no desenho combinado em 26/11/2026 ("estudo no ônibus"). No
@@ -24,7 +24,7 @@ Faz parte do **Projeto Fácil** (Conta Fácil, Elétrica Fácil, Estudo Fácil e
 - **Apostilas:** teoria do instrutor (Claude) para quem nunca viu o assunto, voltada à banca. O texto fica em
   `apostilas/<disciplina>.md`, um capítulo por assunto do edital (formato no cabeçalho de `apostilas.js`). Cada capítulo termina com exercícios de fixação (linha `x: enunciado :: resposta`), cuja resposta abre com um toque; não
   valem ponto nem fazem o dia valer. Existem a de
-  Língua Portuguesa (15 capítulos: 12 da ANPD e 3 só do Cofen), a de Direito Administrativo, a de Direito Constitucional (14 capítulos: 9 da ANPD e 5 só do Cofen) (16 capítulos: 12 assuntos da ANPD e 4 só do Cofen, em `mais`) e a da LGPD (19 capítulos)
+  Língua Portuguesa (15 capítulos: 12 da ANPD e 3 só do Cofen), a de Direito Administrativo (16 capítulos: 12 assuntos da ANPD e 4 só do Cofen, em `mais`), a de Direito Constitucional (14 capítulos: 9 da ANPD e 5 só do Cofen) e a da LGPD (19 capítulos)
 - **Lei seca, sem travar a fila:** de cada capítulo concluído, uma dose só com os artigos daquele assunto, recortados do texto oficial
   (`DOSES`, em `leis.js`). O texto não muda: redações antigas e trechos riscados aparecem como no Planalto
 - **Relembrar:** cartões de conceito (frente pergunta, verso responde; **Lembrei** ou **Não lembrei**), escritos junto
@@ -144,7 +144,7 @@ Regras:
   entra uma folga (até 2), gasta sozinha num dia de falta;
 - **fila:** capítulos que voltaram pelos cartões; depois, na ordem dos assuntos, os capítulos não lidos; depois os
   guardados para reler (ainda não concluídos); por último, as doses de lei dos capítulos concluídos. Em Hoje, a dose
-  aparece como segunda opção ("Lei seca, se quiser") e os cartões do dia vêm antes da leitura. Sem nada pendente, a leitura mais antiga volta como
+  aparece como segunda opção ("Lei seca do capítulo") e os cartões do dia vêm antes da leitura. Sem nada pendente, a leitura mais antiga volta como
   sugestão. O capítulo em que a leitura parou no meio vem antes de tudo;
 - **ordem dos assuntos:** grupo (comum aos dois concursos, só Cofen, só ANPD), disciplina (`ORDEM_DISC`, em `app.js`) e
   a ordem do edital. Depois da prova de um concurso, o que só ele cobra vai para o fim;

@@ -1,6 +1,6 @@
 {
   "name": "estudo-facil",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "description": "Estudo Fácil: estudo para os concursos da ANPD e do Cofen, com apostilas em capítulos, cartões para relembrar, leis na íntegra, edital com cobertura e datas, sequência de dias e medalhas. App web instalável (PWA) do Projeto Fácil.",
   "private": true,
   "type": "module",

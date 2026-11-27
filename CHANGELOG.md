@@ -3,6 +3,12 @@
 Formato: versão, data e o que muda para quem usa. Versões no formato `maior.menor.correção`; enquanto a versão começar
 com `0.`, o app está em fase de testes (rascunho).
 
+## 1.18.1 · 2026-11-27
+
+- Em Hoje, o atalho da lei seca se chama "Lei seca do capítulo" (antes, "Lei seca, se quiser"): o texto diz o que vai ali, sem sugerir que é para deixar de lado.
+
+Também: Código do Projeto Fácil 0.13.1 (saiu a comanda ao vivo do Código, dos Anexos e da regra do Firestore); a política de segurança de conteúdo (CSP) deixou de liberar o login do Firebase, que o app não usa, e ficou igual nos quatro apps; README com a versão certa e a linha das apostilas acertada.
+
 ## 1.18.0 · 2026-11-27
 
 - **Apostila de Direito Constitucional:** 14 capítulos (os 9 assuntos da ANPD e os 5 que só o Cofen cobra), 83 cartões e 75 exercícios de fixação, já no padrão de um exemplo para cada conceito. Inclui o capítulo da proteção de dados como direito fundamental (Emenda 115/2022).

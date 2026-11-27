@@ -43,7 +43,7 @@ const viewHoje = {
         <button type="button" class="kf-btn kf-comecar bloco" id="hoje-estudar" data-act="estudar-proximo">${I.play}${s.tipo === 'lei' ? 'Ler a lei' : s.tipo === 'continuar' ? 'Continuar a leitura' : s.antigo ? 'Reler' : 'Ler agora'}</button>`
           : `<p class="apoio">Nenhuma apostila disponível ainda.</p>`}
       </section>
-      ${lei && s && s.tipo !== 'lei' ? `<ul class="card lista"><li><button type="button" class="lin" data-act="abrir-dose" data-id="${esc(lei.t)}" id="hoje-lei"><span class="lin-ic">${I.lei}</span><span class="lin-tx"><b>Lei seca, se quiser</b><small>${esc(doseRotulo(doseDe(lei.t)))}</small></span>${I.seta}</button></li></ul>` : ''}`;
+      ${lei && s && s.tipo !== 'lei' ? `<ul class="card lista"><li><button type="button" class="lin" data-act="abrir-dose" data-id="${esc(lei.t)}" id="hoje-lei"><span class="lin-ic">${I.lei}</span><span class="lin-tx"><b>Lei seca do capítulo</b><small>${esc(doseRotulo(doseDe(lei.t)))}</small></span>${I.seta}</button></li></ul>` : ''}`;
   },
 };
 function sobreSequencia() {

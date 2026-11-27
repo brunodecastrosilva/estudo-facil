@@ -2,7 +2,7 @@
    As telas ficam em telas.js; as apostilas e a leitura, em apostilas.js; os cartões, em cartoes.js; níveis e medalhas,
    em jogo.js; moldura, Ajustes e abertura, em casca.js. Os editais da biblioteca ficam em editais.js. */
 "use strict";
-const VERSAO = '1.18.0';
+const VERSAO = '1.18.1';
 const KEY = 'estudofacil.';
 
 /* ---------- utilidades ---------- */
@@ -338,7 +338,9 @@ function agendarPintura() { if (pintarPendente) return; pintarPendente = true; r
 window.addEventListener('storage', e => { if (e.key === KEY + 'db') { const b = arrumarBanco(LS.get('db', null)); if (b) { DB = b; fotografar(); VER++; agendarPintura(); } } });
 
 /* ---------- Kit Fácil: avaliação, sobre, cópia de segurança, tema e sincronização ---------- */
-const NOVIDADES = [{ versao: '1.18.0', itens: [
+const NOVIDADES = [{ versao: '1.18.1', itens: [
+  'Em Hoje, o atalho da lei seca agora se chama "Lei seca do capítulo".',
+] }, { versao: '1.18.0', itens: [
   'Apostila nova: Direito Constitucional, com 14 capítulos, 83 cartões e 75 exercícios. Serve à ANPD e ao Cofen.',
   'Direito Administrativo ampliado: espécies e classificação dos atos, formas de provimento, remoção e redistribuição, e mais. São agora 91 cartões.',
   'Direito Administrativo e LGPD: um exemplo em cada conceito que estava sem.',
